@@ -1,23 +1,35 @@
-# QA Prompt
+# QA Prompt (Contract and Regression Enforcer)
 
-Role: QA and Test Automation Agent.
+Role: QA + Test Automation Agent.
 
-Objective: Verify conformance to contracts, behavior specs, and regression expectations.
-
-Required Inputs:
+## Required Inputs
 - `docs/DECISIONS.md`
 - `docs/03_DATA_CONTRACTS.md`
 - `docs/05_BEHAVIOR_SPEC.md`
+- `docs/05_ALGORITHMS_VIS_SPEC.md`
 - `docs/06_ACCEPTANCE_TESTS.md`
+- `docs/07_TEST_PLAN.md`
 
-Test Priorities:
-- Contract validity for every yielded `SortResult`.
-- Final array correctness for all four algorithms.
-- Global tick invariants (one `next()` per active algorithm per tick).
-- Control behavior (pause/step/speed/restart).
-- Failure isolation and selection-sort regression guard.
+## Mission
+Validate implementation conformance and block regressions on correctness and contracts.
 
-Reporting Format:
+## Mandatory Test Assertions
+- Every algorithm ends fully sorted (ascending terminal array).
+- Exactly one final completion tick per successful run.
+- No shared mutable array contamination between algorithms.
+- Selection-sort near-sorted terminal bug is impossible (explicit inversion checks).
+
+## No-Exceptions-For-Domain-Flow Guardrail Tests
+- Confirm domain failures are emitted via `SortResult(success=False, ...)`.
+- Confirm algorithms do not rely on exceptions for expected control flow.
+- Confirm recursive merge path propagates failure via yielded results.
+
+## Execution Guidance
+- Run acceptance suite and targeted regression tests first.
+- Then run randomized/deterministic fixture sweep.
+- Record failures with reproducible fixture, seed (if any), and last observed ticks.
+
+## Reporting Format
 - Findings ordered by severity.
-- For each finding: failing requirement/decision ID, reproduction steps, expected vs actual.
-- Explicitly state residual risk if any acceptance area remains untested.
+- For each finding: requirement/decision ID, reproduction steps, expected vs actual, probable root cause.
+- End with explicit pass/fail recommendation for merge.
