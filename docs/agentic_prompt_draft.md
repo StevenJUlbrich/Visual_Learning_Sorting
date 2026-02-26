@@ -1,22 +1,21 @@
-Here is the **Final Master `AGENT_PROMPT.md**`. You can copy this entire block, save it, and hand it directly to your agentic coding tool to build the complete, polished V1 of your visualizer.
-
----
-
-```markdown
 # Agentic Context & Implementation Guide
-**Project:** Sorting Algorithm Visualizer 
+
+**Project:** Sorting Algorithm Visualizer
 **Role:** AI Software Engineer / Coding Agent
 **Objective:** Implement a production-ready, highly decoupled MVC Pygame application based on the following strict architectural constraints.
 
 ## 1. Environment & Tech Stack
-* **Language:** Python 3.13 
+
+* **Language:** Python 3.13
 * **Environment:** Ubuntu WSL executing on a Windows 11 host.
 * **Dependency Manager:** `uv`
 * **Core Libraries:** `pygame` (Rendering engine)
 * **Dev Tools:** `ruff` (Linting/Formatting), `pyright` (Strict type checking)
 
 ## 2. Directory Structure
+
 You must strictly adhere to this MVC layout within the `src/` directory. No import bleeding.
+
 ```text
 sorting-visualizer/
 ├── src/                      
@@ -133,7 +132,3 @@ class BaseSortAlgorithm(ABC):
 * **Step:** Advances the tick logic exactly once manually.
 * **Restart:** Re-instantiates the model classes with a fresh copy of the initial array.
 * **Speed Toggle:** Adjusts `pygame.time.Clock().tick()` multipliers.
-
-
-
-```
