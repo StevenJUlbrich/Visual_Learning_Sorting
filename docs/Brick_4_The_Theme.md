@@ -14,23 +14,23 @@ import pygame
 
 @dataclass(frozen=True)
 class Colors:
-    """
-    A modern, dark-mode color palette.
-    Using muted RGB values to avoid the harshness of legacy pure colors.
-    """
-    # Backgrounds
-    APP_BACKGROUND: tuple[int, int, int] = (30, 30, 36)      # Deep slate gray
-    PANEL_BACKGROUND: tuple[int, int, int] = (45, 45, 53)    # Slightly lighter for elevation
+    """A modern, dark-mode color palette with per-algorithm accents."""
+    # Backgrounds & Typography
+    APP_BACKGROUND: tuple[int, int, int] = (30, 30, 36)
+    PANEL_BACKGROUND: tuple[int, int, int] = (45, 45, 53)
+    TEXT_PRIMARY: tuple[int, int, int] = (240, 240, 245)
+    TEXT_SECONDARY: tuple[int, int, int] = (170, 170, 180)
     
-    # Typography
-    TEXT_PRIMARY: tuple[int, int, int] = (240, 240, 245)     # Off-white for readability
-    TEXT_SECONDARY: tuple[int, int, int] = (170, 170, 180)   # Muted gray for step counters
-    
-    # Algorithm States
-    ARRAY_DEFAULT: tuple[int, int, int] = (100, 150, 255)    # Soft blue for resting numbers
-    ARRAY_HIGHLIGHT: tuple[int, int, int] = (255, 180, 50)   # Warm amber for active comparisons/swaps
-    ARRAY_COMPLETE: tuple[int, int, int] = (80, 220, 120)    # Mint green for finished state
-    ERROR_STATE: tuple[int, int, int] = (235, 80, 80)        # Soft red for explicit failures
+    # Base States
+    ARRAY_DEFAULT: tuple[int, int, int] = (100, 150, 255)  # Soft blue for resting numbers
+    ARRAY_COMPLETE: tuple[int, int, int] = (80, 220, 120)  # Mint green for finished state
+    ERROR_STATE: tuple[int, int, int] = (235, 80, 80)      # Soft red for explicit failures
+
+    # Algorithm Specific Accents
+    ACCENT_BUBBLE: tuple[int, int, int] = (0, 255, 255)    # Cyan
+    ACCENT_INSERTION: tuple[int, int, int] = (255, 0, 255) # Magenta
+    ACCENT_MERGE: tuple[int, int, int] = (170, 0, 255)     # Purple
+    ACCENT_SELECTION: tuple[int, int, int] = (255, 80, 80) # Red
 
 class Typography:
     """
@@ -41,6 +41,8 @@ class Typography:
         self.title_font: pygame.font.Font | None = None
         self.body_font: pygame.font.Font | None = None
         self.number_font: pygame.font.Font | None = None
+
+    
 
     def initialize_fonts(self) -> None:
         """

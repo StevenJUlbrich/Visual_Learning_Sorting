@@ -1,7 +1,3 @@
-Here is a comprehensive **Agentic Context & Implementation Guide**. You can save this as `AGENT_PROMPT.md` and feed it directly into Cursor, Copilot, or any other agentic coding tool. It is written specifically for an AI to parse, understand, and strictly adhere to the architectural rules we established.
-
----
-
 # Agentic Context & Implementation Guide
 
 **Project:** Sorting Algorithm Visualizer
@@ -37,11 +33,12 @@ sorting-visualizer/
 │       │   ├── __init__.py
 │       │   ├── theme.py            # Colors & Typography
 │       │   ├── panel.py            # AlgorithmPanel class
-│       │   └── grid.py             # VisualizerWindow (2x2 layout)
+│       │   ├── ui.py               # Custom Button class
+│       │   └── grid.py             # VisualizerWindow (responsive layout)
 │       ├── controllers/      
 │       │   ├── __init__.py
 │       │   └── main_controller.py  # Main execution loop
-│       └── main.py                 # Application entry point
+│       └── main.py                 # Application entry point with config flags
 ├── assets/                         # Contains TTF fonts (e.g., Inter, FiraCode)
 └── tests/                    
 
@@ -55,26 +52,26 @@ sorting-visualizer/
 
 * Every algorithm is a Generator.
 * Every single "tick" (atomic operation) MUST yield a `SortResult` dataclass.
-* **Recursive Bubbling:** For recursive algorithms like Merge Sort, do NOT use `yield from`. You must explicitly unpack and check the success state to bubble failures up the call stack:
-```python
-for result in self._merge_sort(left, mid):
-    yield result
-    if not result.success: return
-
-```
-
-
+* **Recursive Bubbling:** For recursive algorithms like Merge Sort, do NOT use `yield from`. You must explicitly unpack and check the success state to bubble failures up the call stack.
 
 ### B. Array State Immutability
 
-**CRITICAL:** Python passes lists by reference. When yielding the `array_state` to the View layer, you MUST yield a frozen copy of the list (`self.data.copy()`). If you yield the raw list, the background Pygame loop will render torn states.
+**CRITICAL:** Python passes lists by reference. When yielding the `array_state` to the View layer, you MUST yield a frozen copy of the list (`self.data.copy()`).
 
 ### C. UI/UX Principles (Modern Pygame)
 
-* **No legacy colors:** Do not use `(255, 0, 0)` or pure RGBs. Use the muted dark-mode hex/RGB tuples defined in `views/theme.py`.
-* **No system fonts by default:** Attempt to load custom `.ttf` files from `assets/`. Implement a `try/except FileNotFoundError` block to gracefully degrade to `pygame.font.SysFont` if assets are missing.
+* **No legacy colors:** Use the muted dark-mode hex/RGB tuples defined in `views/theme.py`.
+* **No system fonts by default:** Attempt to load custom `.ttf` files from `assets/`. Implement a `try/except FileNotFoundError` block to gracefully degrade to `pygame.font.SysFont`.
 * **Anti-aliasing:** All `font.render()` calls MUST have `antialias=True`.
-* **Geometry:** Use `border_radius` on Pygame rectangles to ensure modern, rounded UI panels.
+* **Geometry:** Use `border_radius` on Pygame rectangles.
+
+### D. UI Control Scope (Custom Clickable UI)
+
+**CRITICAL:** Do NOT import any third-party UI libraries (e.g., `pygame_gui`). The application must feature a custom, minimal clickable UI built entirely with Pygame primitives.
+
+* **The Component:** Create a `Button` class in `src/visualizer/views/ui.py`. It must use `pygame.draw.rect` with `border_radius` for styling and center rendered text within its bounding box.
+* **The Controls:** The UI must include buttons for: Play/Pause, Step Forward (only active when paused), Restart, and Speed Toggle (1x, 1.5x, 2x).
+* **Collision Logic:** The Controller layer MUST handle button interactions by checking `button.rect.collidepoint(event.pos)`.
 
 ## 4. Data Contracts
 
@@ -88,9 +85,12 @@ class SortResult:
     success: bool
     message: str
     is_complete: bool = False
+    array_state: list[int] | None = None
     highlight_indices: tuple[int, ...] | None = None
 
 ```
+
+* **The "Step" Definition:** A "step" is strictly defined as any yielded `SortResult` where `success=True` and `is_complete=False`. The View layer must simply increment its counter upon receiving this state.
 
 ### The `BaseSortAlgorithm` Interface
 
@@ -116,18 +116,19 @@ class BaseSortAlgorithm(ABC):
 ### Models (The Algorithms)
 
 * **Initial State:** All 4 algorithms receive the exact same worst-case array upon initialization: `[7, 6, 5, 4, 3, 2, 1]`.
-* **Tick Cadence:** Yield a state *before* a swap (comparison highlight) and *after* a swap (placement highlight) to accurately visualize time complexity cost.
 * **Merge Sort Specifics:** In-place modification is required for UI stability. Create a temp copy of the sub-array during the `merge` phase and overwrite `self.data` using a pointer to maintain array length for the Pygame renderer.
 
 ### Views (The Rendering Engine)
 
-* **AlgorithmPanel:** Responsible for a single algorithm. Receives a `SortResult`. If `success=False`, it must draw an explicit Error UI border/message. Maps the array values into evenly spaced horizontal slots using `rect.center`.
-* **VisualizerWindow:** Calculates dynamic width/height for a 2x2 grid based on window size. Routes `SortResult` dict to the 4 respective `AlgorithmPanel` instances.
+* **Color Semantics (Per-Algorithm Accents):** The visualizer uses specific accent colors per algorithm defined in `theme.py` (Bubble = Cyan `(0, 255, 255)`, Insertion = Magenta `(255, 0, 255)`, Merge = Purple `(170, 0, 255)`, Selection = Red `(255, 80, 80)`). The `AlgorithmPanel` must accept an `accent_color` and apply it to indices in `highlight_indices`. Resting numbers use `Colors.ARRAY_DEFAULT`.
+* **Responsive Layout:** The `VisualizerWindow` must dynamically calculate the 2x2 grid and UI button placement based on the provided width and height.
 
 ### Controllers (The Main Loop)
 
-* **MainController:** Holds the 4 generator instances.
+* **Configurable Resolution:** `main.py` must support initializing the `MainController` with either Landscape (1280x720) or Portrait (720x996) resolutions.
 * **Tick Execution:** Iterates through generators calling `next(gen)` once per frame per active algorithm.
-* **Failure Handling:** If a generator yields `success=False`, set that algorithm's active flag to `False` but continue running the other algorithms.
-* **Controls:** * `SPACE`: Global Pause/Resume.
-* `1`, `2`, `3`: Adjust `pygame.time.Clock().tick()` speed multipliers (1x, 1.5x, 2x).
+* **Event Handling:** Explicitly handles `pygame.MOUSEBUTTONDOWN` for UI interaction:
+* **Play/Pause:** Toggles the global pause state.
+* **Step:** Advances the tick logic exactly once manually.
+* **Restart:** Re-instantiates the model classes with a fresh copy of the initial array.
+* **Speed Toggle:** Adjusts `pygame.time.Clock().tick()` multipliers.
