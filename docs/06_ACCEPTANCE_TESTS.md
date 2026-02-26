@@ -1,68 +1,84 @@
-# 06 ACCEPTANCE TESTS - Human Checks and Automation Intent
+# 06 ACCEPTANCE TESTS - Human Checks and Automated Intent
+
+Scope: Acceptance criteria for Sorting Algorithm Visualizer v1.
+Grounding: `docs/Sorting_Algorithm_Visualizer_Planning.md` and locked visualization/runtime contracts.
 
 ## Definition of Done
-All conditions below must be satisfied:
-- Canonical docs are internally consistent and match `docs/DECISIONS.md`.
-- All four algorithms complete with correctly sorted final arrays.
-- Global controls (play/pause/step/speed/restart) behave per `docs/05_BEHAVIOR_SPEC.md`.
-- Contract integrity checks pass for generator outputs.
-- No regressions on known risks (selection-sort incomplete-final-state issue).
+All items below must pass:
+- Every algorithm reaches a fully sorted final array in ascending order.
+- Every algorithm emits exactly one final completion tick (`success=True`, `is_complete=True`).
+- No shared mutable array behavior exists between algorithm instances.
+- Selection Sort cannot terminate in a near-sorted state (reference bug regression blocked).
+- Global controls and tick behavior meet `docs/05_BEHAVIOR_SPEC.md`.
 
-## Human-Checkable Acceptance Tests
-### AT-01 Startup State
+## Acceptance Tests (Human-Checkable)
+
+### AT-01 Startup Baseline
 - Launch app.
-- Expect paused state.
-- Expect 4 panels visible with algorithm names and step counters at zero.
+- Expect paused state and 4 visible algorithm panels.
+- Expect each panel starts from the same initial values.
 
-### AT-02 Global Play/Pause
-- Press Play, observe all active panels advance.
-- Press Pause, observe all motion stops immediately.
-
-### AT-03 Single Step
+### AT-02 Global Tick Consistency
 - While paused, press Step once.
 - Expect each active algorithm to advance exactly one tick.
-- Repeat and verify deterministic progression.
+- Repeat multiple times; expect deterministic progression with no skipped/extra panel advancement.
 
-### AT-04 Speed Cycle
-- Toggle speed through 1x, 1.5x, 2x.
-- Expect perceptible pacing change with no logic/state corruption.
+### AT-03 Completion Correctness (All Algorithms)
+- Run to completion.
+- For each panel, verify final numbers are ascending and unchanged after completion.
+- Verify each panel enters completion state and stops advancing.
 
-### AT-05 Restart
-- Run several ticks.
-- Press Restart.
-- Expect all panels reset to initial data and paused state.
+### AT-04 Generator Completion Contract
+- Observe full run for each algorithm.
+- Verify there is a clear terminal completion state.
+- Verify no additional progress ticks occur after completion.
 
-### AT-06 Completion Behavior
-- Let run to finish.
-- Expect each panel to stop independently on completion, preserve final sorted state, and show completion treatment.
+### AT-05 No Shared Mutable Array Isolation
+- Start run and pause mid-way.
+- Confirm each panel diverges only according to its own algorithm path.
+- Restart and compare: each algorithm always starts from same original array, unaffected by other panels' prior mutations.
+
+### AT-06 Selection Sort Regression Guard
+- Run Selection Sort panel to completion.
+- Specifically verify final sequence is fully sorted; no residual inversion is allowed.
+- Failure example (must never occur): trailing inversion like `[..., 12, 11]`.
 
 ### AT-07 Failure Isolation
-- Inject or simulate one algorithm failure state.
-- Expect only that panel to stop and show error state; others continue.
+- Simulate one algorithm failure tick (`success=False`).
+- Expect only that panel deactivates and shows error state.
+- Other panels continue to completion.
 
-### AT-08 Selection Sort Regression Guard
-- Verify Selection Sort final array is fully sorted (no near-sorted terminal bug).
+## Automated Acceptance Intent (for `tests/`)
 
-## Automated Test Intent (for `tests/`)
-### Contract Tests
-- Validate all yielded objects conform to `SortResult` schema.
-- Assert valid field combinations only.
-- Assert `message` present on every yield.
-- Assert snapshot immutability pattern (`array_state` is a copy, not live mutable reference).
+### A) Minimum Correctness Checks
+- For each algorithm class, consume generator to terminal tick.
+- Assert final `array_state` is sorted ascending.
+- Assert final output is a permutation of input multiset.
+- Assert completion tick count is exactly 1.
 
-### Algorithm Correctness Tests
-- For each algorithm, consume generator to terminal state and assert final array sorted ascending.
-- Assert exactly one completion tick on success path.
+### B) Generator Contract Checks
+- Assert every yielded item is `SortResult`.
+- Assert `message` is present on every yield.
+- Assert there is exactly one terminal tick where `success=True and is_complete=True`.
+- Assert no `success=True and is_complete=False` ticks are emitted after terminal tick.
 
-### Tick Semantics Tests
-- Simulate controller advance cycle and assert one `next()` per active generator per global tick.
-- Assert step counter increments only for successful non-terminal ticks.
+### C) No Shared Mutable Array Checks
+- Instantiate all algorithms with same source list object.
+- Advance one algorithm; assert other algorithm internal `data` remains unchanged.
+- Mutate original source list after instantiation; assert model internal states remain unchanged.
+- For every successful tick, mutate returned `array_state`; assert model internal `data` is unaffected (snapshot-copy guarantee).
 
-### Controller Lifecycle Tests
-- Restart recreates generators and resets state.
-- Failure result deactivates only failing algorithm.
-- Completion result deactivates only completed algorithm.
+### D) Selection Bug Regression Tests
+- Input fixture includes reverse-sorted array and mixed random arrays.
+- For Selection Sort, assert terminal array is strictly non-decreasing at every adjacent pair.
+- Add explicit guard assertion: no terminal state may contain any inversion index `i` where `a[i] > a[i+1]`.
 
-## Non-Functional Checks
-- Fonts fallback path works when TTF assets are absent.
-- UI remains readable at both supported resolutions.
+### E) Controller Tick/Deactivation Semantics
+- Per global tick, controller calls `next()` once per active generator.
+- On completion tick, only that algorithm deactivates.
+- On failure tick, only that algorithm deactivates.
+
+## Exit Criteria
+- All acceptance tests pass manually.
+- All automated acceptance checks pass in CI/local.
+- No open severity-1 or severity-2 defects related to correctness, terminal contract, array isolation, or selection regression.

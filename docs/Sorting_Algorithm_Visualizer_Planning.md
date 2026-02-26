@@ -11,6 +11,7 @@
 Reviewed video: `Sorting_Algorithm___Dark_Code.mp4` — a 17-second, 720×996 portrait animation showing four sorting algorithms (Bubble, Insertion, Merge, Selection) running simultaneously on a dark background with number-based arrays and color-coded highlights per algorithm.
 
 ### Video Observations
+
 - Simultaneous side-by-side comparison is intuitive
 - Color-coding per algorithm (cyan=Bubble, magenta=Insertion, purple=Merge, red=Selection)
 - Merge Sort shows sub-array brackets during divide-and-conquer — nice touch
