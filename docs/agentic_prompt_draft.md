@@ -76,6 +76,17 @@ for result in self._merge_sort(left, mid):
 * **Anti-aliasing:** All `font.render()` calls MUST have `antialias=True`.
 * **Geometry:** Use `border_radius` on Pygame rectangles to ensure modern, rounded UI panels.
 
+### D. UI Control Scope (Custom Clickable UI)
+
+**CRITICAL:** Do NOT import any third-party UI libraries (e.g., `pygame_gui`). The application must feature a custom, minimal clickable UI built entirely with Pygame primitives.
+* **The Component:** Create a `Button` class in `src/visualizer/views/ui.py`. It must use `pygame.draw.rect` with `border_radius` for styling and center rendered text within its bounding box.
+* **The Controls:** The UI must include buttons for: 
+  1. Play/Pause
+  2. Step Forward (only active when paused)
+  3. Restart (resets arrays to the initial worst-case state)
+  4. Speed Toggle (cycles through 1x, 1.5x, 2x)
+* **Collision Logic:** The Controller layer MUST handle button interactions by listening for `pygame.MOUSEBUTTONDOWN` events and checking `button.rect.collidepoint(event.pos)`.
+
 ## 4. Data Contracts
 
 ### The `SortResult` Contract
@@ -88,8 +99,8 @@ class SortResult:
     success: bool
     message: str
     is_complete: bool = False
+    array_state: list[int] | None = None
     highlight_indices: tuple[int, ...] | None = None
-
 ```
 
 ### The `BaseSortAlgorithm` Interface
@@ -121,13 +132,18 @@ class BaseSortAlgorithm(ABC):
 
 ### Views (The Rendering Engine)
 
+* **Color Semantics (Per-Algorithm Accents):** The visualizer does NOT use a global highlight color. The `AlgorithmPanel` `__init__` method MUST accept an `accent_color: tuple[int, int, int]` parameter. 
+* **Highlighting Logic:** Inside `_draw_array`, if an index is in `highlight_indices`, it must be rendered using that specific panel's `accent_color`. Resting numbers use `Colors.ARRAY_DEFAULT`, and completed algorithms use `Colors.ARRAY_COMPLETE`.
+* **Routing:** The `VisualizerWindow` must map the correct accent color from `theme.Colors` to the corresponding algorithm when instantiating the panels in `setup_panels`.
 * **AlgorithmPanel:** Responsible for a single algorithm. Receives a `SortResult`. If `success=False`, it must draw an explicit Error UI border/message. Maps the array values into evenly spaced horizontal slots using `rect.center`.
 * **VisualizerWindow:** Calculates dynamic width/height for a 2x2 grid based on window size. Routes `SortResult` dict to the 4 respective `AlgorithmPanel` instances.
 
 ### Controllers (The Main Loop)
-
-* **MainController:** Holds the 4 generator instances.
+* **MainController:** Holds the 4 generator instances and manages the global UI state.
 * **Tick Execution:** Iterates through generators calling `next(gen)` once per frame per active algorithm.
-* **Failure Handling:** If a generator yields `success=False`, set that algorithm's active flag to `False` but continue running the other algorithms.
-* **Controls:** * `SPACE`: Global Pause/Resume.
-* `1`, `2`, `3`: Adjust `pygame.time.Clock().tick()` speed multipliers (1x, 1.5x, 2x).
+* **Failure Handling:** If a generator yields `success=False`, set that algorithm's active flag to `False` but continue running the others.
+* **Event Handling:** Explicitly handles `pygame.MOUSEBUTTONDOWN` for UI interaction.
+  * **Play/Pause:** Toggles the global pause state.
+  * **Step:** Advances the tick logic exactly once manually.
+  * **Restart:** Re-instantiates the model classes with a fresh copy of the initial array and resets active flags.
+  * **Speed Toggle:** Adjusts `pygame.time.Clock().tick()` multipliers.
