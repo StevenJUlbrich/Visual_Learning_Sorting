@@ -49,3 +49,4 @@ Status values:
 - C-003 Orientation ambiguity: resolved to dual support, landscape default.
 - C-004 Merge bracket ambiguity: resolved to range highlights required, literal bracket drawing deferred.
 - C-005 Message line visibility ambiguity (N-002 said undecided, `04_UI_SPEC.md` assumed always-visible): resolved to always visible, locked as D-021.
+- C-006 CI stance conflict (`10_CI.md` title/scope said "optional" but body defined locked gates and mandatory merge policy): resolved to mandatory CI; title, scope, and trigger policy aligned.
