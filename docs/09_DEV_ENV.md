@@ -29,7 +29,7 @@ python3 --version
 Project bootstrap/sync:
 
 ```bash
-cd /mnt/d/Visual_Learning_Sorting
+cd <REPO_ROOT>
 uv sync
 ```
 
@@ -87,9 +87,12 @@ orientation = "landscape"
 - Keep repo on Windows drive path `/mnt/d/...` only if performance is acceptable; for faster heavy test cycles, a Linux-home clone may perform better.
 
 ## 8) Path and Shell Conventions
-- Windows path equivalent: `d:\Visual_Learning_Sorting`.
-- WSL path equivalent: `/mnt/d/Visual_Learning_Sorting`.
+- `<REPO_ROOT>` refers to wherever the repository is cloned.
+- Common locations:
+  - WSL Linux home: `~/projects/Visual_Learning_Sorting`
+  - WSL-mounted Windows drive: `/mnt/d/Visual_Learning_Sorting` (Windows: `d:\Visual_Learning_Sorting`)
 - Canonical docs/commands assume execution from repo root.
+- For best I/O performance in WSL, prefer cloning to the Linux filesystem (`~/`) over a mounted Windows drive (`/mnt/`).
 
 ## 9) Definition of Ready (Local)
 Developer setup is ready when all pass:
