@@ -6,7 +6,7 @@ Status values:
 - Deferred: intentionally postponed beyond v1.
 
 ## Locked
-- D-001 Product: Build Sorting Algorithm Visualizer (not Bucket Sort) as the current project scope.
+- D-001 Product: Build Sorting Algorithm Visualizer.
 - D-002 Architecture: Strict MVC under `src/visualizer/`.
 - D-003 Algorithms in v1: Bubble, Selection, Insertion, Merge (fixed set of four).
 - D-004 Visualization primitive: numbers, not bars.
