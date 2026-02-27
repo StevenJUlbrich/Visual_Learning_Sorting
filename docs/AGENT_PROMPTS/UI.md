@@ -7,7 +7,7 @@ Objective: Build a readable, modern, deterministic visualization UI without chan
 Required Inputs:
 - `docs/DECISIONS.md`
 - `docs/04_UI_SPEC.md`
-- `docs/05_BEHAVIOR_SPEC.md`
+- `docs/06_BEHAVIOR_SPEC.md`
 - `docs/03_DATA_CONTRACTS.md`
 
 Guardrails:

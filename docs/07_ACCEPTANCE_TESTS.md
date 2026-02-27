@@ -1,4 +1,4 @@
-# 06 ACCEPTANCE TESTS - Human Checks and Automated Intent
+# 07 ACCEPTANCE TESTS - Human Checks and Automated Intent
 
 Scope: Acceptance criteria for Sorting Algorithm Visualizer v1.
 Grounding: `docs/Sorting_Algorithm_Visualizer_Planning.md` and locked visualization/runtime contracts.
@@ -9,7 +9,7 @@ All items below must pass:
 - Every algorithm emits exactly one final completion tick (`success=True`, `is_complete=True`).
 - No shared mutable array behavior exists between algorithm instances.
 - Selection Sort cannot terminate in a near-sorted state (reference bug regression blocked).
-- Global controls and tick behavior meet `docs/05_BEHAVIOR_SPEC.md`.
+- Global controls and tick behavior meet `docs/06_BEHAVIOR_SPEC.md`.
 
 ## Acceptance Tests (Human-Checkable)
 
@@ -50,17 +50,24 @@ All items below must pass:
 
 ## Automated Acceptance Intent (for `tests/`)
 
-### A) Minimum Correctness Checks
-- For each algorithm class, consume generator to terminal tick.
+### A) Minimum Correctness Checks (non-empty fixtures only)
+- For each algorithm class with non-empty input, consume generator to terminal tick.
 - Assert final `array_state` is sorted ascending.
 - Assert final output is a permutation of input multiset.
 - Assert completion tick count is exactly 1.
 
-### B) Generator Contract Checks
+### B) Generator Contract Checks (non-empty fixtures only)
 - Assert every yielded item is `SortResult`.
 - Assert `message` is present on every yield.
 - Assert there is exactly one terminal tick where `success=True and is_complete=True`.
 - Assert no `success=True and is_complete=False` ticks are emitted after terminal tick.
+
+### B2) Empty Input Contract Checks (`empty_0` fixture)
+- For each algorithm class with empty input, consume generator to terminal tick.
+- Assert exactly one failure tick is yielded (`success=False`, `is_complete=False`).
+- Assert `message` is present and describes the empty input condition.
+- Assert no completion tick is emitted.
+- Assert no progress ticks are emitted.
 
 ### C) No Shared Mutable Array Checks
 - Instantiate all algorithms with same source list object.

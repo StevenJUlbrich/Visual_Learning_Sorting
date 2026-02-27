@@ -1,7 +1,11 @@
 # Sorting Algorithm Visualizer — Project Planning Notes
 
+> **SUPERSEDED**: This file is historical. All open questions below have been resolved.
+> The authoritative sources are `docs/DECISIONS.md` and `docs/01_PRD.md` through `docs/10_CI.md`.
+> Do not use this file to derive implementation decisions.
+
 **Date:** February 22, 2026
-**Status:** Planning / Pre-Development
+**Status:** Historical — superseded by locked specification docs
 **Purpose:** Portfolio piece — educational tool to help others learn sorting algorithm mechanics
 
 ---
@@ -56,44 +60,34 @@ Reviewed video: `Sorting_Algorithm___Dark_Code.mp4` — a 17-second, 720×996 po
 
 ---
 
-## Open Questions
+## Open Questions (All Resolved)
 
-### Algorithm Selection
-- Are the initial four fixed (Bubble, Insertion, Merge, Selection), or is there a menu/UI to swap in others from a library?
-- This affects whether a selector UI is needed now or just planned architecturally.
+> Every question below has been resolved. Resolution references are inline.
 
-### Worst-Case Array Definition
-- Worst case differs per algorithm. Reverse-sorted is worst for Bubble and Insertion, but Merge Sort is always O(n log n).
-- Do we show "worst case for Bubble Sort" and let others run on that same array?
-- Or a dropdown: "worst case for: [algorithm name]"?
-- Or just one sensible default (reverse-sorted) since it demonstrates the most dramatic contrast?
+### Algorithm Selection — *Resolved: D-003, F-002*
+- ~~Are the initial four fixed?~~ Yes, fixed set of four (D-003). Picker deferred (F-002).
 
-### Current Action Label
-- Should each panel show a small text label for the current action (e.g., "Comparing 7 and 3", "Swapping")?
-- Or just let the colors tell the story?
+### Worst-Case Array Definition — *Resolved: D-006*
+- ~~Which array?~~ Identical `[7, 6, 5, 4, 3, 2, 1]` for all algorithms (D-006).
 
-### Big-O Labels
-- Show algorithm complexity (O(n²), O(n log n)) alongside the step counter?
-- Would reinforce theory connection.
+### Current Action Label — *Resolved: D-010, D-021*
+- ~~Show action text or just colors?~~ Message line always visible with current action text (D-010, D-021).
 
-### Completed Panel Behavior
-- When an algorithm finishes before others, does its panel show a "Complete" state and sit idle?
-- That idle time is a teaching moment — the user sees faster algorithms waiting.
+### Big-O Labels — *Resolved: D-023*
+- ~~Show complexity?~~ Yes, as `complexity` property on each algorithm class (D-023).
 
-### Sound
-- Pitch-mapped tones for operations (common in sorting visualizations)?
-- Or overkill for this project?
+### Completed Panel Behavior — *Resolved: D-015*
+- ~~Panel behavior on completion?~~ Completed panels remain visible and idle (D-015).
 
-### Visual Identity
-- Lightning Labs branding (matching Bucket Sort project)?
-- Or separate identity for this project?
+### Sound — *Resolved: F-004*
+- ~~Add audio cues?~~ Deferred beyond v1 (F-004).
 
-### UI Elements Summary (Confirmed So Far)
-- Start / Step button
-- Speed selector (1x, 1.5x, 2x)
-- Restart button
-- Pause/Resume (global)
-- Step counter per panel
+### Visual Identity — *Resolved: D-027*
+- ~~Branding?~~ Standalone identity "Learn Visual - Expand Knowledge" (D-027).
+
+### UI Elements Summary — *Resolved: D-012, D-013, D-022*
+- Controls: Play/Pause, Step, Restart, Speed cycle (D-012, D-013).
+- Keyboard bindings locked (D-022).
 
 ---
 

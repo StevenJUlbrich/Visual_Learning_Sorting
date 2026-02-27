@@ -4,7 +4,7 @@ Role: Review Agent focused on contract and behavior drift.
 
 ## Required Inputs
 - `docs/DECISIONS.md` (highest authority)
-- `docs/01_PRD.md` .. `docs/09_CI.md`
+- `docs/01_PRD.md` .. `docs/10_CI.md`
 - Current implementation and tests
 
 ## Mission

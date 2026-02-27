@@ -1,7 +1,7 @@
 # 05 ALGORITHMS VIS SPEC - Tick Taxonomy and Highlight Semantics
 
 Scope: This spec locks algorithm visualization behavior for Bubble, Selection, Insertion, and Merge Sort.
-Grounding sources: `docs/Brick_3_bubble_sort.md`, `docs/Brick_3_merge_sort.md`, and `docs/Sorting_Algorithm_Visualizer_Planning.md`.
+Grounding sources: `docs/reference/Brick_3_bubble_sort.md`, `docs/reference/Brick_3_merge_sort.md`, and `docs/Sorting_Algorithm_Visualizer_Planning.md`.
 
 ## 1) Global Visualization Contract
 
@@ -12,11 +12,11 @@ Grounding sources: `docs/Brick_3_bubble_sort.md`, `docs/Brick_3_merge_sort.md`, 
   - `is_complete=False`
   - `array_state` snapshot copy
   - appropriate `highlight_indices`
-- Each algorithm must end with exactly one completion tick:
+- For non-empty input, each algorithm must end with exactly one completion tick:
   - `success=True`
   - `is_complete=True`
   - full-array highlight (`tuple(range(size))`)
-- Empty input boundary must yield failure tick (`success=False`) and stop.
+- For empty input (`len(data) == 0`), the algorithm must yield exactly one failure tick (`success=False`) and stop. No completion tick is emitted.
 
 ## 2) Tick Taxonomy (Locked)
 

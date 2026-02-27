@@ -47,7 +47,7 @@ Invalid combinations are contract violations.
 - Swap tick: highlights swapped indices and new snapshot.
 - Shift/placement tick: highlights moved/placed indices and new snapshot.
 - Merge range tick: highlights active merge range (range tuple expanded to indices).
-- Terminal completion tick: final sorted array snapshot.
+- Terminal completion tick: final sorted array snapshot with full-array highlight (`highlight_indices=tuple(range(size))`).
 - Failure tick: explicit error state with message.
 
 ## Step Counter Definition
@@ -57,12 +57,20 @@ A panel step increments on every received `SortResult` where:
 
 Completion and failure ticks do not increment step count.
 
+## Secondary Counters (Comparisons and Writes)
+Each algorithm tracks its own `comparisons` and `writes` counters as instance attributes on `BaseSortAlgorithm`:
+- `comparisons`: incremented by the algorithm each time a compare operation occurs (before yielding a compare tick).
+- `writes`: incremented by the algorithm each time a mutation occurs (swap, shift, placement — before yielding a write tick).
+- Counters are initialized to `0` in `__init__` and reset on re-instantiation (restart).
+- The view layer reads these properties directly from the algorithm instance for display.
+
 ## Generator Contract
 Each algorithm generator must:
 - Yield at every atomic operation.
 - Yield exactly one terminal completion tick on success.
 - Yield failure tick and stop on unrecoverable domain failure.
 - Avoid `yield from` for recursive failure bubbling where explicit checking is required by design.
+- On empty input (`len(data) == 0`), yield exactly one failure tick (`success=False`, `message` explaining empty input) and stop. No completion tick is emitted.
 
 ## BaseSortAlgorithm Interface
 
@@ -71,10 +79,13 @@ from abc import ABC, abstractmethod
 from collections.abc import Generator
 
 class BaseSortAlgorithm(ABC):
-    def __init__(self, data: list[int], name: str):
+    def __init__(self, data: list[int], name: str, complexity: str):
         self.name = name
+        self.complexity = complexity
         self.data = data.copy()
         self.size = len(self.data)
+        self.comparisons: int = 0
+        self.writes: int = 0
 
     @abstractmethod
     def sort_generator(self) -> Generator[SortResult, None, None]:

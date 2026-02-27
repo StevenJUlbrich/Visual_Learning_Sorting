@@ -1,4 +1,4 @@
-# 08 DEV ENV - WSL/Windows Developer Environment
+# 09 DEV ENV - WSL/Windows Developer Environment
 
 Scope: Reliable local development for Sorting Algorithm Visualizer on Windows 11 + Ubuntu WSL.
 Grounded in handoff environment: Python 3.13, `uv`, `pygame`, `ruff`, `pyright`.
@@ -29,7 +29,7 @@ python3 --version
 Project bootstrap/sync:
 
 ```bash
-cd /mnt/d/Visual_Learning_Sorting
+cd <REPO_ROOT>
 uv sync
 ```
 
@@ -66,19 +66,35 @@ uv run pyright
 uv run pytest -q
 ```
 
-## 6) WSL + Pygame Reliability Notes
+## 6) Application Configuration (`config.toml`)
+
+The app reads `config.toml` from the repo root at startup. If the file is missing, defaults are used.
+
+```toml
+[window]
+# "landscape" (1280x720) or "portrait" (720x996)
+orientation = "landscape"
+```
+
+- `orientation`: determines window resolution. Default is `"landscape"` (1280x720). Set to `"portrait"` for 720x996.
+- The controller reads this file once at startup; changes require a restart.
+
+## 7) WSL + Pygame Reliability Notes
 - Preferred: Windows 11 + WSLg (GUI support enabled).
 - If Pygame window does not open:
   - confirm WSLg is active (`echo $DISPLAY` should be set).
   - run `wsl --update` from Windows PowerShell and restart WSL.
 - Keep repo on Windows drive path `/mnt/d/...` only if performance is acceptable; for faster heavy test cycles, a Linux-home clone may perform better.
 
-## 7) Path and Shell Conventions
-- Windows path equivalent: `d:\Visual_Learning_Sorting`.
-- WSL path equivalent: `/mnt/d/Visual_Learning_Sorting`.
+## 8) Path and Shell Conventions
+- `<REPO_ROOT>` refers to wherever the repository is cloned.
+- Common locations:
+  - WSL Linux home: `~/projects/Visual_Learning_Sorting`
+  - WSL-mounted Windows drive: `/mnt/d/Visual_Learning_Sorting` (Windows: `d:\Visual_Learning_Sorting`)
 - Canonical docs/commands assume execution from repo root.
+- For best I/O performance in WSL, prefer cloning to the Linux filesystem (`~/`) over a mounted Windows drive (`/mnt/`).
 
-## 8) Definition of Ready (Local)
+## 9) Definition of Ready (Local)
 Developer setup is ready when all pass:
 - `uv sync` completes.
 - `uv run ruff check .` returns no errors.
