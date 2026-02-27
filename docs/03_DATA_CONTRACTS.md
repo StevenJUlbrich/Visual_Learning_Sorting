@@ -22,7 +22,7 @@ class SortResult:
   - `False`: explicit algorithm/domain failure.
 - `message`
   - Required for every yielded result.
-  - Human-readable action/error text for debugging and optional UI line.
+  - Human-readable action/error text displayed in the panel message line (always visible per D-021).
 - `is_complete`
   - `True` only on normal terminal state.
   - Must not be used with `success=False`.
