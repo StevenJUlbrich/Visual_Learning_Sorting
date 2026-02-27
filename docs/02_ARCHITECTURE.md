@@ -16,7 +16,7 @@ No import bleeding across layers beyond required contracts.
 1. Process events.
 2. If not paused, advance exactly one tick per active algorithm.
 3. Render full frame from current states.
-4. Sleep via clock tick using configured speed multiplier.
+4. Gate tick advancement via time accumulator (`tick_interval_ms = 500 / speed_multiplier`; see `06_BEHAVIOR_SPEC.md` Tick Timing).
 
 ## Global Tick Semantics
 - A global tick is one controller advance cycle.

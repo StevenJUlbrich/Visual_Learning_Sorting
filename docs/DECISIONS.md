@@ -34,6 +34,7 @@ Status values:
 - D-026 Control bar layout: fixed 48px control bar at bottom of window; panel grid computed from remaining height above it.
 - D-027 Branding: standalone identity "Learn Visual - Expand Knowledge"; used as window title.
 - D-028 Secondary counters: panels display comparisons and writes counters alongside the step counter; tracked as `comparisons` and `writes` properties on `BaseSortAlgorithm`.
+- D-029 Tick timing: base interval 500ms at 1.0x; formula `tick_interval_ms = 500 / speed_multiplier`; render loop decoupled from tick rate via time accumulator.
 
 ## Deferred
 - F-001 User-provided custom arrays.
