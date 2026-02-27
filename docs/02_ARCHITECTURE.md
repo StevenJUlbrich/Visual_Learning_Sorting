@@ -14,9 +14,8 @@ No import bleeding across layers beyond required contracts.
 - Controller owns global app state (`paused`, speed multiplier, active generators, current panel states).
 - On each render frame:
 1. Process events.
-2. If not paused, advance exactly one tick per active algorithm.
+2. If not paused and time accumulator >= `tick_interval_ms`, advance exactly one global tick (one `next()` per active algorithm) and reset accumulator (see `06_BEHAVIOR_SPEC.md` Tick Timing).
 3. Render full frame from current states.
-4. Gate tick advancement via time accumulator (`tick_interval_ms = 500 / speed_multiplier`; see `06_BEHAVIOR_SPEC.md` Tick Timing).
 
 ## Global Tick Semantics
 - A global tick is one controller advance cycle.
