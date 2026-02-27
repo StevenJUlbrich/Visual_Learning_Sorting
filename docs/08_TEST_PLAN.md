@@ -40,18 +40,25 @@ Primary objective: prevent correctness drift and contract drift while preserving
 
 ## 4) Core Test Cases (Automated)
 
-### TC-A1 Final Sortedness (All Algorithms)
-- Arrange: instantiate algorithm with fixture.
+### TC-A1 Final Sortedness (All Algorithms, non-empty fixtures)
+- Arrange: instantiate algorithm with non-empty fixture (`reverse_7`, `sorted_7`, `mixed_7`, `duplicates_7`, `single_1`).
 - Act: consume generator until terminal tick.
 - Assert: final `array_state` sorted ascending.
 
-### TC-A2 Final Completion Tick Contract
+### TC-A2 Final Completion Tick Contract (non-empty fixtures)
 - Assert exactly one terminal completion tick.
 - Assert completion tick has `success=True`, `is_complete=True`, and full-array highlight.
 
-### TC-A3 Tick Stream Contract Validity
+### TC-A3 Tick Stream Contract Validity (non-empty fixtures)
 - For each yielded tick, assert required fields and valid state combinations.
 - Ensure no non-terminal success tick appears after completion.
+
+### TC-A3b Empty Input Contract (`empty_0` fixture)
+- Arrange: instantiate algorithm with `empty_0` (`[]`).
+- Act: consume generator to exhaustion.
+- Assert: exactly one failure tick yielded (`success=False`, `is_complete=False`).
+- Assert: `message` is present and describes empty input.
+- Assert: no completion tick and no progress ticks are emitted.
 
 ### TC-A4 Snapshot Isolation (`array_state`)
 - Mutate returned `array_state` from a yielded tick.
@@ -80,6 +87,7 @@ Primary objective: prevent correctness drift and contract drift while preserving
 ## 6) Traceability Matrix
 - Correctness: TC-A1, AT-03.
 - Final tick contract: TC-A2, TC-A3, AT-04.
+- Empty input contract: TC-A3b, D-024.
 - No shared mutability: TC-A4, TC-A5, AT-05.
 - Selection bug regression: TC-A6, AT-06.
 

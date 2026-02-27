@@ -12,11 +12,11 @@ Grounding sources: `docs/reference/Brick_3_bubble_sort.md`, `docs/reference/Bric
   - `is_complete=False`
   - `array_state` snapshot copy
   - appropriate `highlight_indices`
-- Each algorithm must end with exactly one completion tick:
+- For non-empty input, each algorithm must end with exactly one completion tick:
   - `success=True`
   - `is_complete=True`
   - full-array highlight (`tuple(range(size))`)
-- Empty input boundary must yield failure tick (`success=False`) and stop.
+- For empty input (`len(data) == 0`), the algorithm must yield exactly one failure tick (`success=False`) and stop. No completion tick is emitted.
 
 ## 2) Tick Taxonomy (Locked)
 
