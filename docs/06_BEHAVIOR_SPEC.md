@@ -1,4 +1,4 @@
-# 05 BEHAVIOR SPEC - Runtime Controls and Panel Behavior
+# 06 BEHAVIOR SPEC - Runtime Controls and Panel Behavior
 
 ## Startup Behavior
 
@@ -22,7 +22,8 @@
 
 ### Speed Toggle
 
-- Cycles deterministic multipliers: `1.0`, `1.5`, `2.0`.
+- Cycles deterministic multipliers: `1.0` → `1.5` → `2.0` → `1.0` (wrapping).
+- Default speed is `1.0` at startup and after restart.
 - Applies only to controller clock pacing, never algorithm logic.
 
 ### Restart
@@ -59,6 +60,16 @@
 
 - Clickable controls are required in v1.
 - Keyboard shortcuts are also required as parity controls.
+
+### Keyboard Bindings (Locked)
+
+| Key | Action |
+|---|---|
+| `Space` | Play / Pause |
+| `Right Arrow` | Step (one tick, only while paused) |
+| `R` | Restart |
+| `S` | Speed cycle (1x → 1.5x → 2x → 1x) |
+| `Escape` | Quit |
 
 ## Shutdown Behavior
 

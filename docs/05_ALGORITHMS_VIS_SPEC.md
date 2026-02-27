@@ -1,7 +1,7 @@
 # 05 ALGORITHMS VIS SPEC - Tick Taxonomy and Highlight Semantics
 
 Scope: This spec locks algorithm visualization behavior for Bubble, Selection, Insertion, and Merge Sort.
-Grounding sources: `docs/Brick_3_bubble_sort.md`, `docs/Brick_3_merge_sort.md`, and `docs/Sorting_Algorithm_Visualizer_Planning.md`.
+Grounding sources: `docs/reference/Brick_3_bubble_sort.md`, `docs/reference/Brick_3_merge_sort.md`, and `docs/Sorting_Algorithm_Visualizer_Planning.md`.
 
 ## 1) Global Visualization Contract
 

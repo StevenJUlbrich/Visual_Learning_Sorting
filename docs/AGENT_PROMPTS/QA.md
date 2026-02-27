@@ -5,10 +5,10 @@ Role: QA + Test Automation Agent.
 ## Required Inputs
 - `docs/DECISIONS.md`
 - `docs/03_DATA_CONTRACTS.md`
-- `docs/05_BEHAVIOR_SPEC.md`
 - `docs/05_ALGORITHMS_VIS_SPEC.md`
-- `docs/06_ACCEPTANCE_TESTS.md`
-- `docs/07_TEST_PLAN.md`
+- `docs/06_BEHAVIOR_SPEC.md`
+- `docs/07_ACCEPTANCE_TESTS.md`
+- `docs/08_TEST_PLAN.md`
 
 ## Mission
 Validate implementation conformance and block regressions on correctness and contracts.

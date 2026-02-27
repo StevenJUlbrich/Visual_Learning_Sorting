@@ -1,4 +1,4 @@
-# 06 ACCEPTANCE TESTS - Human Checks and Automated Intent
+# 07 ACCEPTANCE TESTS - Human Checks and Automated Intent
 
 Scope: Acceptance criteria for Sorting Algorithm Visualizer v1.
 Grounding: `docs/Sorting_Algorithm_Visualizer_Planning.md` and locked visualization/runtime contracts.
@@ -9,7 +9,7 @@ All items below must pass:
 - Every algorithm emits exactly one final completion tick (`success=True`, `is_complete=True`).
 - No shared mutable array behavior exists between algorithm instances.
 - Selection Sort cannot terminate in a near-sorted state (reference bug regression blocked).
-- Global controls and tick behavior meet `docs/05_BEHAVIOR_SPEC.md`.
+- Global controls and tick behavior meet `docs/06_BEHAVIOR_SPEC.md`.
 
 ## Acceptance Tests (Human-Checkable)
 

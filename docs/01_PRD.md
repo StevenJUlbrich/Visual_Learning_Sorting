@@ -45,7 +45,7 @@ An educational desktop visualizer that shows four sorting algorithms running sid
 - Every algorithm reaches a correct sorted final array.
 - Global controls are deterministic and consistent across all panels.
 - Contract-driven architecture is strong enough for agentic implementation without ambiguity.
-- Acceptance tests in `docs/06_ACCEPTANCE_TESTS.md` pass.
+- Acceptance tests in `docs/07_ACCEPTANCE_TESTS.md` pass.
 
 ## References
 - Decision authority: `docs/DECISIONS.md`

@@ -9,23 +9,32 @@ Scope: This spec locks the visual and compositional behavior for v1 UI, grounded
 
 ## 2) Window, Grid, and Spacing Rules
 
-### 2.1 Supported Window Sizes
+### 2.1 Window Title
+- `"Learn Visual - Expand Knowledge"`
+
+### 2.2 Supported Window Sizes
 - Default: `1280x720` (landscape).
 - Alternate: `720x996` (portrait).
 
-### 2.2 Grid Layout
+### 2.3 Grid Layout
 - Main visualization area is always a `2x2` panel grid.
-- The grid manager uses one spacing token: `PADDING = 20`.
+- The grid manager uses these spacing/sizing tokens:
+  - `PADDING = 20`
+  - `CONTROL_BAR_HEIGHT = 48` (reserved at bottom of window for on-screen controls)
+- The grid occupies the space above the control bar:
+  - `grid_height = window_height - CONTROL_BAR_HEIGHT - PADDING`
 - Panel dimensions are computed dynamically:
   - `panel_width = (window_width - (PADDING * 3)) // 2`
-  - `panel_height = (window_height - (PADDING * 3)) // 2`
+  - `panel_height = (grid_height - (PADDING * 3)) // 2`
 - Panel positions:
   - Top-left: `(PADDING, PADDING)`
   - Top-right: `(PADDING * 2 + panel_width, PADDING)`
   - Bottom-left: `(PADDING, PADDING * 2 + panel_height)`
   - Bottom-right: `(PADDING * 2 + panel_width, PADDING * 2 + panel_height)`
+- Control bar position:
+  - Anchored at `y = window_height - CONTROL_BAR_HEIGHT`, full window width, centered content.
 
-### 2.3 Panel Geometry
+### 2.4 Panel Geometry
 - Panel container background uses rounded corners.
 - Corner radius token: `PANEL_RADIUS = 12`.
 - Error state keeps the same radius and adds a border overlay.
@@ -53,7 +62,7 @@ Each algorithm panel contains the following UI regions and elements:
 
 ### 4.1 Header Region
 - Left side: algorithm title (e.g., `Bubble Sort`).
-- Right side: metrics line `"<Big-O> | Steps: <count>"`.
+- Right side: metrics line `"<Big-O> | Steps: <n> | Comps: <n> | Writes: <n>"`.
 - Default placement tokens from Brick 4:
   - Title anchor: `x = rect.x + 20`, `y = rect.y + 15`.
   - Metrics right aligned with right inset `20`, baseline around `y = rect.y + 20`.

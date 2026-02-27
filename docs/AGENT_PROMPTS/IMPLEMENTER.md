@@ -9,11 +9,12 @@ Mode: Build-only execution from canonical specs. No speculative redesign.
 - `docs/02_ARCHITECTURE.md`
 - `docs/03_DATA_CONTRACTS.md`
 - `docs/04_UI_SPEC.md`
-- `docs/05_BEHAVIOR_SPEC.md`
 - `docs/05_ALGORITHMS_VIS_SPEC.md`
-- `docs/06_ACCEPTANCE_TESTS.md`
-- `docs/07_TEST_PLAN.md`
-- `docs/08_DEV_ENV.md`
+- `docs/06_BEHAVIOR_SPEC.md`
+- `docs/07_ACCEPTANCE_TESTS.md`
+- `docs/08_TEST_PLAN.md`
+- `docs/09_DEV_ENV.md`
+- `docs/10_CI.md`
 
 ## Mission
 Implement the application exactly to spec with zero contract drift.

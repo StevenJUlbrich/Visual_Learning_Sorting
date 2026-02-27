@@ -1,4 +1,4 @@
-# 07 TEST PLAN - QA Strategy and Execution Matrix
+# 08 TEST PLAN - QA Strategy and Execution Matrix
 
 Scope: Implementation-facing QA plan for Sorting Algorithm Visualizer v1.
 Primary objective: prevent correctness drift and contract drift while preserving educational visualization behavior.
