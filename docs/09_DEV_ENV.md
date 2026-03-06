@@ -4,6 +4,7 @@ Scope: Reliable local development for Sorting Algorithm Visualizer on Windows 11
 Grounded in handoff environment: Python 3.13, `uv`, `pygame`, `ruff`, `pyright`.
 
 ## 1) Supported Environment (Locked)
+
 - Host OS: Windows 11.
 - Dev shell: Ubuntu WSL.
 - Python: 3.13.
@@ -12,6 +13,7 @@ Grounded in handoff environment: Python 3.13, `uv`, `pygame`, `ruff`, `pyright`.
 - Quality tools: `ruff`, `pyright`.
 
 ## 2) One-Time Setup (WSL)
+
 Run inside Ubuntu WSL:
 
 ```bash
@@ -34,6 +36,7 @@ uv sync
 ```
 
 ## 3) Reliable Run Commands
+
 Use these commands from repo root:
 
 ```bash
@@ -45,6 +48,7 @@ uv run python src/visualizer/main.py
 ```
 
 ## 4) Lint / Typecheck Commands (Locked)
+
 From repo root:
 
 ```bash
@@ -59,6 +63,7 @@ uv run pyright
 ```
 
 ## 5) Recommended Local QA Loop
+
 ```bash
 uv sync
 uv run ruff check .
@@ -80,6 +85,7 @@ orientation = "landscape"
 - The controller reads this file once at startup; changes require a restart.
 
 ## 7) WSL + Pygame Reliability Notes
+
 - Preferred: Windows 11 + WSLg (GUI support enabled).
 - If Pygame window does not open:
   - confirm WSLg is active (`echo $DISPLAY` should be set).
@@ -87,6 +93,7 @@ orientation = "landscape"
 - Keep repo on Windows drive path `/mnt/d/...` only if performance is acceptable; for faster heavy test cycles, a Linux-home clone may perform better.
 
 ## 8) Path and Shell Conventions
+
 - `<REPO_ROOT>` refers to wherever the repository is cloned.
 - Common locations:
   - WSL Linux home: `~/projects/Visual_Learning_Sorting`
@@ -95,7 +102,9 @@ orientation = "landscape"
 - For best I/O performance in WSL, prefer cloning to the Linux filesystem (`~/`) over a mounted Windows drive (`/mnt/`).
 
 ## 9) Definition of Ready (Local)
+
 Developer setup is ready when all pass:
+
 - `uv sync` completes.
 - `uv run ruff check .` returns no errors.
 - `uv run pyright` returns no type errors.
