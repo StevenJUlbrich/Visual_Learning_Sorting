@@ -17,6 +17,7 @@ class SortResult:
 ```
 
 ## Field Semantics
+
 - `success`
   - `True`: normal algorithm progression or normal completion.
   - `False`: explicit algorithm/domain failure.
@@ -36,6 +37,7 @@ class SortResult:
   - If provided, all indices must be valid for `array_state` length.
 
 ## Valid State Combinations
+
 - Progress tick: `success=True`, `is_complete=False`, `array_state!=None`.
 - Completion tick: `success=True`, `is_complete=True`, `array_state!=None`.
 - Failure tick: `success=False`, `is_complete=False`, `array_state` optional.
@@ -43,6 +45,7 @@ class SortResult:
 Invalid combinations are contract violations.
 
 ## Tick Taxonomy
+
 - Compare tick: highlights compared indices.
 - Swap tick: highlights swapped indices and new snapshot.
 - Shift/placement tick: highlights moved/placed indices and new snapshot.
@@ -51,21 +54,27 @@ Invalid combinations are contract violations.
 - Failure tick: explicit error state with message.
 
 ## Step Counter Definition
+
 A panel step increments on every received `SortResult` where:
+
 - `success=True`
 - `is_complete=False`
 
 Completion and failure ticks do not increment step count.
 
 ## Secondary Counters (Comparisons and Writes)
+
 Each algorithm tracks its own `comparisons` and `writes` counters as instance attributes on `BaseSortAlgorithm`:
+
 - `comparisons`: incremented by the algorithm each time a compare operation occurs (before yielding a compare tick).
 - `writes`: incremented by the algorithm each time a mutation occurs (swap, shift, placement — before yielding a write tick).
 - Counters are initialized to `0` in `__init__` and reset on re-instantiation (restart).
 - The view layer reads these properties directly from the algorithm instance for display.
 
 ## Generator Contract
+
 Each algorithm generator must:
+
 - Yield at every atomic operation.
 - Yield exactly one terminal completion tick on success.
 - Yield failure tick and stop on unrecoverable domain failure.
