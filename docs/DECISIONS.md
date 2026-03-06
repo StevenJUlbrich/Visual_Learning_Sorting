@@ -1,11 +1,13 @@
 # DECISIONS - Single Source of Truth
 
 Status values:
+
 - Locked: must be followed by all implementation agents.
 - Not decided: unresolved; requires explicit decision before affected scope expands.
 - Deferred: intentionally postponed beyond v1.
 
 ## Locked
+
 - D-001 Product: Build Sorting Algorithm Visualizer.
 - D-002 Architecture: Strict MVC under `src/visualizer/`.
 - D-003 Algorithms in v1: Bubble, Selection, Insertion, Merge (fixed set of four).
@@ -37,6 +39,7 @@ Status values:
 - D-029 Tick timing: base interval 500ms at 1.0x; formula `tick_interval_ms = 500 / speed_multiplier`; render loop decoupled from tick rate via time accumulator.
 
 ## Deferred
+
 - F-001 User-provided custom arrays.
 - F-002 Algorithm picker / dynamic algorithm set.
 - F-003 More than four simultaneous algorithms.
@@ -45,6 +48,7 @@ Status values:
 - F-006 Built-in video export.
 
 ## Conflict Resolutions Applied
+
 - C-001 Contract mismatch (`array_state` omitted in some docs): resolved to required-on-success in `03_DATA_CONTRACTS.md`.
 - C-002 Control ambiguity (keyboard-only vs clickable): resolved to clickable + keyboard parity for v1.
 - C-003 Orientation ambiguity: resolved to dual support, landscape default.
