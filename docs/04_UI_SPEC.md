@@ -3,6 +3,7 @@
 Scope: This spec locks the visual and compositional behavior for v1 UI, grounded in Brick 4 (`Theme`, `Panel`) and planning notes.
 
 ## 1) UI Design Goals
+
 - Maximize readability of algorithm mechanics (numbers + highlights).
 - Keep visuals modern and consistent (dark palette, anti-aliased text, rounded geometry).
 - Preserve algorithm identity at a glance using stable per-panel accents.
@@ -10,13 +11,16 @@ Scope: This spec locks the visual and compositional behavior for v1 UI, grounded
 ## 2) Window, Grid, and Spacing Rules
 
 ### 2.1 Window Title
+
 - `"Learn Visual - Expand Knowledge"`
 
 ### 2.2 Supported Window Sizes
+
 - Default: `1280x720` (landscape).
 - Alternate: `720x996` (portrait).
 
 ### 2.3 Grid Layout
+
 - Main visualization area is always a `2x2` panel grid.
 - The grid manager uses these spacing/sizing tokens:
   - `PADDING = 20`
@@ -35,6 +39,7 @@ Scope: This spec locks the visual and compositional behavior for v1 UI, grounded
   - Anchored at `y = window_height - CONTROL_BAR_HEIGHT`, full window width, centered content.
 
 ### 2.4 Panel Geometry
+
 - Panel container background uses rounded corners.
 - Corner radius token: `PANEL_RADIUS = 12`.
 - Error state keeps the same radius and adds a border overlay.
@@ -42,11 +47,13 @@ Scope: This spec locks the visual and compositional behavior for v1 UI, grounded
 ## 3) Typography Rules (Locked)
 
 ### 3.1 Font Families and Sizes
+
 - Title font: `Inter-Bold.ttf`, size `24`.
 - Body/metrics/message font: `Inter-Regular.ttf`, size `16`.
 - Number font: `FiraCode-Regular.ttf`, size `28`.
 
 ### 3.2 Fallback Behavior
+
 - Font loading must attempt bundled assets from `assets/` first.
 - If a font asset is missing, app must not crash.
 - Fallbacks:
@@ -54,6 +61,7 @@ Scope: This spec locks the visual and compositional behavior for v1 UI, grounded
   - Number -> `pygame.font.SysFont("consolas, courier", 28)`
 
 ### 3.3 Text Rendering Quality
+
 - All text rendering must use anti-aliasing (`antialias=True`).
 
 ## 4) Per-Panel Composition (Locked)
@@ -61,6 +69,7 @@ Scope: This spec locks the visual and compositional behavior for v1 UI, grounded
 Each algorithm panel contains the following UI regions and elements:
 
 ### 4.1 Header Region
+
 - Left side: algorithm title (e.g., `Bubble Sort`).
 - Right side: metrics line `"<Big-O> | Steps: <n> | Comps: <n> | Writes: <n>"`.
 - Default placement tokens from Brick 4:
@@ -68,11 +77,13 @@ Each algorithm panel contains the following UI regions and elements:
   - Metrics right aligned with right inset `20`, baseline around `y = rect.y + 20`.
 
 ### 4.2 Message Line (Required)
+
 - A message line is included and shows latest `SortResult.message`.
 - Purpose: expose current action/error semantics for learning clarity.
 - Styling: body font + secondary text color in normal state, error color in failure state.
 
 ### 4.3 Array Rendering Region
+
 - Numbers only (no bars).
 - Horizontal spacing uses internal array padding token: `ARRAY_X_PADDING = 40`.
 - Number slots are evenly distributed across available width.
@@ -80,6 +91,7 @@ Each algorithm panel contains the following UI regions and elements:
 - Vertical anchor defaults to panel center (`rect.y + rect.height // 2`).
 
 ### 4.4 State Overlays
+
 - Completion state: all numbers in completion color.
 - Error state: red border + readable failure message (`"Failed: ..."`).
 
@@ -88,10 +100,12 @@ Each algorithm panel contains the following UI regions and elements:
 Decision: **Per-panel algorithm accent colors** (not a single global highlight color).
 
 Rationale from planning + Brick 4:
+
 - Planning explicitly calls out algorithm color coding as a teaching aid.
 - Brick 4 theme defines dedicated accent constants per algorithm.
 
 ### 5.1 Core Palette
+
 - App background: `(30, 30, 36)`
 - Panel background: `(45, 45, 53)`
 - Primary text: `(240, 240, 245)`
@@ -101,6 +115,7 @@ Rationale from planning + Brick 4:
 - Error state: `(235, 80, 80)`
 
 ### 5.2 Algorithm Accent Mapping
+
 - Bubble: `(0, 255, 255)` (cyan)
 - Insertion: `(255, 0, 255)` (magenta)
 - Merge: `(170, 0, 255)` (purple)
@@ -109,6 +124,7 @@ Rationale from planning + Brick 4:
 Mapping is fixed by algorithm name and does not rotate at runtime.
 
 ## 6) State-to-Visual Rules
+
 - Idle/pre-first-tick: panel shell + header + zero steps visible.
 - Running tick:
   - Non-highlighted indices -> default array color.
@@ -122,6 +138,7 @@ Mapping is fixed by algorithm name and does not rotate at runtime.
   - No further step increments.
 
 ## 7) Control Surface (UI Scope)
+
 - On-screen controls are required for v1:
   - Play/Pause
   - Step
@@ -130,6 +147,7 @@ Mapping is fixed by algorithm name and does not rotate at runtime.
 - Keyboard shortcuts must mirror these controls.
 
 ## 8) Explicit Non-Goals for UI v1
+
 - No bar chart rendering.
 - No per-panel independent playback controls.
 - No historical trail/replay layers.
