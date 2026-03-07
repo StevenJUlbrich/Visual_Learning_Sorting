@@ -49,12 +49,12 @@ Reviewed video: `Sorting_Algorithm___Dark_Code.mp4` — a 17-second, 720×996 po
 * **Same array** across all four algorithms.
 * **7 elements**.
 * **Preset worst-case array** as default.
-* 
+
 ## Not In Scope (Current Phase)
 
-- User input for custom arrays
-- Bar-based visualization
-- More than 4 simultaneous algorithms
-- Video export (handled externally via Camtasia)
-- History/replay of changes
+* User input for custom arrays
+* Bar-based visualization
+* More than 4 simultaneous algorithms
+* Video export (handled externally via Camtasia)
+* History/replay of changes
   
