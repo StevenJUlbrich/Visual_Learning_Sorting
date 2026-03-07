@@ -7,9 +7,9 @@
 ## Locked
 
 * **D-001 Product:** Build Sorting Algorithm Visualizer.
-* **D-002 Architecture:** Strict MVC under `src/visualizer/` using a Tkinter front end.
+* **D-002 Architecture:** Strict MVC under `src/visualizer/` using a **Pygame front end**.
 * **D-003 Algorithms in v1:** Bubble, Selection, Insertion, Merge (fixed set of four).
-* **D-004 Visualization primitive:** Sprite-based number entities with independent `(x, y)` coordinate tracking and delta-time updates.
+* **D-004 Visualization primitive:** Pygame Sprite entities with independent `(x, y)` coordinate tracking, target coordinate interpolation, and delta-time (`dt`) updates.
 * **D-005 Layout:** 2x2 grid, max 4 simultaneous panels.
 * **D-006 Initial data:** identical `[7, 6, 5, 4, 3, 2, 1]` per algorithm instance.
 * **D-007 Tick model (REPLACED):** Independent operation queues per algorithm. Time is driven by operation-weighted simulated costs, creating a genuine race.
@@ -40,4 +40,5 @@
 
 * **F-001** User-provided custom arrays.
 * **F-002** Algorithm picker / dynamic algorithm set.
-* **F-003** More than four simultaneous algori
+* **F-003** More than four simultaneous algorithms.
+* **F-004** Audio cues.
