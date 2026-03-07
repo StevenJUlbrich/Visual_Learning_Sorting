@@ -31,11 +31,13 @@
 - Base tick interval: `500ms` (2 algorithm ticks per second at 1.0x).
 - Formula: `tick_interval_ms = 500 / speed_multiplier`.
 - Concrete values:
+
   | Speed | Interval | Ticks/sec |
-  |---|---|---|
+  | --- | --- | --- |
   | 1.0x | 500ms | 2.0 |
   | 1.5x | 333ms | 3.0 |
   | 2.0x | 250ms | 4.0 |
+
 - The render loop runs at display refresh rate (uncapped or vsync). Tick advancement is gated by an accumulator against `tick_interval_ms`, not by frame rate.
 - Step mode ignores tick timing and advances immediately on input.
 
@@ -77,7 +79,7 @@
 ### Keyboard Bindings (Locked)
 
 | Key | Action |
-|---|---|
+| --- | --- |
 | `Space` | Play / Pause |
 | `Right Arrow` | Step (one tick, only while paused) |
 | `R` | Restart |

@@ -65,33 +65,42 @@ Reviewed video: `Sorting_Algorithm___Dark_Code.mp4` — a 17-second, 720×996 po
 > Every question below has been resolved. Resolution references are inline.
 
 ### Algorithm Selection — *Resolved: D-003, F-002*
+
 - ~~Are the initial four fixed?~~ Yes, fixed set of four (D-003). Picker deferred (F-002).
 
 ### Worst-Case Array Definition — *Resolved: D-006*
+
 - ~~Which array?~~ Identical `[7, 6, 5, 4, 3, 2, 1]` for all algorithms (D-006).
 
 ### Current Action Label — *Resolved: D-010, D-021*
+
 - ~~Show action text or just colors?~~ Message line always visible with current action text (D-010, D-021).
 
 ### Big-O Labels — *Resolved: D-023*
+
 - ~~Show complexity?~~ Yes, as `complexity` property on each algorithm class (D-023).
 
 ### Completed Panel Behavior — *Resolved: D-015*
+
 - ~~Panel behavior on completion?~~ Completed panels remain visible and idle (D-015).
 
 ### Sound — *Resolved: F-004*
+
 - ~~Add audio cues?~~ Deferred beyond v1 (F-004).
 
 ### Visual Identity — *Resolved: D-027*
+
 - ~~Branding?~~ Standalone identity "Learn Visual - Expand Knowledge" (D-027).
 
 ### UI Elements Summary — *Resolved: D-012, D-013, D-022*
+
 - Controls: Play/Pause, Step, Restart, Speed cycle (D-012, D-013).
 - Keyboard bindings locked (D-022).
 
 ---
 
 ## Not In Scope (Current Phase)
+
 - User input for custom arrays
 - Bar-based visualization
 - More than 4 simultaneous algorithms
