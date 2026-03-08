@@ -8,7 +8,7 @@ This write-up focuses on **motion and teaching behavior**, not style or visual t
 
 ---
 
-# 1. High-Level Behavior
+## 1. High-Level Behavior
 
 The animation presents **Heap Sort as a two-phase process**:
 
@@ -31,17 +31,17 @@ This makes Heap Sort visually distinct from the other algorithms.
 
 ---
 
-# 2. Layout Observed
+## 2. Layout Observed
 
 The animation likely uses **two simultaneous conceptual representations**:
 
-### Array row
+### 2.1 Array Row
 
 A horizontal row representing the array storage.
 
 Each element is positioned in a fixed slot corresponding to its index.
 
-### Binary heap structure
+### 2.2 Binary Heap Structure
 
 A tree-like structure representing the heap relationships.
 
@@ -54,17 +54,17 @@ The tree representation helps viewers understand:
 
 ---
 
-# 3. Conceptual Zones
+## 3. Conceptual Zones
 
 The animation visually separates the array into two regions:
 
-### Active heap region
+### 3.1 Active Heap Region
 
 The portion of the array still forming the heap.
 
 This region participates in heap comparisons and heapify operations.
 
-### Sorted region
+### 3.2 Sorted Region
 
 The rightmost portion of the array where extracted maximum values accumulate.
 
@@ -72,11 +72,11 @@ Once elements move here they are no longer part of the heap.
 
 ---
 
-# 4. Core Teaching Model
+## 4. Core Teaching Model
 
 The animation repeatedly demonstrates the same conceptual pattern:
 
-### Phase 1: Build the heap
+### 4.1 Phase 1: Build the Heap
 
 The algorithm transforms the unsorted array into a **max heap**.
 
@@ -90,9 +90,7 @@ The animation emphasizes comparisons between:
 
 The largest value becomes the parent.
 
----
-
-### Phase 2: Extract maximum
+### 4.2 Phase 2: Extract Maximum
 
 Once the heap is built:
 
@@ -104,41 +102,37 @@ This cycle repeats until the heap region is empty.
 
 ---
 
-# 5. Visual States Observed
+## 5. Visual States Observed
 
 Each element in the animation appears to transition between several visual states.
 
-### Resting heap element
+### 5.1 Resting Heap Element
 
 Element currently participating in the heap but not actively compared.
 
-### Parent candidate
+### 5.2 Parent Candidate
 
 The element currently being evaluated during heapify.
 
-### Child candidate
+### 5.3 Child Candidate
 
 Children of the parent currently being compared.
 
-### Active swap pair
+### 5.4 Active Swap Pair
 
 Two nodes that will exchange positions.
 
-### Sorted element
+### 5.5 Sorted Element
 
 Element that has been removed from the heap and placed in the sorted region.
 
 ---
 
-# 6. Motion Choreography
+## 6. Motion Choreography
 
-The animation uses several distinct motion patterns.
+The animation uses several distinct motion patterns. Heap Sort motion differs significantly from the other algorithms.
 
-Heap Sort motion differs significantly from the other algorithms.
-
----
-
-# 6.1 Heap construction (heapify)
+### 6.1 Heap Construction (Heapify)
 
 During heap construction the animation appears to focus on a specific node and its children.
 
@@ -151,9 +145,7 @@ The likely choreography is:
 
 This swap moves the larger value upward in the heap.
 
----
-
-# 6.2 Swap during heapify
+### 6.2 Swap During Heapify
 
 When a swap occurs:
 
@@ -162,9 +154,7 @@ When a swap occurs:
 
 The animation likely continues the sift-down process until the heap property is restored.
 
----
-
-# 6.3 Root extraction
+### 6.3 Root Extraction
 
 Once the heap is established:
 
@@ -173,9 +163,7 @@ Once the heap is established:
 
 This motion is visually significant because it marks the start of the sorted region.
 
----
-
-# 6.4 Heap boundary shrink
+### 6.4 Heap Boundary Shrink
 
 After root extraction:
 
@@ -184,9 +172,7 @@ After root extraction:
 
 This boundary movement is a key visual teaching cue.
 
----
-
-# 6.5 Sift-down restoration
+### 6.5 Sift-Down Restoration
 
 After the root swap:
 
@@ -197,55 +183,43 @@ This repeats the parent-child comparison and swap pattern until the heap propert
 
 ---
 
-# 7. Motion Types Implied by the Video
+## 7. Motion Types Implied by the Video
 
 From a Pygame perspective the animation implies several reusable motion primitives.
 
----
-
-### Node highlight
+### 7.1 Node Highlight
 
 Highlight parent and child nodes during comparisons.
 
 This emphasizes the decision process.
 
----
-
-### Parent-child swap
+### 7.2 Parent-Child Swap
 
 Two nodes exchange positions in the heap.
 
 This swap may occur either in the tree layout or along the array row.
 
----
-
-### Root extraction swap
+### 7.3 Root Extraction Swap
 
 The root element swaps with the final element in the heap region.
 
 This is a major motion event in the animation.
 
----
-
-### Heap boundary movement
+### 7.4 Heap Boundary Movement
 
 The boundary separating heap and sorted region moves leftward as the heap shrinks.
 
----
-
-### Sift-down sequence
+### 7.5 Sift-Down Sequence
 
 A series of parent-child comparisons and swaps moving downward through the tree.
 
 ---
 
-# 8. Pygame Implementation Interpretation
+## 8. Pygame Implementation Interpretation
 
 A Pygame developer studying this animation would likely structure the system around several types of objects.
 
----
-
-## Value sprites
+### 8.1 Value Sprites
 
 Each value in the array should be represented by a persistent sprite-like object.
 
@@ -266,9 +240,7 @@ Example state flags might include:
 * is_sorted
 * is_heap_member
 
----
-
-## Heap structure overlay
+### 8.2 Heap Structure Overlay
 
 A logical mapping between array indices and tree coordinates.
 
@@ -277,17 +249,13 @@ This overlay determines:
 * parent node location
 * child node locations
 
----
-
-## Heap boundary indicator
+### 8.3 Heap Boundary Indicator
 
 A marker showing where the heap ends and the sorted region begins.
 
 This boundary moves after each extraction.
 
----
-
-## Comparison highlight system
+### 8.4 Comparison Highlight System
 
 Visual cues indicating which nodes are currently being compared.
 
@@ -295,45 +263,45 @@ These highlights guide viewer attention.
 
 ---
 
-# 9. State Transitions Observed
+## 9. State Transitions Observed
 
-The animation cycles through several repeated states.
+The animation cycles through several repeated states:
 
-### Heapify start
+### 9.1 Heapify Start
 
 A parent node is selected for heapification.
 
-### Compare children
+### 9.2 Compare Children
 
 Parent and children are compared.
 
-### Swap if necessary
+### 9.3 Swap if Necessary
 
 Parent swaps with the larger child.
 
-### Continue sift-down
+### 9.4 Continue Sift-Down
 
 The node continues moving downward if needed.
 
-### Heap built
+### 9.5 Heap Built
 
 The array now represents a valid max heap.
 
-### Extract root
+### 9.6 Extract Root
 
 Root swaps with the last heap element.
 
-### Reduce heap
+### 9.7 Reduce Heap
 
 Heap size decreases by one.
 
-### Restore heap
+### 9.8 Restore Heap
 
 Sift-down restores heap property.
 
 ---
 
-# 10. Teaching Goals of the Animation
+## 10. Teaching Goals of the Animation
 
 The animation emphasizes several algorithmic ideas:
 
@@ -346,41 +314,36 @@ Unlike other algorithms, the emphasis is not on adjacent swaps but on **tree rel
 
 ---
 
-# 11. What the Video Does Not Define
+## 11. What the Video Does Not Define
 
-The video demonstrates behavior but does not lock down several implementation details.
+The video demonstrates behavior but does not lock down several implementation details:
 
-Examples include:
-
-* exact tree layout geometry
-* exact swap animation paths
-* animation timing
-* highlight colors
-* node shapes
-* edge rendering between nodes
-* easing curves
+* Exact tree layout geometry
+* Exact swap animation paths
+* Animation timing
+* Highlight colors
+* Node shapes
+* Edge rendering between nodes
+* Easing curves
 
 These details would need to be standardized later.
 
 ---
 
-# 12. Key Technical Insight
+## 12. Key Technical Insight
 
-Heap Sort animation relies on a **tree-based comparison structure**, making it visually and conceptually different from the other sorting algorithms.
+Heap Sort animation relies on a **tree-based comparison structure**, making it visually and conceptually different from the other sorting algorithms:
 
-Where:
-
-Bubble Sort shows **adjacent comparisons**
-Selection Sort shows **scan and minimum tracking**
-Insertion Sort shows **key insertion and shifts**
-
-Heap Sort shows **parent-child restructuring in a binary heap**.
+* Bubble Sort shows **adjacent comparisons**
+* Selection Sort shows **scan and minimum tracking**
+* Insertion Sort shows **key insertion and shifts**
+* Heap Sort shows **parent-child restructuring in a binary heap**
 
 This makes Heap Sort a strong visual complement to the other algorithms.
 
 ---
 
-# 13. Developer Summary
+## 13. Developer Summary
 
 If explaining the animation to another Pygame engineer:
 
