@@ -68,3 +68,7 @@ Primary objective: Prevent correctness drift, ensure operation-weighted timers a
 ## 6) Tooling and Execution
 
 - Unit/integration automation: `pytest`. Pygame Controller/Sprite math logic can be tested statelessly without invoking the display `while True:` loop.
+
+## 7) Controller fairness test
+
+    - all active generators receive execution opportunities.
