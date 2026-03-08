@@ -14,7 +14,8 @@ class OpType(Enum):
     SWAP = auto()     # Maps to T2 (400ms)
     SHIFT = auto()    # Maps to T2 (400ms)
     RANGE = auto()    # Maps to T3 (200ms)
-    TERMINAL = auto() # Maps to T4 / T0
+    TERMINAL = auto()  # Used for completion ticks
+    FAILURE = auto()   # Used for explicit failure ticks
 
 @dataclass(slots=True)
 class SortResult:
@@ -31,6 +32,12 @@ SWAP → exchange two sprite home slots with arc path, duration = T2
 SHIFT → source/destination horizontal slide, duration = T2
 RANGE → highlight contiguous range only, no sprite displacement
 TERMINAL → no motion; apply completion styling
+
+### highlight_indices rules
+
+- Indices must be unique.
+- Order does not affect rendering.
+- Indices must exist within array_state bounds.
 
 ## Field Semantics
 
@@ -60,6 +67,11 @@ TERMINAL → no motion; apply completion styling
 - Failure tick: `success=False`, `is_complete=False`, `array_state` optional.
 
 Invalid combinations are contract violations.
+
+### Generator Completion Behavior
+
+- After emitting a completion or failure tick, the generator must terminate naturally.
+- No additional SortResult objects may be yielded after the terminal event.
 
 ## Tick Taxonomy
 
