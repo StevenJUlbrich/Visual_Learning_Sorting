@@ -14,6 +14,7 @@ Scope: Defines how the Pygame View layer translates discrete logical operations 
 
 - **Action:** Two elements exchange indices.
 - **Motion:** Both sprites interpolate their `x` coordinates to the other's home position. To prevent visual collision, one sprite applies a temporary negative `y` offset (arcs up) while the other applies a positive `y` offset (arcs down) during the transit.
+  - Left sprite arcs upward, right sprite arcs downward.
 
 ### 2.2 Insertion Sort (Lift and Drop)
 
