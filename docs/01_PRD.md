@@ -18,6 +18,13 @@ An educational desktop visualizer that shows four sorting algorithms running con
 - User presses Play, and all four algorithms begin animating simultaneously. Faster algorithms (like Merge Sort) physically complete their operations and halt their timers earlier than slower ones (like Bubble Sort).
 - User can pause mid-animation, step through logical operations, and change playback speed.
 
+### Rendering Target
+
+The application targets a render rate of 60 FPS.
+
+Minor frame variance is acceptable, but sprite motion must remain visually continuous.
+Animations must never "teleport" except when the application is paused or stepped mid-operation.
+
 ## Scope
 
 ### In Scope (v1)
