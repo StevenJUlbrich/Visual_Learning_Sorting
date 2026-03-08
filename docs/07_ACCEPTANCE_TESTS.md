@@ -60,6 +60,10 @@ All items below must pass:
 - Verify that swaps (Bubble, Selection) utilize a `y`-axis arc to prevent visual collisions.
 - Verify that elements do not "teleport" or snap abruptly unless the user pauses or steps mid-animation.
 
+### AT-08 Duplicate value arrays
+
+- animate without sprite identity confusion.
+
 ## Automated Acceptance Intent (for `tests/`)
 
 ### A) Minimum Correctness Checks (non-empty fixtures only)
