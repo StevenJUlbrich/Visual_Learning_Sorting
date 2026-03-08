@@ -1,5 +1,23 @@
 # 02 ARCHITECTURE - MVC, Pygame Sprites, Independent Queues
 
+## Directory Tree
+
+```text
+src/visualizer/
+├── main.py                 # App entry point, config loading, and root Controller instantiation
+├── models/
+│   ├── contracts.py        # SortResult, OpType, BaseSortAlgorithm
+│   ├── bubble.py           # BubbleSort implementation
+│   ├── insertion.py        # InsertionSort implementation
+│   ├── merge.py            # MergeSort implementation
+│   └── selection.py        # SelectionSort implementation
+├── views/
+│   ├── window.py           # Pygame display init and master 2x2 grid layout
+│   ├── panel.py            # Individual algorithm rendering frame and UI counters
+│   └── sprite.py           # NumberSprite class containing dt interpolation math
+└── controllers/
+    └── orchestrator.py     # Independent queue management, operation timing, and event loop```
+
 ## Architecture Style
 
 Strict MVC under `src/visualizer/`.
