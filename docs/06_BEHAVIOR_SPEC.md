@@ -17,6 +17,7 @@
 
 - Enabled only while paused.
 - "Step" forces every active algorithm to advance its queue to the conclusion of its *current* pending logical operation, smoothly animating the sprites to their final target positions for that specific move before pausing again.
+- A single Step action processes exactly one newly fetched SortResult per active algorithm panel. If that tick produces motion, the app animates that motion to completion, then immediately returns to paused state.
 
 ### Speed Toggle
 
