@@ -1,4 +1,8 @@
-# Sorting_Algorithm_Visualizer_Planning.md (Rewritten)
+# Sorting_Algorithm_Visualizer_Planning.md
+
+This document is historical reference only.
+
+Implementation authority resides exclusively in the locked specification documents.
 
 **Status:** Historical — superseded by locked specification docs
 **Purpose:** Portfolio piece — educational tool to help others learn sorting algorithm mechanics
