@@ -5,16 +5,26 @@ This file is the single source of truth for algorithm/controller/view runtime co
 ## SortResult (Definitive)
 
 ```python
-from dataclasses import dataclass
+from enum import Enum, auto
+
+class OpType(Enum):
+    COMPARE = auto()  # Maps to T1 (150ms)
+    SWAP = auto()     # Maps to T2 (400ms)
+    SHIFT = auto()    # Maps to T2 (400ms)
+    RANGE = auto()    # Maps to T3 (200ms)
+    TERMINAL = auto() # Maps to T4 / T0
 
 @dataclass(slots=True)
 class SortResult:
     success: bool
     message: str
+    operation_type: OpType  # NEW: Agent uses this for queue timing
     is_complete: bool = False
     array_state: list[int] | None = None
     highlight_indices: tuple[int, ...] | None = None
 ```
+
+
 
 ## Field Semantics
 
