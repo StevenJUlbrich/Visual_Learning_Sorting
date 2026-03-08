@@ -24,8 +24,6 @@ class SortResult:
     highlight_indices: tuple[int, ...] | None = None
 ```
 
-
-
 ## Field Semantics
 
 - `success`

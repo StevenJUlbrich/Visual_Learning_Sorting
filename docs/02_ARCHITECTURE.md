@@ -32,6 +32,8 @@ The execution operates on two parallel, decoupled tracks:
 
 ### View Responsibilities
 
+The View layer MUST maintain a persistent list of NumberSprite objects initialized at startup. When receiving a new SortResult.array_state, the View MUST NOT destroy and recreate sprites. Instead, it must map the values in the new array_state to the existing NumberSprite instances and invoke their set_target(new_x, new_y) methods to initiate the tweening.
+
 - Maintain `NumberSprite` objects (tracking value, exact floating-point `(x, y)` coords, and target coords).
 - Execute linear interpolation formulas to move sprites smoothly over the `dt` window.
 - Dynamically calculate resting layout coordinates based on the active Option C orientation flag.
