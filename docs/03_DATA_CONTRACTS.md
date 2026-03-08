@@ -1,20 +1,36 @@
 # 03 DATA CONTRACTS - Canonical Source
 
 This file is the single source of truth for algorithm/controller/view runtime contracts.
+Indices must be unique.
+Order has no semantic meaning.
 
 ## SortResult (Definitive)
 
 ```python
-from dataclasses import dataclass
+from enum import Enum, auto
+
+class OpType(Enum):
+    COMPARE = auto()  # Maps to T1 (150ms)
+    SWAP = auto()     # Maps to T2 (400ms)
+    SHIFT = auto()    # Maps to T2 (400ms)
+    RANGE = auto()    # Maps to T3 (200ms)
+    TERMINAL = auto() # Maps to T4 / T0
 
 @dataclass(slots=True)
 class SortResult:
     success: bool
     message: str
+    operation_type: OpType  # NEW: Agent uses this for queue timing
     is_complete: bool = False
     array_state: list[int] | None = None
     highlight_indices: tuple[int, ...] | None = None
 ```
+
+COMPARE → highlight only, no sprite position change
+SWAP → exchange two sprite home slots with arc path, duration = T2
+SHIFT → source/destination horizontal slide, duration = T2
+RANGE → highlight contiguous range only, no sprite displacement
+TERMINAL → no motion; apply completion styling
 
 ## Field Semantics
 
@@ -30,6 +46,7 @@ class SortResult:
 - `array_state`
   - Required on successful non-terminal and terminal ticks.
   - Optional (`None`) on failure ticks.
+  - Failure ticks must include the most recent array_state if available.
   - Must be an immutable snapshot copy at yield time (`self.data.copy()`).
 - `highlight_indices`
   - Optional tuple of indices to accent for current tick.
@@ -78,6 +95,7 @@ Each algorithm generator must:
 - Yield at every atomic operation.
 - Yield exactly one terminal completion tick on success.
 - Yield failure tick and stop on unrecoverable domain failure.
+- Generators must terminate naturally after emitting the final tick.
 - Avoid `yield from` for recursive failure bubbling where explicit checking is required by design.
 - On empty input (`len(data) == 0`), yield exactly one failure tick (`success=False`, `message` explaining empty input) and stop. No completion tick is emitted.
 

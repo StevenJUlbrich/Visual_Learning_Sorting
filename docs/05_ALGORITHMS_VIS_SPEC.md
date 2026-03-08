@@ -81,7 +81,7 @@ Additional rules:
 
 Required sequence per outer index `i`:
 
-1. Emit key-selection tick (classified as `T2 Write/Mutation Context`) highlighting `(i,)`.
+1. Emit key-selection tick (classified as `T1 compare context`) highlighting `(i,)`.
 2. For each right-shift while condition holds, emit `T1 Compare Tick` on `(j, j+1)` before/with shift intent.
 3. After insertion, emit `T2 Write/Mutation Tick` on placed index `(j+1,)`.
 
@@ -94,7 +94,7 @@ Additional rules:
 
 Required recursive sequence:
 
-1. Recursively process left and right halves.
+1. Recursive generators must be iterated manually and yield forwarded ticks.
 2. At start of each merge operation, emit `T3 Range Emphasis Tick` on full range `left..right`.
 3. During merge loop:
    - emit `T1 Compare Tick` for current merge decision.

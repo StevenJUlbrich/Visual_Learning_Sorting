@@ -37,6 +37,8 @@ Scope: This spec locks the visual and compositional behavior for v1 UI, grounded
   - Bottom-right: `(PADDING * 2 + panel_width, PADDING * 2 + panel_height)`
 - Control bar position:
   - Anchored at `y = window_height - CONTROL_BAR_HEIGHT`, full window width, centered content.
+- Buttons:
+  - Evenly distributed horizontally with 16px spacing.
 
 ### 2.4 Panel Geometry
 
@@ -87,13 +89,14 @@ Each algorithm panel contains the following UI regions and elements:
 - Numbers only (no bars).
 - Horizontal spacing uses internal array padding token: `ARRAY_X_PADDING = 40`.
 - Number slots are evenly distributed across available width.
-- Numbers are centered in their slot.
+- Numbers are centered in their slot. (`slot_width = (panel_width - ARRAY_X_PADDING*2) / array_size`)
 - Vertical anchor defaults to panel center (`rect.y + rect.height // 2`).
 
 ### 4.4 State Overlays
 
 - Completion state: all numbers in completion color.
 - Error state: red border + readable failure message (`"Failed: ..."`).
+  - Error border thickness = 3px
 
 ## 5) Color Identity Decision (Locked)
 

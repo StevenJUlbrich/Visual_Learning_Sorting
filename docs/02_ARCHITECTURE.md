@@ -1,66 +1,93 @@
-# 02 ARCHITECTURE - MVC, Tick Model, Runtime
+# 02 ARCHITECTURE - MVC, Pygame Sprites, Independent Queues
+
+## Directory Tree
+
+```text
+src/visualizer/
+├── main.py                 # App entry point, config loading, and root Controller instantiation
+├── models/
+│   ├── contracts.py        # SortResult, OpType, BaseSortAlgorithm
+│   ├── bubble.py           # BubbleSort implementation
+│   ├── insertion.py        # InsertionSort implementation
+│   ├── merge.py            # MergeSort implementation
+│   └── selection.py        # SelectionSort implementation
+├── views/
+│   ├── window.py           # Pygame display init and master 2x2 grid layout
+│   ├── panel.py            # Individual algorithm rendering frame and UI counters
+│   └── sprite.py           # NumberSprite class containing dt interpolation math
+└── controllers/
+    └── orchestrator.py     # Independent queue management, operation timing, and event loop
+```
 
 ## Architecture Style
 
 Strict MVC under `src/visualizer/`.
 
-- `models/`: algorithms + shared data contracts.
-- `views/`: rendering/theme/layout/UI widgets.
-- `controllers/`: app lifecycle, input handling, global tick orchestration.
+- `models/`: algorithms + shared data contracts. Logic is strictly isolated here.
+- `views/`: Pygame rendering, UI layouts, and the `NumberSprite` entity system. Theme utilizes Option B (each panel has an accent color tinted per algorithm).
+- `controllers/`: app lifecycle, input handling, and independent queue orchestration.'
+- main.py owns the pygame event loop.
+- Controller exposes update(dt).
+- View exposes render().
 
-No import bleeding across layers beyond required contracts.
+## Runtime Model: The Decoupled Race
 
-## Runtime Model
+The execution operates on two parallel, decoupled tracks:
 
-- Pygame loop runs continuously.
-- Controller owns global app state (`paused`, speed multiplier, active generators, current panel states).
-- On each render frame:
+1. **Render Track (The View):** A high-frequency Pygame `while True:` loop runs continuously (e.g., 60 FPS). On every frame, it calculates the delta-time (`dt`) and calls `update(dt)` on all active Sprite entities, ensuring smooth visual interpolation regardless of algorithm state.
+2. **Logical Track (The Controller):** The Controller manages four independent algorithm queues. It pulls `SortResult` yields from each algorithm and assigns a simulated time cost (in milliseconds) to each operation. It dispatches target `(x, y)` commands to the Sprites and waits for the operation cost duration to elapse before pulling the next yield.
 
-1. Process events.
-2. If not paused and time accumulator >= `tick_interval_ms`, advance exactly one global tick (one `next()` per active algorithm) and reset accumulator (see `06_BEHAVIOR_SPEC.md` Tick Timing).
-3. Render full frame from current states.
+### Each panel maintains
 
-## Global Tick Semantics
+- current_operation_remaining_ms
+- pending_generator
 
-- A global tick is one controller advance cycle.
-- During one global tick, each active algorithm generator is advanced once (`next(gen)` exactly once).
-- Completed/failed algorithms are skipped in later ticks.
-- This enables direct visual cadence comparison without time skew.
+Controller subtracts dt each frame.
+When <=0, next SortResult is requested.
+
+## Independent Queue Semantics
+
+- Each active algorithm generator is advanced based on its own elapsed simulated time, not a global clock.
+- Fast algorithms will exhaust their queues and reach terminal states before slower algorithms.
+- Completed/failed algorithms stop their individual timers but remain visually static on screen.
+- This enables a true side-by-side race where the speed of completion directly reflects the algorithm's operational efficiency.
 
 ## Component Boundaries
 
 ### Model Responsibilities
 
-- Maintain algorithm-local mutable array copy.
+- Maintain an algorithm-local mutable array copy.
 - Yield `SortResult` for every atomic operation and terminal state.
-- Never mutate View or Controller state.
+- Never execute rendering logic or mutate View state.
 
 ### View Responsibilities
 
-- Purely render from latest `SortResult` values.
-- Keep panel-local counters and visual states.
-- Never execute algorithm logic.
+The controller/view computes sprite movement by comparing prior logical index ownership to the new logical index ownership after each tick. Sprite-to-slot mapping must never rely on raw value matching.
+
+- Maintain `NumberSprite` objects (tracking value, exact floating-point `(x, y)` coords, and target coords).
+- Execute linear interpolation formulas to move sprites smoothly over the `dt` window.
+- Dynamically calculate resting layout coordinates based on the active Option C orientation flag.
 
 ### Controller Responsibilities
 
-- Instantiate models with shared initial data copied per model.
-- Own generator lifecycle and halt policy (`success=False` or `is_complete=True`).
-- Translate UI events into control state changes.
+- Instantiate models with shared initial data.
+- Map `SortResult` actions to specific physical destinations and simulated time costs.
+- Track independent elapsed time for each panel to simulate the "race".
 
 ## Error Model
 
 - Domain and algorithm-flow failures must be represented by `SortResult(success=False, ...)`.
 - Controller must not crash app for one algorithm failure; it deactivates that algorithm and continues others.
-- Unexpected runtime exceptions may be logged and converted to failure state where practical.
 
-## Config + Runtime Targets
+## Config + Runtime Targets (Option C)
 
-- Default target: landscape 1280x720.
-- Alternate supported target: portrait 720x996.
-- Same layout logic (2x2) for both targets.
+- Landscape target: `1280x720`.
+- Portrait target: `720x996`.
+- Target is determined via a config flag. The View dynamically calculates origin `(x, y)` baseline slots for the arrays based on the active resolution.
+- Extensibility Rules: New algorithms must implement `BaseSortAlgorithm` and `sort_generator` contract. Max simultaneous displayed algorithms remains 4 in v1.
 
-## Extensibility Rules
+## Sprite Identity
 
-- New algorithms must implement `BaseSortAlgorithm` and `sort_generator` contract.
-- UI must remain contract-driven; no algorithm-specific logic in panel rendering.
-- Max simultaneous displayed algorithms remains 4 in v1.
+- Sprites represent array positions, not values.
+- Each sprite has a stable ID created at initialization.
+  
