@@ -1,6 +1,8 @@
 # 03 DATA CONTRACTS - Canonical Source
 
 This file is the single source of truth for algorithm/controller/view runtime contracts.
+Indices must be unique.
+Order has no semantic meaning.
 
 ## SortResult (Definitive)
 
@@ -38,6 +40,7 @@ class SortResult:
 - `array_state`
   - Required on successful non-terminal and terminal ticks.
   - Optional (`None`) on failure ticks.
+  - Failure ticks must include the most recent array_state if available.
   - Must be an immutable snapshot copy at yield time (`self.data.copy()`).
 - `highlight_indices`
   - Optional tuple of indices to accent for current tick.
@@ -86,6 +89,7 @@ Each algorithm generator must:
 - Yield at every atomic operation.
 - Yield exactly one terminal completion tick on success.
 - Yield failure tick and stop on unrecoverable domain failure.
+- Generators must terminate naturally after emitting the final tick.
 - Avoid `yield from` for recursive failure bubbling where explicit checking is required by design.
 - On empty input (`len(data) == 0`), yield exactly one failure tick (`success=False`, `message` explaining empty input) and stop. No completion tick is emitted.
 
