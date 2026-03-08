@@ -60,9 +60,16 @@ All items below must pass:
 - Verify that swaps (Bubble, Selection) utilize a `y`-axis arc to prevent visual collisions.
 - Verify that elements do not "teleport" or snap abruptly unless the user pauses or steps mid-animation.
 
-### AT-08 Duplicate value arrays
+### AT-08 Duplicate Value Stability
 
-- animate without sprite identity confusion.
+Use dataset: [3,1,3,2,1,2,3]
+
+Verify:
+
+- Duplicate values remain visually distinct sprites
+- No sprite disappears or duplicates visually
+- Final sorted array preserves multiset equality
+- All sprites maintain stable animation behavior
 
 ## Automated Acceptance Intent (for `tests/`)
 
