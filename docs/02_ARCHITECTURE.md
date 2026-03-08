@@ -62,7 +62,7 @@ When <=0, next SortResult is requested.
 
 ### View Responsibilities
 
-The View layer MUST maintain a persistent list of NumberSprite objects initialized at startup. When receiving a new SortResult.array_state, the View MUST NOT destroy and recreate sprites. Instead, it must map the values in the new array_state to the existing NumberSprite instances and invoke their set_target(new_x, new_y) methods to initiate the tweening.
+The controller/view computes sprite movement by comparing prior logical index ownership to the new logical index ownership after each tick. Sprite-to-slot mapping must never rely on raw value matching.
 
 - Maintain `NumberSprite` objects (tracking value, exact floating-point `(x, y)` coords, and target coords).
 - Execute linear interpolation formulas to move sprites smoothly over the `dt` window.
