@@ -88,6 +88,39 @@ The controller/view computes sprite movement by comparing prior logical index ow
 
 ## Sprite Identity
 
-- Sprites represent array positions, not values.
-- Each sprite has a stable ID created at initialization.
-  
+- Sprite instances represent logical array positions, not values.
+- Each sprite has a permanent ID created at initialization.
+- When a SortResult provides a new array_state, the controller/view computes which logical index each sprite must move to based on index transitions between the previous and new array states.
+- Sprite movement must never rely on value matching because duplicate values may exist.
+
+## Panel Runtime State Machine
+
+Each panel maintains one of the following states:
+
+- idle_paused
+- animating_operation
+- waiting_for_next_tick
+- completed
+- failed
+
+State transitions:
+
+idle_paused → waiting_for_next_tick when Play begins  
+waiting_for_next_tick → animating_operation when a SortResult is fetched  
+animating_operation → waiting_for_next_tick when animation finishes  
+waiting_for_next_tick → completed when completion tick received  
+waiting_for_next_tick → failed when failure tick received
+
+## Operation Timing
+
+Each panel maintains:
+
+- current_operation_remaining_ms
+- pending_generator
+- elapsed_time_ms
+
+During each frame:
+
+1. Controller subtracts dt from current_operation_remaining_ms.
+2. When remaining time ≤ 0, the next SortResult is requested.
+3. The SortResult.operation_type determines the duration of the next animation.
