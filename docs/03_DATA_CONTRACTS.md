@@ -26,6 +26,12 @@ class SortResult:
     highlight_indices: tuple[int, ...] | None = None
 ```
 
+COMPARE → highlight only, no sprite position change
+SWAP → exchange two sprite home slots with arc path, duration = T2
+SHIFT → source/destination horizontal slide, duration = T2
+RANGE → highlight contiguous range only, no sprite displacement
+TERMINAL → no motion; apply completion styling
+
 ## Field Semantics
 
 - `success`
