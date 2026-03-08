@@ -49,7 +49,7 @@ Scope: This spec locks the visual and compositional behavior for v1 UI, grounded
 - The control bar contains four buttons:
   - Play/Pause
   - Step
-  - Restart 
+  - Restart
   - Speed
 
 Button dimensions:
@@ -59,7 +59,6 @@ height = 32 px
 Spacing between buttons: 16 px
 
 Buttons are centered horizontally inside the control bar.
-
 
 ## 3) Typography Rules (Locked)
 
