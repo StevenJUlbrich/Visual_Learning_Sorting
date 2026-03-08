@@ -14,7 +14,7 @@ An educational desktop visualizer that shows four sorting algorithms running con
 ## Target User Experience
 
 - User opens app and sees a clean 2x2 grid with all algorithms ready.
-- App starts paused so the user can inspect the initial identical array states.
+- App starts paused so the user can inspect the initial identical array states with the array being [7,6,5,4,3,2,1]
 - User presses Play, and all four algorithms begin animating simultaneously. Faster algorithms (like Merge Sort) physically complete their operations and halt their timers earlier than slower ones (like Bubble Sort).
 - User can pause mid-animation, step through logical operations, and change playback speed.
 
@@ -23,10 +23,12 @@ An educational desktop visualizer that shows four sorting algorithms running con
 ### In Scope (v1)
 
 - 4 fixed algorithms: Bubble, Selection, Insertion, Merge.
+- The array will be [7,6,5,4,3,2,1] for all algorithms.
 - Pygame `Sprite` entity system for continuous `(x, y)` coordinate interpolation.
 - Independent operation queues and visual timers.
 - On-screen controls + keyboard shortcuts.
 - Two supported resolutions via a config flag (Option C): 1280x720 (landscape) and 720x996 (portrait).
+- Animations follow the motion contracts defined in 10_ANIMATION_SPEC.md.
 
 ### Out of Scope (v1)
 
