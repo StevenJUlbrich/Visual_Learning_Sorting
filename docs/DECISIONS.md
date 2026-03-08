@@ -34,7 +34,7 @@
 * **D-026 Control bar layout:** fixed 48px control bar at bottom of window.
 * **D-027 Branding:** standalone identity "Learn Visual - Expand Knowledge".
 * **D-028 Secondary counters:** panels display comparisons and writes counters.
-* **D-029 Render loop (REPLACED):** Render loop uses pygame.time.Clock tick-based dt. updates for the Sprite entities, completely decoupled from logical algorithm progression.
+* **D-029 Render loop:** Application uses a pygame.time.Clock based render loop. Each frame computes delta-time (dt) used for sprite interpolation.
 
 ## Deferred
 
