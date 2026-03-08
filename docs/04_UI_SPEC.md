@@ -37,14 +37,29 @@ Scope: This spec locks the visual and compositional behavior for v1 UI, grounded
   - Bottom-right: `(PADDING * 2 + panel_width, PADDING * 2 + panel_height)`
 - Control bar position:
   - Anchored at `y = window_height - CONTROL_BAR_HEIGHT`, full window width, centered content.
-- Buttons:
-  - Evenly distributed horizontally with 16px spacing.
 
 ### 2.4 Panel Geometry
 
 - Panel container background uses rounded corners.
 - Corner radius token: `PANEL_RADIUS = 12`.
 - Error state keeps the same radius and adds a border overlay.
+
+### 2.5 Control Button Layout
+
+- The control bar contains four buttons:
+  - Play/Pause
+  - Step
+  - Restart 
+  - Speed
+
+Button dimensions:
+width = 120 px
+height = 32 px
+
+Spacing between buttons: 16 px
+
+Buttons are centered horizontally inside the control bar.
+
 
 ## 3) Typography Rules (Locked)
 
