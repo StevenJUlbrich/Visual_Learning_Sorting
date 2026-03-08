@@ -37,6 +37,15 @@ Animations must never "teleport" except when the application is paused or steppe
 - Two supported resolutions via a config flag (Option C): 1280x720 (landscape) and 720x996 (portrait).
 - Animations follow the motion contracts defined in 10_ANIMATION_SPEC.md.
 
+### Default Dataset
+
+The visualizer always initializes with the fixed array:
+
+[7, 6, 5, 4, 3, 2, 1]
+
+Array size for v1 is always 7 elements.
+No runtime array editing exists in v1.
+
 ### Out of Scope (v1)
 
 - Custom arrays or user input.
