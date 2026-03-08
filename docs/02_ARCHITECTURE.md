@@ -16,7 +16,8 @@ src/visualizer/
 │   ├── panel.py            # Individual algorithm rendering frame and UI counters
 │   └── sprite.py           # NumberSprite class containing dt interpolation math
 └── controllers/
-    └── orchestrator.py     # Independent queue management, operation timing, and event loop```
+    └── orchestrator.py     # Independent queue management, operation timing, and event loop
+```
 
 ## Architecture Style
 
@@ -24,7 +25,10 @@ Strict MVC under `src/visualizer/`.
 
 - `models/`: algorithms + shared data contracts. Logic is strictly isolated here.
 - `views/`: Pygame rendering, UI layouts, and the `NumberSprite` entity system. Theme utilizes Option B (each panel has an accent color tinted per algorithm).
-- `controllers/`: app lifecycle, input handling, and independent queue orchestration.
+- `controllers/`: app lifecycle, input handling, and independent queue orchestration.'
+- main.py owns the pygame event loop.
+- Controller exposes update(dt).
+- View exposes render().
 
 ## Runtime Model: The Decoupled Race
 
@@ -32,6 +36,14 @@ The execution operates on two parallel, decoupled tracks:
 
 1. **Render Track (The View):** A high-frequency Pygame `while True:` loop runs continuously (e.g., 60 FPS). On every frame, it calculates the delta-time (`dt`) and calls `update(dt)` on all active Sprite entities, ensuring smooth visual interpolation regardless of algorithm state.
 2. **Logical Track (The Controller):** The Controller manages four independent algorithm queues. It pulls `SortResult` yields from each algorithm and assigns a simulated time cost (in milliseconds) to each operation. It dispatches target `(x, y)` commands to the Sprites and waits for the operation cost duration to elapse before pulling the next yield.
+
+### Each panel maintains
+
+- current_operation_remaining_ms
+- pending_generator
+
+Controller subtracts dt each frame.
+When <=0, next SortResult is requested.
 
 ## Independent Queue Semantics
 
@@ -73,3 +85,9 @@ The View layer MUST maintain a persistent list of NumberSprite objects initializ
 - Portrait target: `720x996`.
 - Target is determined via a config flag. The View dynamically calculates origin `(x, y)` baseline slots for the arrays based on the active resolution.
 - Extensibility Rules: New algorithms must implement `BaseSortAlgorithm` and `sort_generator` contract. Max simultaneous displayed algorithms remains 4 in v1.
+
+## Sprite Identity
+
+- Sprites represent array positions, not values.
+- Each sprite has a stable ID created at initialization.
+  
