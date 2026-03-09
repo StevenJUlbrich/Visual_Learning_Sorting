@@ -2,22 +2,21 @@
 
 ## Directory Tree
 
-```text
-src/visualizer/
-├── main.py                 # App entry point, config loading, and root Controller instantiation
-├── models/
-│   ├── contracts.py        # SortResult, OpType, BaseSortAlgorithm
-│   ├── bubble.py           # BubbleSort implementation
-│   ├── insertion.py        # InsertionSort implementation
-│   ├── merge.py            # MergeSort implementation
-│   └── selection.py        # SelectionSort implementation
-├── views/
-│   ├── window.py           # Pygame display init and master 2x2 grid layout
-│   ├── panel.py            # Individual algorithm rendering frame and UI counters
-│   └── sprite.py           # NumberSprite class containing dt interpolation math
-└── controllers/
-    └── orchestrator.py     # Independent queue management, operation timing, and event loop
-```
+`src/visualizer/`
+├── `main.py`                 # App entry point, config loading, and root Controller instantiation
+├── `models/`
+│   ├── `contracts.py`        # SortResult, OpType, BaseSortAlgorithm
+│   ├── `bubble.py`           # BubbleSort implementation
+│   ├── `insertion.py`        # InsertionSort implementation
+│   ├── `heap.py`             # HeapSort implementation
+│   └── `selection.py`        # SelectionSort implementation
+├── `views/`
+│   ├── `window.py`           # Pygame display init and master proportional layout
+│   ├── `panel.py`            # Individual algorithm rendering frame and UI counters
+│   ├── `sprite.py`           # NumberSprite class containing time-normalized easing math
+│   └── `easing.py`           # Mathematical curves for fluid animation
+└── `controllers/`
+    └── `orchestrator.py`     # Independent queue management, operation timing, and event loop
 
 ## Architecture Style
 
@@ -25,7 +24,7 @@ Strict MVC under `src/visualizer/`.
 
 - `models/`: algorithms + shared data contracts. Logic is strictly isolated here.
 - `views/`: Pygame rendering, UI layouts, and the `NumberSprite` entity system. Theme utilizes Option B (each panel has an accent color tinted per algorithm).
-- `controllers/`: app lifecycle, input handling, and independent queue orchestration.'
+- `controllers/`: app lifecycle, input handling, and independent queue orchestration.
 - main.py owns the pygame event loop.
 - Controller exposes update(dt).
 - View exposes render().
@@ -34,7 +33,7 @@ Strict MVC under `src/visualizer/`.
 
 The execution operates on two parallel, decoupled tracks:
 
-1. **Render Track (The View):** A high-frequency Pygame `while True:` loop runs continuously (e.g., 60 FPS). On every frame, it calculates the delta-time (`dt`) and calls `update(dt)` on all active Sprite entities, ensuring smooth visual interpolation regardless of algorithm state.
+1. **Render Track (The View):** A high-frequency Pygame `while True:` loop runs continuously. On every frame, it calculates the delta-time (`dt`) and calls `update(dt)` on all active Sprite entities, ensuring smooth visual easing regardless of algorithm state.
 2. **Logical Track (The Controller):** The Controller manages four independent algorithm queues. It pulls `SortResult` yields from each algorithm and assigns a simulated time cost (in milliseconds) to each operation. It dispatches target `(x, y)` commands to the Sprites and waits for the operation cost duration to elapse before pulling the next yield.
 
 ### Each panel maintains
@@ -65,8 +64,8 @@ When <=0, next SortResult is requested.
 The controller/view computes sprite movement by comparing prior logical index ownership to the new logical index ownership after each tick. Sprite-to-slot mapping must never rely on raw value matching.
 
 - Maintain `NumberSprite` objects (tracking value, exact floating-point `(x, y)` coords, and target coords).
-- Execute linear interpolation formulas to move sprites smoothly over the `dt` window.
-- Dynamically calculate resting layout coordinates based on the active Option C orientation flag.
+- Execute time-normalized easing functions (e.g., quadratic ease-in-out) to move sprites smoothly and naturally, decoupling physical destination mapping from strict frame-rate integration.
+- Dynamically calculate resting layout coordinates based on the active resolution proportions.
 
 ### Controller Responsibilities
 
@@ -79,11 +78,9 @@ The controller/view computes sprite movement by comparing prior logical index ow
 - Domain and algorithm-flow failures must be represented by `SortResult(success=False, ...)`.
 - Controller must not crash app for one algorithm failure; it deactivates that algorithm and continues others.
 
-## Config + Runtime Targets (Option C)
+## Config + Runtime Targets
 
-- Landscape target: `1280x720`.
-- Portrait target: `720x996`.
-- Target is determined via a config flag. The View dynamically calculates origin `(x, y)` baseline slots for the arrays based on the active resolution.
+- Proportional geometry target. The View calculates `x` and `y` baselines, padding, and sprite dimensions dynamically as percentages of the active window resolution defined in `config.toml` (e.g., standard 1080p support).
 - Extensibility Rules: New algorithms must implement `BaseSortAlgorithm` and `sort_generator` contract. Max simultaneous displayed algorithms remains 4 in v1.
 
 ## Sprite Identity
@@ -105,10 +102,10 @@ Each panel maintains one of the following states:
 
 State transitions:
 
-idle_paused → waiting_for_next_tick when Play begins  
-waiting_for_next_tick → animating_operation when a SortResult is fetched  
-animating_operation → waiting_for_next_tick when animation finishes  
-waiting_for_next_tick → completed when completion tick received  
+idle_paused → waiting_for_next_tick when Play begins
+waiting_for_next_tick → animating_operation when a SortResult is fetched
+animating_operation → waiting_for_next_tick when animation finishes
+waiting_for_next_tick → completed when completion tick received
 waiting_for_next_tick → failed when failure tick received
 
 ## Operation Timing

@@ -16,15 +16,14 @@ Scope: This spec locks the visual and compositional behavior for v1 UI, grounded
 
 ### 2.2 Supported Window Sizes
 
-- Default: `1280x720` (landscape).
-- Alternate: `720x996` (portrait).
+- Dynamic target based on `config.toml` window resolution.
 
 ### 2.3 Grid Layout
 
 - Main visualization area is always a `2x2` panel grid.
-- The grid manager uses these spacing/sizing tokens:
-  - `PADDING = 20`
-  - `CONTROL_BAR_HEIGHT = 48` (reserved at bottom of window for on-screen controls)
+- The grid manager eliminates hardcoded magic numbers and uses these proportional spacing tokens calculated dynamically from window dimensions:
+  - `PADDING = window_width * 0.015`
+  - `CONTROL_BAR_HEIGHT = window_height * 0.07` (reserved at bottom of window for on-screen controls)
 - The grid occupies the space above the control bar:
   - `grid_height = window_height - CONTROL_BAR_HEIGHT - PADDING`
 - Panel dimensions are computed dynamically:
@@ -40,25 +39,18 @@ Scope: This spec locks the visual and compositional behavior for v1 UI, grounded
 
 ### 2.4 Panel Geometry
 
-- Panel container background uses rounded corners.
+- Panel container background uses `pygame.draw.rect(..., border_radius=PANEL_RADIUS)` for rounded corners. No surface clipping mask is required; child elements (text, sprites) are positioned within the panel rect insets and do not need to be clipped to the rounded edge.
 - Corner radius token: `PANEL_RADIUS = 12`.
 - Error state keeps the same radius and adds a border overlay.
 
 ### 2.5 Control Button Layout
 
-- The control bar contains four buttons:
+- The control bar contains three buttons:
   - Play/Pause
   - Step
   - Restart
-  - Speed
 
-Button dimensions:
-width = 120 px
-height = 32 px
-
-Spacing between buttons: 16 px
-
-Buttons are centered horizontally inside the control bar.
+Buttons scale proportionally or center horizontally inside the control bar with equal padding.
 
 ## 3) Typography Rules (Locked)
 
@@ -79,6 +71,13 @@ Buttons are centered horizontally inside the control bar.
 ### 3.3 Text Rendering Quality
 
 - All text rendering must use anti-aliasing (`antialias=True`).
+
+### 3.4 Font Surface Caching
+
+- Each `NumberSprite` must pre-render and cache its text surfaces for each color state it can display: default array color, panel accent (highlight) color, completion color, and settled/extracted color.
+- Cached surfaces are created once at sprite initialization (and again on restart).
+- During rendering, the sprite selects the appropriate pre-cached surface based on its current visual state rather than calling `font.render()` every frame.
+- This eliminates redundant anti-aliased text rendering across 28 sprites at 60 FPS.
 
 ## 4) Per-Panel Composition (Locked)
 
@@ -101,12 +100,17 @@ Each algorithm panel contains the following UI regions and elements:
 ### 4.3 Array Rendering Region
 
 - Numbers only (no bars).
-- Horizontal spacing uses internal array padding token: `ARRAY_X_PADDING = 40`.
+- Horizontal spacing uses internal array padding proportional token: `ARRAY_X_PADDING = panel_width * 0.05`.
 - Number slots are evenly distributed across available width.
 - Numbers are centered in their slot. (`slot_width = (panel_width - ARRAY_X_PADDING*2) / array_size`)
 - Vertical anchor defaults to panel center (`rect.y + rect.height // 2`).
 
-### 4.4 State Overlays
+### 4.4 Panel Surface Strategy
+
+- Each panel draws directly to the main display surface. Panels do not use independent `pygame.Surface` objects or `subsurface`.
+- Rounded corners are achieved via `pygame.draw.rect` with `border_radius`. Child elements are positioned within insets and do not require clipping.
+
+### 4.5 State Overlays
 
 - Completion state: all numbers in completion color.
 - Error state: red border + readable failure message (`"Failed: ..."`).
@@ -130,12 +134,13 @@ Rationale from planning + Brick 4:
 - Default array value: `(100, 150, 255)`
 - Complete state: `(80, 220, 120)`
 - Error state: `(235, 80, 80)`
+- Settled/extracted (Heap Sort): `(60, 90, 155)` — dimmed variant of default array color, applied to elements that have left the active heap
 
 ### 5.2 Algorithm Accent Mapping
 
 - Bubble: `(0, 255, 255)` (cyan)
 - Insertion: `(255, 0, 255)` (magenta)
-- Merge: `(170, 0, 255)` (purple)
+- Heap: `(255, 140, 0)` (orange)
 - Selection: `(255, 80, 80)` (red)
 
 Mapping is fixed by algorithm name and does not rotate at runtime.
@@ -160,7 +165,6 @@ Mapping is fixed by algorithm name and does not rotate at runtime.
   - Play/Pause
   - Step
   - Restart
-  - Speed toggle (`1x -> 1.5x -> 2x`)
 - Keyboard shortcuts must mirror these controls.
 
 ## 8) Explicit Non-Goals for UI v1

@@ -2,7 +2,7 @@
 
 ## Startup Behavior
 
-- App initializes all four algorithms with identical initial array `[7, 6, 5, 4, 3, 2, 1]`.
+- App initializes all four algorithms with identical initial array `[4, 7, 2, 6, 1, 5, 3]`.
 - App starts in the paused state.
 - Initial frame renders panels, base sprites, and metadata (0 steps, 0.00s elapsed).
 
@@ -11,40 +11,36 @@
 ### Play/Pause
 
 - **Play:** Begins the independent time accumulators for all active queues, starting the race. Sprites begin interpolating.
-- **Pause:** Freezes all time accumulators immediately. Active sprites pause their `dt` interpolation and hold their exact mid-air `(x, y)` positions.
+- **Pause:** Freezes all time accumulators immediately. Active sprites pause their time-normalized movement and hold their exact mid-air `(x, y)` positions. All visual state is frozen: sprite positions, highlight colors, and the panel message line. No tick is re-fetched or restarted on resume — animation continues from the exact interrupted point with remaining duration.
 
 ### Step
 
 - Enabled only while paused.
+- Step input is **ignored** while a step animation is still in progress. The user must wait for the current step animation to complete before stepping again.
 - "Step" forces every active algorithm to advance its queue to the conclusion of its *current* pending logical operation, smoothly animating the sprites to their final target positions for that specific move before pausing again.
-- A single Step action processes exactly one newly fetched SortResult per active algorithm panel. If that tick produces motion, the app animates that motion to completion, then immediately returns to paused state.
-
-### Speed Toggle
-
-- Cycles deterministic multipliers: `1.0x` → `1.5x` → `2.0x` → `1.0x`.
-- Mathematically divides the operation time costs (e.g., a 400ms swap takes 200ms at 2.0x speed).
-- Speed changes apply immediately to any in-progress operation.
-- Remaining animation duration scales according to the new multiplier.
+- A single Step action processes exactly one newly fetched SortResult per active algorithm panel. If that tick produces motion, the app animates that motion to completion using the **same operation duration and easing as play mode** (e.g., 400ms for a swap), then immediately returns to paused state.
 
 ### Restart
 
 - Re-initializes all models, queues, panel counters, and elapsed timers.
 - Uses original initial array values.
-- Returns app to paused state.
+- If sprites are mid-animation, all positions **snap instantly** to the initial array layout. There is no animated return. All animation state (elapsed time, interpolation progress, highlights) is discarded.
+- Returns app to paused state with a clean initial frame.
 
 ## Racing and Operation Timing
 
-Time is driven by operation cost. Base costs at `1.0x` speed:
+Time is driven by absolute simulated operation costs:
 
 - **Compare Operation (`T1`):** `150ms` simulated cost.
 - **Write/Swap Operation (`T2`):** `400ms` simulated cost (allows time for physical sprite interpolation).
-- **Range Emphasis (`T3`):** `200ms` simulated cost.
+- **Range Emphasis (`T3`):** `200ms` simulated cost — used by Heap Sort to display the active heap boundary before each extraction swap.
 
 The View tracks and displays an `Elapsed Time` metric formatted to two decimal places (e.g., `03.45s`) for each panel.
 
 ## Tick and Counting Behavior
 
-- A panel "step" increments strictly upon receiving a `SortResult` where `success=True` and `is_complete=False`.
+- A panel "step" increments strictly upon receiving a `SortResult` where `success=True`, `is_complete=False`, and `operation_type` is **not** `OpType.RANGE`.
+- T3 Range Emphasis ticks (used by Heap Sort for boundary display) do **not** increment the step count. They are a visual teaching aid, not an algorithmic operation.
 - Completion ticks (`is_complete=True`) and failure ticks do not increment the step count.
 - Upon completion, the panel's elapsed timer permanently halts, proving its final "race" time.
 
@@ -71,5 +67,4 @@ The View tracks and displays an `Elapsed Time` metric formatted to two decimal p
 | `Space` | Play / Pause |
 | `Right Arrow` | Step (resolve current operation, only while paused) |
 | `R` | Restart |
-| `S` | Speed cycle (1x → 1.5x → 2x → 1x) |
 | `Escape` | Quit app cleanly |
