@@ -38,7 +38,7 @@ Time is driven by operation cost. Base costs at `1.0x` speed:
 
 - **Compare Operation (`T1`):** `150ms` simulated cost.
 - **Write/Swap Operation (`T2`):** `400ms` simulated cost (allows time for physical sprite interpolation).
-- **Range Emphasis (`T3`):** `200ms` simulated cost.
+- **Range Emphasis (`T3`):** `200ms` simulated cost — used by Heap Sort to display the active heap boundary before each extraction swap.
 
 The View tracks and displays an `Elapsed Time` metric formatted to two decimal places (e.g., `03.45s`) for each panel.
 
