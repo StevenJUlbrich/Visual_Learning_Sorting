@@ -57,7 +57,7 @@ All items below must pass:
 ### AT-07 Sprite Motion and Tweening Smoothness
 
 - During Play, observe the physical movement of the sprites.
-- Verify that swaps (Bubble, Selection) utilize a `y`-axis arc to prevent visual collisions.
+- Verify that swaps (Bubble, Selection, Heap) utilize a `y`-axis arc to prevent visual collisions.
 - Verify that elements do not "teleport" or snap abruptly unless the user pauses or steps mid-animation.
 
 ### AT-08 Duplicate Value Stability
@@ -66,10 +66,23 @@ Use dataset: [3,1,3,2,1,2,3]
 
 Verify:
 
-- Duplicate values remain visually distinct sprites
-- No sprite disappears or duplicates visually
-- Final sorted array preserves multiset equality
-- All sprites maintain stable animation behavior
+- Duplicate values remain visually distinct sprites.
+- No sprite disappears or duplicates visually.
+- Final sorted array preserves multiset equality.
+- All sprites maintain stable animation behavior.
+
+### AT-09 Heap Sort Two-Phase Visual Distinction
+
+- Run Heap Sort panel to completion.
+- Verify that T3 Range Emphasis ticks are visible at the start of each extraction step, showing the shrinking active heap boundary highlighted in the panel accent color (orange).
+- Verify that after the final extraction, all sprites are in ascending order and the completion color is applied to the full array.
+- Verify that all Heap Sort motion remains in-place on the main array row (no auxiliary row animation).
+
+### AT-10 Heap Sort Phase Correctness
+
+- Run Heap Sort panel to completion.
+- Verify the Build Max-Heap phase completes before any extraction swap occurs (no element is swapped to its sorted position before the full heap is constructed).
+- Verify the sorted region (right side of array) grows by one element per extraction step.
 
 ## Automated Acceptance Intent (for `tests/`)
 
@@ -90,3 +103,10 @@ Verify:
 
 - Assert the Controller accurately calculates total simulated elapsed time based on predefined operation costs (`T1`, `T2`, `T3`).
 - On a completion tick, assert only that algorithm deactivates and its timer halts.
+
+### D) Heap Sort Phase Contract
+
+- Consume the Heap Sort generator for a known fixture (e.g., `[7, 6, 5, 4, 3, 2, 1]`).
+- Assert at least one `T3 Range Emphasis Tick` is emitted (active heap boundary display).
+- Assert T3 ticks only appear during Phase 2 (extraction), never during Phase 1 (build max-heap).
+- Assert that each T3 tick's `highlight_indices` forms the contiguous range `tuple(range(0, k))` for a strictly decreasing `k`.
