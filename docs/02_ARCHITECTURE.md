@@ -12,20 +12,21 @@ src/visualizer/
 │   ├── heap.py             # HeapSort implementation
 │   └── selection.py        # SelectionSort implementation
 ├── views/
-│   ├── window.py           # Pygame display init and master 2x2 grid layout
+│   ├── window.py           # Pygame display init and master proportional layout
 │   ├── panel.py            # Individual algorithm rendering frame and UI counters
-│   └── sprite.py           # NumberSprite class containing dt interpolation math
+│   ├── sprite.py           # NumberSprite class containing time-normalized easing math
+│   └── easing.py           # Mathematical curves for fluid animation
 └── controllers/
     └── orchestrator.py     # Independent queue management, operation timing, and event loop
 ```
 
 ## Architecture Style
 
-Strict MVC under `src/visualizer/`.
+Strict MVC under src/visualizer/.
 
-- `models/`: algorithms + shared data contracts. Logic is strictly isolated here.
-- `views/`: Pygame rendering, UI layouts, and the `NumberSprite` entity system. Theme utilizes Option B (each panel has an accent color tinted per algorithm).
-- `controllers/`: app lifecycle, input handling, and independent queue orchestration.'
+- models/: algorithms + shared data contracts. Logic is strictly isolated here.
+- views/: Pygame rendering, UI layouts, and the NumberSprite entity system. Theme utilizes Option B (each panel has an accent color tinted per algorithm).
+- controllers/: app lifecycle, input handling, and independent queue orchestration.
 - main.py owns the pygame event loop.
 - Controller exposes update(dt).
 - View exposes render().
@@ -34,7 +35,7 @@ Strict MVC under `src/visualizer/`.
 
 The execution operates on two parallel, decoupled tracks:
 
-1. **Render Track (The View):** A high-frequency Pygame `while True:` loop runs continuously (e.g., 60 FPS). On every frame, it calculates the delta-time (`dt`) and calls `update(dt)` on all active Sprite entities, ensuring smooth visual interpolation regardless of algorithm state.
+1. **Render Track (The View):** A high-frequency Pygame `while True:` loop runs continuously. On every frame, it calculates the delta-time (dt) and calls update(dt) on all active Sprite entities, ensuring smooth visual easing regardless of algorithm state.
 2. **Logical Track (The Controller):** The Controller manages four independent algorithm queues. It pulls `SortResult` yields from each algorithm and assigns a simulated time cost (in milliseconds) to each operation. It dispatches target `(x, y)` commands to the Sprites and waits for the operation cost duration to elapse before pulling the next yield.
 
 ### Each panel maintains

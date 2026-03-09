@@ -14,7 +14,7 @@ An educational desktop visualizer that shows four sorting algorithms running con
 ## Target User Experience
 
 - User opens app and sees a clean 2x2 grid with all algorithms ready.
-- App starts paused so the user can inspect the initial identical array states with the array being [7,6,5,4,3,2,1]
+- App starts paused so the user can inspect the initial identical array states with the array being [7,6,5,4,3,2,1].
 - User presses Play, and all four algorithms begin animating simultaneously. Faster algorithms physically complete their operations and halt their timers earlier than slower ones.
 - User can pause mid-animation and step through logical operations. (Speed controls have been removed to ensure animation stability).
 
