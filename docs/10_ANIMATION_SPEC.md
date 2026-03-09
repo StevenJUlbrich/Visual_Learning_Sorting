@@ -23,7 +23,16 @@ Scope: Defines how the Pygame View layer translates discrete logical operations 
 - **Motion (Shift):** Shifted elements slide horizontally.
 - **Motion (Drop):** The held key smoothly returns to the base `y` line at its newly sorted index.
 
-### 2.3 Merge Sort (Auxiliary Array)
+### 2.3 Heap Sort (In-Place Swaps with Boundary Highlight)
 
-- **Action:** Elements are sorted into a temporary array segment.
-- **Motion:** The View defines an auxiliary `y` row below the main array. Sprites involved in the active merge segment drop to this row, sort horizontally, and then the entire group slides back up to the primary `y` line upon completion.
+- **Action:** Two elements exchange indices during sift-down or root extraction.
+- **Motion:** Identical arc swap motion to Bubble and Selection Sort — both sprites interpolate their `x` coordinates to each other's home position. Left sprite arcs upward, right sprite arcs downward.
+- **Heap Boundary Emphasis (T3):** On a Range Emphasis tick, the sprites at indices `0..heap_size-1` briefly render in the panel accent color (orange) for the T3 duration (200ms) with no positional change. This visually communicates the active heap region to the learner.
+- **No auxiliary row:** All Heap Sort motion occurs on the main array `y` row. There is no secondary animation row for Heap Sort.
+
+#### Heap Sort Extraction Visual Sequence (per extraction step)
+
+1. T3 tick fires: indices `0..end` flash accent color for 200ms (no movement).
+2. T2 swap tick fires: root (index 0) and end (index `end`) exchange positions via arc motion over 400ms.
+3. Sift-down T1/T2 ticks fire: comparisons highlight and swaps arc within the shrinking heap boundary.
+4. The element now at index `end` renders in a "settled" dimmed color to show it has left the active heap.
