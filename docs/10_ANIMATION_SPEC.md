@@ -63,8 +63,8 @@ Scope: Defines how the Pygame View layer translates discrete logical operations 
 - **Action:** A key is selected, elements shift right, and the key is placed at its sorted position.
 - **Lift height:** `lift_offset = panel_height * 0.06` (proportional, not a fixed pixel value).
 - **Motion sequence within the Insertion Sort tick group:**
-  1. **Lift (key-selection T1 tick):** The selected key sprite eases from `home_y` to `home_y - lift_offset` over the T1 duration. The sprite remains elevated across subsequent shift ticks.
-  2. **Shift (T2 shift ticks):** Shifted elements ease horizontally from their current slot to the adjacent slot using the standard easing curve. The lifted key sprite holds its elevated `y` position and does not move horizontally during shifts.
+  1. **Lift (key-selection T1 tick):** The selected key sprite eases from `home_y` to `home_y - lift_offset` over the T1 duration. The sprite remains elevated across all subsequent compare and shift ticks until the placement drop.
+  2. **Compare and Shift (T1 compare + T2 shift ticks):** Shifted elements ease horizontally from their current slot to the adjacent slot using the standard easing curve. The lifted key sprite holds its elevated `y` position and does not move horizontally during compare or shift ticks.
   3. **Drop (T2 placement tick):** The lifted key sprite eases horizontally to its destination slot `home_x` and simultaneously eases vertically from `home_y - lift_offset` back to `home_y`, using the standard easing curve over the T2 duration.
 - Easing for all three sub-motions uses the same ease-in-out curve as swaps.
 
