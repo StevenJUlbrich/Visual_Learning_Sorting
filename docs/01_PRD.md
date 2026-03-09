@@ -20,10 +20,8 @@ An educational desktop visualizer that shows four sorting algorithms running con
 
 ### Rendering Target
 
-The application targets a render rate of 60 FPS.
-
-Minor frame variance is acceptable, but sprite motion must remain visually continuous.
-Animations must never "teleport" except when the application is paused or stepped mid-operation.
+The application prioritizes seamless, fluid motion decoupled from strict frame rates.
+Animations operate on a time-normalized progression ($t$) to ensure sprites reach their targets accurately even if hardware frame rates fluctuate.
 
 ## Scope
 
