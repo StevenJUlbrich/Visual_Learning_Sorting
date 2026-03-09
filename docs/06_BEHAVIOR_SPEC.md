@@ -11,7 +11,7 @@
 ### Play/Pause
 
 - **Play:** Begins the independent time accumulators for all active queues, starting the race. Sprites begin interpolating.
-- **Pause:** Freezes all time accumulators immediately. Active sprites pause their `dt` interpolation and hold their exact mid-air `(x, y)` positions.
+- **Pause:** Freezes all time accumulators immediately. Active sprites pause their time-normalized movement and hold their exact mid-air `(x, y)` positions.
 
 ### Step
 
@@ -27,7 +27,7 @@
 
 ## Racing and Operation Timing
 
-Time is driven by operation cost. These costs are absolute and immutable:
+Time is driven by absolute simulated operation costs:
 
 - **Compare Operation (`T1`):** `150ms` simulated cost.
 - **Write/Swap Operation (`T2`):** `400ms` simulated cost (allows time for physical sprite interpolation).
