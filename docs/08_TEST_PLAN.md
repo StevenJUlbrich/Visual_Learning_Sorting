@@ -21,7 +21,7 @@ Primary objective: Prevent correctness drift, ensure operation-weighted timers a
 
 ## 2) Test Levels
 
-- **Unit tests:** Model algorithms, data contract invariants, and `NumberSprite` math helpers (linear interpolation formulas).
+- **Unit tests:** Model algorithms, data contract invariants, and `NumberSprite` math helpers.
 - **Integration tests:** Controller queue processing, independent timer accumulation, and algorithm lifecycle.
 - **Manual exploratory:** Fluidity of Pygame motion, arc pathing clarity, heap boundary highlight visibility, and runtime interaction (Pause/Step behavior).
 
@@ -52,12 +52,14 @@ Primary objective: Prevent correctness drift, ensure operation-weighted timers a
 ### TC-A4 Controller Independent Queues & Timers
 
 - Mock the algorithm generators to yield known operation types (e.g., 2 compares, 1 swap).
-- Assert the Controller accurately calculates the total simulated elapsed time based on the defined operation costs (e.g., `(2 * 150ms) + (1 * 400ms)`).
+- Assert the Controller accurately calculates the total simulated elapsed time based on the absolute defined operation costs (`(2 * 150ms) + (1 * 400ms)`).
 
 ### TC-A5 Sprite Physics and Math
 
-- Unit test the `NumberSprite` easing functions. Assert that given a start of $x=0$, a target of $x=100$, and a time ratio $t=0.5$, the internal $x$ reflects the midpoint of the ease-in-out curve (which is still 50.0, but acceleration/deceleration at $t=0.2$ and $t=0.8$ must be non-linear).
-- Assert that upon `progress >= 1.0`, the exact `x` snaps to the target to eliminate drift.
+- Unit test the `NumberSprite` easing functions (e.g., `ease_in_out_quad`).
+- Assert that given a start of `x=0`, a target of `x=100`, and a time ratio `t=0.5`, the internal `x` reflects the mathematical midpoint of the curve (50.0).
+- Assert that acceleration/deceleration at `t=0.2` and `t=0.8` are non-linear compared to standard progression.
+- Assert that upon `t >= 1.0`, the exact `x` snaps precisely to the target to eliminate drift.
 
 ### TC-A6 Controller Fairness
 
@@ -81,7 +83,7 @@ Primary objective: Prevent correctness drift, ensure operation-weighted timers a
 ## 5) Manual Test Pass (Release Gate)
 
 - Verify startup paused state and identical initial arrays.
-- Verify play/pause/step/restart/speed controls.
+- Verify play/pause/step/restart controls.
 - **Observe the Race:** Ensure faster algorithms visually finish earlier, freeze their panels, and halt their UI timers.
 - **Observe the Physics:** Verify elements slide smoothly, use vertical arcs when swapping, and respect the Option B accent color tinting.
 - **Observe Heap Sort Phases:** Verify the orange heap boundary highlight pulses during extraction and visibly shrinks one slot each step.
@@ -89,7 +91,3 @@ Primary objective: Prevent correctness drift, ensure operation-weighted timers a
 ## 6) Tooling and Execution
 
 - Unit/integration automation: `pytest`. Pygame Controller/Sprite math logic can be tested statelessly without invoking the display `while True:` loop.
-
-## 7) Controller fairness test
-
-    - all active generators receive execution opportunities.
