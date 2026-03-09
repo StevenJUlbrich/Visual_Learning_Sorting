@@ -5,17 +5,20 @@ Scope: Defines how the Pygame View layer translates discrete logical operations 
 ## 1) Interpolation (Tweening) Rules
 
 - Motion must occur smoothly over the duration commanded by the Controller (e.g., 400ms for a swap).
-- Standard spatial movement utilizes time-normalized easing functions (e.g., Quadratic or Cubic Ease-In-Out) based on elapsed operation time. The interpolation ratio ($t$) is calculated as:
-  $$t = \frac{\text{elapsed\_time}}{\text{total\_duration}}$$
-  This guarantees that regardless of Pygame's frame delta-time (`dt`), the sprite will map exactly to the easing curve and land perfectly on target at $t=1.0$, eliminating physics derailment from frame drops.
-- The internal sprite state must track `exact_x` and `exact_y` as floats to prevent rounding drift, syncing to the integer `rect` only at the final render step.
+- Standard spatial movement utilizes time-normalized easing functions (e.g., Quadratic or Cubic Ease-In-Out) based on elapsed operation time. The interpolation ratio (`t`) is calculated as:
+  `t = elapsed_time / total_duration`
+
+ $$t = \frac{\text{elapsed\_time}}{\text{total\_duration}}$$
+
+- This guarantees that regardless of Pygame's frame delta-time (`dt`), the sprite will map exactly to the mathematical easing curve and land perfectly on target at `t=1.0`, eliminating physics derailment from frame drops.
+- The internal sprite state must track `exact_x` and `exact_y` as floats, syncing to the integer `rect` only at the final render step.
 
 ## 2) Algorithm-Specific Motion Signatures
 
 ### 2.1 Bubble & Selection Sort (Swaps)
 
 - **Action:** Two elements exchange indices.
-- **Motion:** Both sprites interpolate their `x` coordinates to the other's home position. To prevent visual collision, one sprite applies a temporary negative `y` offset (arcs up) while the other applies a positive `y` offset (arcs down) during the transit.
+- **Motion:** Both sprites ease their `x` coordinates to the other's home position. To prevent visual collision, one sprite applies a temporary negative `y` offset (arcs up) while the other applies a positive `y` offset (arcs down) mapped against the time curve.
   - Left sprite arcs upward, right sprite arcs downward.
 
 ### 2.2 Insertion Sort (Lift and Drop)
