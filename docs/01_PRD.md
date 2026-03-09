@@ -2,7 +2,7 @@
 
 ## Product Summary
 
-An educational desktop visualizer that shows four sorting algorithms running concurrently. It features smooth, frame-by-frame sprite animations and independent operation timers, allowing learners to watch the algorithms physically "race" to sort the same data set.
+An educational desktop visualizer that shows four sorting algorithms running concurrently. It features smooth, time-normalized sprite animations and independent operation timers, allowing learners to watch the algorithms physically "race" to sort the same data set.
 
 ## What It Is
 
@@ -20,8 +20,9 @@ An educational desktop visualizer that shows four sorting algorithms running con
 
 ### Rendering Target
 
-The application prioritizes seamless, fluid motion decoupled from strict frame rates.
-Animations operate on a time-normalized progression ($t$) to ensure sprites reach their targets accurately even if hardware frame rates fluctuate.
+The application prioritizes seamless, fluid motion decoupled from strict frame rates. Animations operate on a time-normalized progression to ensure sprites reach their targets accurately even if hardware frame rates fluctuate.
+Minor frame variance is acceptable, but sprite motion must remain visually continuous.
+Animations must never "teleport" except when the application is paused or stepped mid-operation.
 
 ## Scope
 
@@ -29,10 +30,10 @@ Animations operate on a time-normalized progression ($t$) to ensure sprites reac
 
 - 4 fixed algorithms: Bubble, Selection, Insertion, Heap.
 - The array will be [7,6,5,4,3,2,1] for all algorithms.
-- Pygame `Sprite` entity system for continuous `(x, y)` coordinate interpolation.
+- Pygame `Sprite` entity system for continuous `(x, y)` coordinate interpolation using easing functions.
 - Independent operation queues and visual timers.
 - On-screen controls + keyboard shortcuts.
-- Dynamic proportional resolution scaling. The UI geometry calculates dynamically at startup to support arbitrary window sizes cleanly (e.g., standard 1080p).
+- Dynamic proportional resolution scaling. The UI geometry calculates dynamically at startup to support arbitrary window sizes cleanly.
 - Animations follow the motion contracts defined in 10_ANIMATION_SPEC.md.
 
 ### Default Dataset
@@ -50,3 +51,4 @@ No runtime array editing exists in v1.
 - Algorithm picker UI.
 - Bar-chart visualizations.
 - Sound effects.
+- Dynamic playback speed modification.
