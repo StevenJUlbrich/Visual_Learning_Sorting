@@ -11,19 +11,21 @@
 ### Play/Pause
 
 - **Play:** Begins the independent time accumulators for all active queues, starting the race. Sprites begin interpolating.
-- **Pause:** Freezes all time accumulators immediately. Active sprites pause their time-normalized movement and hold their exact mid-air `(x, y)` positions.
+- **Pause:** Freezes all time accumulators immediately. Active sprites pause their time-normalized movement and hold their exact mid-air `(x, y)` positions. All visual state is frozen: sprite positions, highlight colors, and the panel message line. No tick is re-fetched or restarted on resume — animation continues from the exact interrupted point with remaining duration.
 
 ### Step
 
 - Enabled only while paused.
+- Step input is **ignored** while a step animation is still in progress. The user must wait for the current step animation to complete before stepping again.
 - "Step" forces every active algorithm to advance its queue to the conclusion of its *current* pending logical operation, smoothly animating the sprites to their final target positions for that specific move before pausing again.
-- A single Step action processes exactly one newly fetched SortResult per active algorithm panel. If that tick produces motion, the app animates that motion to completion, then immediately returns to paused state.
+- A single Step action processes exactly one newly fetched SortResult per active algorithm panel. If that tick produces motion, the app animates that motion to completion using the **same operation duration and easing as play mode** (e.g., 400ms for a swap), then immediately returns to paused state.
 
 ### Restart
 
 - Re-initializes all models, queues, panel counters, and elapsed timers.
 - Uses original initial array values.
-- Returns app to paused state.
+- If sprites are mid-animation, all positions **snap instantly** to the initial array layout. There is no animated return. All animation state (elapsed time, interpolation progress, highlights) is discarded.
+- Returns app to paused state with a clean initial frame.
 
 ## Racing and Operation Timing
 

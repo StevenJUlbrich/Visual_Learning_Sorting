@@ -39,7 +39,7 @@ Scope: This spec locks the visual and compositional behavior for v1 UI, grounded
 
 ### 2.4 Panel Geometry
 
-- Panel container background uses rounded corners.
+- Panel container background uses `pygame.draw.rect(..., border_radius=PANEL_RADIUS)` for rounded corners. No surface clipping mask is required; child elements (text, sprites) are positioned within the panel rect insets and do not need to be clipped to the rounded edge.
 - Corner radius token: `PANEL_RADIUS = 12`.
 - Error state keeps the same radius and adds a border overlay.
 
@@ -72,6 +72,13 @@ Buttons scale proportionally or center horizontally inside the control bar with 
 
 - All text rendering must use anti-aliasing (`antialias=True`).
 
+### 3.4 Font Surface Caching
+
+- Each `NumberSprite` must pre-render and cache its text surfaces for each color state it can display: default array color, panel accent (highlight) color, completion color, and settled/extracted color.
+- Cached surfaces are created once at sprite initialization (and again on restart).
+- During rendering, the sprite selects the appropriate pre-cached surface based on its current visual state rather than calling `font.render()` every frame.
+- This eliminates redundant anti-aliased text rendering across 28 sprites at 60 FPS.
+
 ## 4) Per-Panel Composition (Locked)
 
 Each algorithm panel contains the following UI regions and elements:
@@ -93,12 +100,17 @@ Each algorithm panel contains the following UI regions and elements:
 ### 4.3 Array Rendering Region
 
 - Numbers only (no bars).
-- Horizontal spacing uses internal array padding proportional token.
+- Horizontal spacing uses internal array padding proportional token: `ARRAY_X_PADDING = panel_width * 0.05`.
 - Number slots are evenly distributed across available width.
 - Numbers are centered in their slot. (`slot_width = (panel_width - ARRAY_X_PADDING*2) / array_size`)
 - Vertical anchor defaults to panel center (`rect.y + rect.height // 2`).
 
-### 4.4 State Overlays
+### 4.4 Panel Surface Strategy
+
+- Each panel draws directly to the main display surface. Panels do not use independent `pygame.Surface` objects or `subsurface`.
+- Rounded corners are achieved via `pygame.draw.rect` with `border_radius`. Child elements are positioned within insets and do not require clipping.
+
+### 4.5 State Overlays
 
 - Completion state: all numbers in completion color.
 - Error state: red border + readable failure message (`"Failed: ..."`).
@@ -122,6 +134,7 @@ Rationale from planning + Brick 4:
 - Default array value: `(100, 150, 255)`
 - Complete state: `(80, 220, 120)`
 - Error state: `(235, 80, 80)`
+- Settled/extracted (Heap Sort): `(60, 90, 155)` — dimmed variant of default array color, applied to elements that have left the active heap
 
 ### 5.2 Algorithm Accent Mapping
 

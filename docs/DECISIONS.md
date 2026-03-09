@@ -18,7 +18,7 @@
 * **D-010 Message policy:** `message` is required on every yielded `SortResult`.
 * **D-011 Array snapshot policy:** successful ticks must include copied `array_state` snapshots.
 * **D-012 Controls scope:** Path 2 UI controls.
-* **D-013 Playback controls:** play/pause, step, restart, speed cycle; default speed is 1x.
+* **D-013 Playback controls:** play/pause, step, restart.
 * **D-014 Startup behavior:** app starts paused.
 * **D-015 Completion behavior:** completed panels remain visible and idle, halting their independent elapsed timer.
 * **D-016 Failure behavior:** failure deactivates only failing algorithm; app keeps running.
@@ -27,15 +27,21 @@
 * **D-019 Heap Sort visualization in v1:** T3 Range Emphasis ticks required during Phase 2 (extraction) to display the active heap boundary; in-place motion only (no auxiliary row).
 * **D-020 Domain flow:** avoid exception-driven algorithm control flow; use explicit failure states.
 * **D-021 Message line visibility:** `message` line is always visible in the panel UI.
-* **D-022 Keyboard bindings:** Space=play/pause, Right Arrow=step, R=restart, S=speed cycle, Escape=quit.
+* **D-022 Keyboard bindings:** Space=play/pause, Right Arrow=step, R=restart, Escape=quit.
 * **D-023 Big-O labels:** each algorithm class exposes a `complexity` property.
 * **D-024 Empty array behavior:** generators yield exactly one failure tick and stop.
 * **D-025 Completion tick highlight:** completion tick must include `highlight_indices=tuple(range(size))`.
-* **D-026 Control bar layout:** fixed 48px control bar at bottom of window.
+* **D-026 Control bar layout:** proportional control bar at bottom of window (`window_height * 0.07`).
 * **D-027 Branding:** standalone identity "Learn Visual - Expand Knowledge".
 * **D-028 Secondary counters:** panels display comparisons and writes counters.
-* **D-029 Render loop:** Application uses a pygame.time.Clock based render loop. Each frame computes delta-time (dt) used for sprite interpolation.
+* **D-029 Render loop:** Application uses `pygame.time.Clock` at 60 FPS target. Each frame computes delta-time (`dt`), clamped to 33ms maximum, used for sprite interpolation.
 * **D-030 Heap Sort accent color:** `(255, 140, 0)` (orange) — replaces the purple previously assigned to Merge Sort.
+* **D-031 Sprite anchor:** Sprite `(exact_x, exact_y)` represents the center of the rendered text surface. Integer `rect` is synced at render time only.
+* **D-032 Arc motion:** Swap arcs use `arc_height = panel_height * 0.08` with `sin(pi * t)` offset. Left sprite arcs up, right sprite arcs down.
+* **D-033 Z-ordering:** During swap animations, the upward-arcing sprite draws on top. During Insertion Sort lift, the lifted sprite draws on top. Default order is array index.
+* **D-034 Font surface caching:** NumberSprites pre-render text surfaces per color state at initialization; no per-frame `font.render()` calls.
+* **D-035 Settled color:** Heap Sort extracted elements use `(60, 90, 155)` — dimmed variant of the default array value color.
+* **D-036 Highlight transitions:** Highlights apply instantly at tick start and are replaced instantly by the next tick. No fade transitions.
 
 ## Deferred
 
@@ -43,3 +49,4 @@
 * **F-002** Algorithm picker / dynamic algorithm set.
 * **F-003** More than four simultaneous algorithms.
 * **F-004** Audio cues.
+* **F-005** Dynamic playback speed modification.
