@@ -23,8 +23,8 @@ Scope: This spec locks the visual and compositional behavior for v1 UI, grounded
 
 - Main visualization area is always a `2x2` panel grid.
 - The grid manager uses these spacing/sizing tokens:
-  - `PADDING = 20`
-  - `CONTROL_BAR_HEIGHT = 48` (reserved at bottom of window for on-screen controls)
+  - Eliminate magic numbers. Grid layout uses proportional tokens: `PADDING = window_width * 0.015`, `CONTROL_BAR_HEIGHT = window_height * 0.07`.
+  - Panel and sprite dimensions are derived mathematically from these baseline proportions.
 - The grid occupies the space above the control bar:
   - `grid_height = window_height - CONTROL_BAR_HEIGHT - PADDING`
 - Panel dimensions are computed dynamically:
