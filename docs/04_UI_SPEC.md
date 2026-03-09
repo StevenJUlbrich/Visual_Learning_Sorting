@@ -160,7 +160,6 @@ Mapping is fixed by algorithm name and does not rotate at runtime.
   - Play/Pause
   - Step
   - Restart
-  - Speed toggle (`1x -> 1.5x -> 2x`)
 - Keyboard shortcuts must mirror these controls.
 
 ## 8) Explicit Non-Goals for UI v1
