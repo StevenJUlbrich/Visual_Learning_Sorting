@@ -13,7 +13,7 @@ class OpType(Enum):
     COMPARE = auto()  # Maps to T1 (150ms)
     SWAP = auto()     # Maps to T2 (400ms)
     SHIFT = auto()    # Maps to T2 (400ms)
-    RANGE = auto()    # Maps to T3 (200ms)
+    RANGE = auto()    # Maps to T3 (200ms) — active heap boundary or region emphasis
     TERMINAL = auto()  # Used for completion ticks
     FAILURE = auto()   # Used for explicit failure ticks
 
@@ -21,7 +21,7 @@ class OpType(Enum):
 class SortResult:
     success: bool
     message: str
-    operation_type: OpType  # NEW: Agent uses this for queue timing
+    operation_type: OpType  # Agent uses this for queue timing
     is_complete: bool = False
     array_state: list[int] | None = None
     highlight_indices: tuple[int, ...] | None = None
@@ -30,7 +30,8 @@ class SortResult:
 COMPARE → highlight only, no sprite position change
 SWAP → exchange two sprite home slots with arc path, duration = T2
 SHIFT → source/destination horizontal slide, duration = T2
-RANGE → highlight contiguous range only, no sprite displacement
+RANGE → highlight contiguous range only, no sprite displacement; used by Heap Sort to
+        show the active heap boundary (indices 0..heap_size-1) at the start of each extraction step
 TERMINAL → no motion; apply completion styling
 
 ### highlight_indices rules
@@ -78,7 +79,8 @@ Invalid combinations are contract violations.
 - Compare tick: highlights compared indices.
 - Swap tick: highlights swapped indices and new snapshot.
 - Shift/placement tick: highlights moved/placed indices and new snapshot.
-- Merge range tick: highlights active merge range (range tuple expanded to indices).
+- Range emphasis tick: highlights a contiguous range of indices; used by Heap Sort for active
+  heap boundary display (range tuple expanded to indices 0..heap_size-1).
 - Terminal completion tick: final sorted array snapshot with full-array highlight (`highlight_indices=tuple(range(size))`).
 - Failure tick: explicit error state with message.
 
