@@ -1,7 +1,7 @@
 # 05 ALGORITHMS VIS SPEC - Tick Taxonomy and Highlight Semantics
 
-Scope: This spec locks algorithm visualization behavior for Bubble, Selection, Insertion, and Merge Sort.
-Grounding sources: `docs/reference/Brick_3_bubble_sort.md`, `docs/reference/Brick_3_merge_sort.md`, and `docs/Sorting_Algorithm_Visualizer_Planning.md`.
+Scope: This spec locks algorithm visualization behavior for Bubble, Selection, Insertion, and Heap Sort.
+Grounding sources: Data Contracts (03), Animation Spec (10), and planning notes.
 
 ## 1) Global Visualization Contract
 
@@ -39,11 +39,12 @@ Grounding sources: `docs/reference/Brick_3_bubble_sort.md`, `docs/reference/Bric
 - Fields: `success=True`, `is_complete=False`, copied `array_state`.
 - Highlight: indices affected by mutation.
 
-### T3 - Range Emphasis Tick (Merge-Specific)
+### T3 - Range Emphasis Tick (Heap Sort active boundary)
 
-- Purpose: show active subarray segment being merged.
+- Purpose: show the active unsorted heap region at the start of each extraction step.
 - Fields: `success=True`, `is_complete=False`, copied `array_state`.
-- Highlight: contiguous index range `left..right`.
+- Highlight: contiguous index range `0..heap_size-1` representing the live heap.
+- No sprite displacement occurs on this tick.
 
 ### T4 - Completion Tick
 
@@ -90,20 +91,28 @@ Additional rules:
 - Shift operations must be visually represented as writes.
 - Must emit final `T4 Completion Tick`.
 
-### 3.4 Merge Sort
+### 3.4 Heap Sort
 
-Required recursive sequence:
+Heap Sort operates in two phases: **Build Max-Heap** and **Extraction**.
 
-1. Recursive generators must be iterated manually and yield forwarded ticks.
-2. At start of each merge operation, emit `T3 Range Emphasis Tick` on full range `left..right`.
-3. During merge loop:
-   - emit `T1 Compare Tick` for current merge decision.
-   - perform write into main array, then emit `T2 Write/Mutation Tick` on destination index.
-4. For remaining elements in either side, each write emits `T2 Write/Mutation Tick`.
+#### Phase 1 — Build Max-Heap
+
+- Iterate `i` from `n // 2 - 1` down to `0`, calling sift-down for each node.
+- Sift-down sequence for a node at index `i` with heap boundary `heap_size`:
+  1. Identify the largest among `i`, left child `(2*i + 1)`, and right child `(2*i + 2)` if within bounds.
+  2. For each child comparison, emit `T1 Compare Tick` on `(i, child_index)` (or `(largest, child_index)` as the running largest changes).
+  3. If `largest != i`, perform swap then emit `T2 Write/Mutation Tick` on `(i, largest)`, then recurse sift-down from `largest`.
+
+#### Phase 2 — Extraction
+
+- Iterate `end` from `n - 1` down to `1`:
+  1. Emit `T3 Range Emphasis Tick` on `tuple(range(0, end + 1))` to highlight the active heap boundary before the extraction swap.
+  2. Swap root (`index 0`) with `end`, then emit `T2 Write/Mutation Tick` on `(0, end)`.
+  3. Call sift-down from `index 0` with `heap_size = end`, yielding T1/T2 ticks per comparison and swap as in Phase 1.
 
 Additional rules:
 
-- Recursive bubbling must remain explicit and contract-driven.
+- Sift-down must be implemented iteratively or as an inner generator; `yield from` may be used for a sift-down sub-generator provided failure bubbling remains explicit.
 - Must emit final `T4 Completion Tick`.
 
 ## 4) Highlight Semantics (Locked)
@@ -114,7 +123,7 @@ Additional rules:
 - Bubble: `(j, j+1)`.
 - Selection: `(min_idx, j)`.
 - Insertion shift-compare: `(j, j+1)`.
-- Merge compare: destination-focused index allowed (per Brick 3 implementation), but must remain consistent within algorithm.
+- Heap sift-down compare: `(parent_idx, child_idx)` or `(largest, child_idx)` as the running largest updates.
 
 ### Swap/Write Highlights
 
@@ -122,34 +131,36 @@ Additional rules:
 - Shift ticks highlight source/destination pair or destination index (consistent per algorithm implementation).
 - Placement ticks highlight the insertion/placement index.
 
-### Merge-Range Highlights
+### Heap Boundary Range Highlights
 
-- Merge range emphasis highlights a contiguous tuple `tuple(range(left, right + 1))`.
-- This serves as subarray emphasis equivalent to bracket semantics in v1.
+- Heap extraction range emphasis highlights `tuple(range(0, heap_size))`.
+- This shows the learner exactly which portion of the array is still an active max-heap before each root extraction.
 
-## 5) Merge Bracket/Subarray Emphasis Decision
+## 5) Heap Sort Visual Phasing Decision
 
-Decision: **Literal bracket graphics are not required in v1.**
+Decision: **Two-phase visual distinction is required in v1.**
 
 Required behavior in v1:
 
-- Merge Sort must emit explicit range emphasis ticks (`T3`) for each merge segment.
-- View layer must render this via contiguous highlighted indices.
+- Heap Sort must emit T3 range emphasis ticks at the start of every extraction step to make the shrinking heap boundary visible.
+- T1/T2 ticks during sift-down communicate individual comparisons and swaps within the heap.
+- No separate auxiliary row animation is used; all Heap Sort motion is in-place on the main array row.
 
 Rationale:
 
-- Planning notes value bracket-like subarray emphasis.
-- Brick 3 merge implementation already encodes this cleanly through `highlight_indices` range ticks.
+- The shrinking boundary communicates the core O(n log n) behavior of heap extraction.
 - Range highlighting preserves clarity without introducing additional drawing complexity.
+- In-place motion is visually consistent with Bubble and Selection Sort panels.
 
 ## 6) Consistency and QA Hooks
 
 - Every yield message must describe the operation in learner-friendly text.
+  - Examples: `"Comparing index 0 (7) and index 2 (5)"`, `"Swapping root 7 with end 1 — extracting max"`, `"Active heap: indices 0–4"`.
 - No tick may expose mutable `self.data` directly; snapshots must be copied.
-- Completion tick must represent a fully sorted array (selection-sort regression guard).
-- Tick density may vary by algorithm; this variance is intentional and instructional.
+- Completion tick must represent a fully sorted array.
+- Tick density varies between phases; the dense sift-down phase and sparse extraction phase are intentional and instructional.
 
-## 7) ## Operation → Animation Mapping
+## 7) Operation → Animation Mapping
 
 - COMPARE
   - Highlight compared indices.
@@ -163,16 +174,9 @@ Rationale:
   - Sprite moves horizontally into a new index position.
 
 - RANGE
-  - Highlight contiguous range only.
+  - Highlight contiguous range only (active heap boundary).
   - No sprite displacement.
 
 - TERMINAL
   - No motion.
   - Entire array receives completion color.
-
-## Merge Animation Sequence
-
-1. RANGE tick highlights the merge segment.
-2. On the first write inside the segment, all sprites in the range move to the auxiliary row.
-3. Write ticks reorder sprites horizontally within the auxiliary row.
-4. After the final write, the entire segment returns to the main row.
