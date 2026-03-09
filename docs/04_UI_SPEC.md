@@ -135,7 +135,7 @@ Rationale from planning + Brick 4:
 
 - Bubble: `(0, 255, 255)` (cyan)
 - Insertion: `(255, 0, 255)` (magenta)
-- Merge: `(170, 0, 255)` (purple)
+- Heap: `(255, 140, 0)` (orange)
 - Selection: `(255, 80, 80)` (red)
 
 Mapping is fixed by algorithm name and does not rotate at runtime.
