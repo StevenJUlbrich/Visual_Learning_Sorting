@@ -14,7 +14,7 @@ An educational desktop visualizer that shows four sorting algorithms running con
 ## Target User Experience
 
 - User opens app and sees a clean 2x2 grid with all algorithms ready.
-- App starts paused so the user can inspect the initial identical array states with the array being [7,6,5,4,3,2,1].
+- App starts paused so the user can inspect the initial identical array states with the array being [4, 7, 2, 6, 1, 5, 3].
 - User presses Play, and all four algorithms begin animating simultaneously. Faster algorithms physically complete their operations and halt their timers earlier than slower ones.
 - User can pause mid-animation and step through logical operations. (Speed controls have been removed to ensure animation stability).
 
@@ -29,7 +29,7 @@ Animations must never "teleport" except when the application is paused or steppe
 ### In Scope (v1)
 
 - 4 fixed algorithms: Bubble, Selection, Insertion, Heap.
-- The array will be [7,6,5,4,3,2,1] for all algorithms.
+- The array will be [4, 7, 2, 6, 1, 5, 3] for all algorithms.
 - Pygame `Sprite` entity system for continuous `(x, y)` coordinate interpolation using easing functions.
 - Independent operation queues and visual timers.
 - On-screen controls + keyboard shortcuts.
@@ -40,7 +40,13 @@ Animations must never "teleport" except when the application is paused or steppe
 
 The visualizer always initializes with the fixed array:
 
-[7, 6, 5, 4, 3, 2, 1]
+[4, 7, 2, 6, 1, 5, 3]
+
+This array was chosen to produce meaningful visual activity across all four algorithms:
+
+- It is **not** a valid max-heap, so Heap Sort's Build Max-Heap phase performs actual swaps (repairing 3 heap violations), making the most distinctive phase of the algorithm visible.
+- It contains 13 inversions, giving Bubble Sort and Insertion Sort substantial work to demonstrate their mechanics.
+- It requires multiple Selection Sort swaps (5), showing the scan-then-swap pattern clearly.
 
 Array size for v1 is always 7 elements.
 No runtime array editing exists in v1.

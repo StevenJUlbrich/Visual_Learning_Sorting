@@ -2,7 +2,7 @@
 
 ## Startup Behavior
 
-- App initializes all four algorithms with identical initial array `[7, 6, 5, 4, 3, 2, 1]`.
+- App initializes all four algorithms with identical initial array `[4, 7, 2, 6, 1, 5, 3]`.
 - App starts in the paused state.
 - Initial frame renders panels, base sprites, and metadata (0 steps, 0.00s elapsed).
 

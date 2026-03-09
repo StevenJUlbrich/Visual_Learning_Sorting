@@ -11,7 +11,7 @@
 * **D-003 Algorithms in v1:** Bubble, Selection, Insertion, Heap (fixed set of four).
 * **D-004 Visualization primitive:** Pygame Sprite entities with independent `(x, y)` coordinate tracking, target coordinate interpolation, and delta-time (`dt`) updates.
 * **D-005 Layout:** 2x2 grid, max 4 simultaneous panels.
-* **D-006 Initial data:** identical `[7, 6, 5, 4, 3, 2, 1]` per algorithm instance.
+* **D-006 Initial data:** identical `[4, 7, 2, 6, 1, 5, 3]` per algorithm instance. Chosen because it is not a valid max-heap (3 violations), has 13 inversions, and produces meaningful visual activity across all four algorithms.
 * **D-007 Tick model (REPLACED):** Independent operation queues per algorithm. Time is driven by operation-weighted simulated costs, creating a genuine race.
 * **D-008 `SortResult` contract:** Canonical contract is defined in `docs/03_DATA_CONTRACTS.md`.
 * **D-009 Step counting:** Increments on successful non-terminal ticks where `operation_type` is not `RANGE`. T3 range emphasis ticks are excluded from the step counter.

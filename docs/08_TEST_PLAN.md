@@ -31,7 +31,13 @@ Primary objective: Prevent correctness drift, ensure operation-weighted timers a
 
 ## 3) Test Data Strategy
 
-- Required fixtures: `reverse_7`, `sorted_7`, `mixed_7`, `duplicates_7`, `single_1`, `empty_0`.
+- Required fixtures:
+  - `default_7`: `[4, 7, 2, 6, 1, 5, 3]` — the application default array. Used for counter accuracy tests and primary correctness checks.
+  - `reverse_7`: `[7, 6, 5, 4, 3, 2, 1]` — worst-case for Bubble/Insertion Sort. Used for edge-case testing (note: this is a valid max-heap, so Heap Sort Phase 1 has no swaps).
+  - `sorted_7`: `[1, 2, 3, 4, 5, 6, 7]` — best-case for Bubble/Insertion Sort. Used for terminating comparison tests.
+  - `duplicates_7`: `[3, 1, 3, 2, 1, 2, 3]` — duplicate stability tests.
+  - `single_1`: `[1]` — minimal non-empty input.
+  - `empty_0`: `[]` — failure tick contract.
 - Deterministic seeded random arrays for repeatability.
 
 ## 4) Core Test Cases (Automated)
@@ -72,9 +78,10 @@ Primary objective: Prevent correctness drift, ensure operation-weighted timers a
 
 ### TC-A7 Heap Sort Phase Contract
 
-- Consume Heap Sort generator for `reverse_7` fixture.
+- Consume Heap Sort generator for `default_7` fixture.
 - Assert at least one T3 Range Emphasis Tick is emitted.
-- Assert T3 ticks only appear after the build-max-heap phase concludes (i.e., no T3 ticks while `i` is descending from `n//2 - 1` to `0` during phase 1).
+- Assert T3 ticks only appear after the build-max-heap phase concludes.
+- Assert Phase 1 produces at least one T2 swap tick (verifying the input has heap violations).
 - Assert each T3 tick's `highlight_indices` is `tuple(range(0, k))` for strictly decreasing `k` values across successive T3 ticks.
 - Assert sorted region grows by exactly one element between each pair of consecutive T3 ticks.
 
@@ -86,22 +93,22 @@ Primary objective: Prevent correctness drift, ensure operation-weighted timers a
 
 ### TC-A9 Insertion Sort Tick Sequence
 
-- Consume Insertion Sort generator for `reverse_7` fixture.
+- Consume Insertion Sort generator for `default_7` fixture.
 - For each outer pass `i` (from 1 to 6):
   - Assert the first tick is a T1 (COMPARE) key-selection tick with `highlight_indices == (i,)`.
   - Assert subsequent ticks follow the pattern: T1 compare on `(j, j+1)`, then T2 shift on `(j, j+1)`, for each shifted element.
   - For passes where `j >= 0` at loop exit (key does not go to position 0), assert a terminating T1 compare tick is emitted.
   - Assert the final tick of the pass is a T2 (SHIFT) placement tick on a single index.
-- For `reverse_7`, every pass shifts the key to position 0, so no terminating comparison ticks should appear (all loops exit via `j < 0`).
+- For `default_7`, passes i=1 (key=7) and i=3 (key=6) should emit terminating comparison ticks (loop exits by condition). Passes i=2 (key=2) and i=4 (key=1) should not (loop exits by `j < 0`).
 
 ### TC-A10 Counter Accuracy (All Algorithms)
 
-- Consume each algorithm's generator for `reverse_7` fixture.
+- Consume each algorithm's generator for `default_7` fixture.
 - Assert exact counter values:
-  - **Bubble Sort:** `comparisons == 21`, `writes == 42`.
-  - **Selection Sort:** `comparisons == 21`, `writes == 6`.
-  - **Insertion Sort:** `comparisons == 21`, `writes == 27`.
-  - **Heap Sort:** Assert `comparisons` and `writes` match pre-calculated values for this input (computable from the deterministic sift-down paths).
+  - **Bubble Sort:** `comparisons == 20`, `writes == 26`.
+  - **Selection Sort:** `comparisons == 21`, `writes == 10`.
+  - **Insertion Sort:** `comparisons == 17`, `writes == 19`.
+  - **Heap Sort:** `comparisons == 20`, `writes == 30`.
 
 ### TC-A11 Key-Selection Does Not Increment Comparisons
 
@@ -111,18 +118,16 @@ Primary objective: Prevent correctness drift, ensure operation-weighted timers a
 
 ### TC-A12 Swap Writes Count
 
-- Consume Bubble Sort generator for `reverse_7` fixture.
+- Consume Bubble Sort generator for `default_7` fixture.
 - Count the number of T2 (SWAP) ticks emitted.
 - Assert `algorithm.writes == swap_tick_count * 2`.
 
 ### TC-A13 T3 Step Counter Exclusion
 
-- Consume Heap Sort generator for `reverse_7` fixture.
+- Consume Heap Sort generator for `default_7` fixture.
 - Count all ticks where `success=True`, `is_complete=False`, `operation_type != RANGE`.
-- This count is the expected step count.
-- Count all T3 (RANGE) ticks separately.
-- Assert total non-RANGE progress ticks + T3 ticks equals total progress ticks.
-- Assert the step counter logic would produce the non-RANGE count (T3 excluded).
+- Assert this count equals 35 (the expected step count).
+- Count all T3 (RANGE) ticks separately and assert count equals 6.
 
 ### TC-A14 Insertion Sort Terminating Comparison
 
@@ -133,13 +138,13 @@ Primary objective: Prevent correctness drift, ensure operation-weighted timers a
 
 ## 5) Manual Test Pass (Release Gate)
 
-- Verify startup paused state and identical initial arrays.
+- Verify startup paused state and identical initial arrays `[4, 7, 2, 6, 1, 5, 3]`.
 - Verify play/pause/step/restart controls.
 - **Observe the Race:** Ensure faster algorithms visually finish earlier, freeze their panels, and halt their UI timers.
 - **Observe the Physics:** Verify elements slide smoothly, use vertical arcs when swapping, and respect the Option B accent color tinting.
-- **Observe Heap Sort Phases:** Verify the orange heap boundary highlight pulses during extraction and visibly shrinks one slot each step.
+- **Observe Heap Sort Phases:** Verify Phase 1 shows actual swaps (heap being built). Verify the orange heap boundary highlight pulses during extraction and visibly shrinks one slot each step.
 - **Observe Insertion Sort Lift/Drop:** Verify the key element lifts above the array, stays elevated during comparisons and shifts, and drops smoothly into position.
-- **Verify Counters:** After completion, cross-check displayed comparisons and writes values against expected values for `[7, 6, 5, 4, 3, 2, 1]`.
+- **Verify Counters:** After completion, cross-check displayed comparisons and writes values against expected values for `[4, 7, 2, 6, 1, 5, 3]`.
 
 ## 6) Tooling and Execution
 

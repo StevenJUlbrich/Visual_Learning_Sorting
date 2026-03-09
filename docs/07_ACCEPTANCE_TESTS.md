@@ -21,7 +21,7 @@ All items below must pass:
 
 - Launch app.
 - Expect paused state and 4 visible algorithm panels.
-- Expect each panel starts from the same initial values.
+- Expect each panel shows the initial array `[4, 7, 2, 6, 1, 5, 3]`.
 - Expect all elapsed timers in the panel headers to read `0.00s`.
 - Expect all counters to read Steps: 0, Comps: 0, Writes: 0.
 
@@ -36,7 +36,7 @@ All items below must pass:
 
 - Press Play and run to completion.
 - Verify faster algorithms finish animating earlier, enter their completion state, and permanently halt their individual elapsed timers.
-- For each panel, verify final numbers are ascending and unchanged after completion.
+- For each panel, verify final numbers are ascending `[1, 2, 3, 4, 5, 6, 7]` and unchanged after completion.
 
 ### AT-04 Generator Completion Contract
 
@@ -76,6 +76,7 @@ Verify:
 ### AT-09 Heap Sort Two-Phase Visual Distinction
 
 - Run Heap Sort panel to completion.
+- Verify that during Phase 1 (Build Max-Heap), actual swaps occur — the heap is being actively constructed with visible element movements (3 heap violations are repaired for the default array).
 - Verify that T3 Range Emphasis ticks are visible at the start of each extraction step, showing the shrinking active heap boundary highlighted in the panel accent color (orange).
 - Verify that after the final extraction, all sprites are in ascending order and the completion color is applied to the full array.
 - Verify that all Heap Sort motion remains in-place on the main array row (no auxiliary row animation).
@@ -84,8 +85,8 @@ Verify:
 
 - Run Heap Sort panel to completion.
 - Verify the Build Max-Heap phase completes before any extraction swap occurs (no element is swapped to its sorted position before the full heap is constructed).
+- For `[4, 7, 2, 6, 1, 5, 3]`, verify that after Phase 1 the array becomes a valid max-heap (`[7, 6, 5, 4, 1, 2, 3]`).
 - Verify the sorted region (right side of array) grows by one element per extraction step.
-- Note: for `[7, 6, 5, 4, 3, 2, 1]` the array is already a valid max-heap, so Phase 1 consists only of comparison ticks with no swaps. This is expected and correct.
 
 ### AT-11 Insertion Sort Tick Sequence
 
@@ -100,18 +101,18 @@ Verify:
 
 ### AT-12 Counter Accuracy
 
-Run all algorithms to completion with `[7, 6, 5, 4, 3, 2, 1]` and verify:
+Run all algorithms to completion with `[4, 7, 2, 6, 1, 5, 3]` and verify:
 
-- **Bubble Sort:** Comparisons = 21, Writes = 42 (21 swaps x 2 array writes each).
-- **Selection Sort:** Comparisons = 21, Writes = 6 (3 swaps x 2 array writes each).
-- **Insertion Sort:** Comparisons = 21, Writes = 27 (21 shifts + 6 placements, each 1 array write).
-- **Heap Sort:** Verify comparisons and writes are consistent with the sift-down traversals. Exact values depend on the sift-down path but must be deterministic for this fixed input.
+- **Bubble Sort:** Comparisons = 20, Writes = 26 (13 swaps x 2 array writes each).
+- **Selection Sort:** Comparisons = 21, Writes = 10 (5 swaps x 2 array writes each).
+- **Insertion Sort:** Comparisons = 17, Writes = 19 (13 shifts + 6 placements, each 1 array write).
+- **Heap Sort:** Comparisons = 20, Writes = 30 (15 swaps x 2 array writes each).
 
 ### AT-13 T3 Step Counter Exclusion
 
 - Run Heap Sort to completion.
 - Count the visible T3 range emphasis highlights (should be 6 for n=7).
-- Verify the panel step count does **not** include these T3 ticks. Heap Sort's step count should reflect only T1 compare ticks and T2 write ticks.
+- Verify the panel step count does **not** include these T3 ticks. Heap Sort's step count should be 35 (20 T1 + 15 T2), not 41.
 
 ## Automated Acceptance Intent (for `tests/`)
 
@@ -135,14 +136,15 @@ Run all algorithms to completion with `[7, 6, 5, 4, 3, 2, 1]` and verify:
 
 ### D) Heap Sort Phase Contract
 
-- Consume the Heap Sort generator for a known fixture (e.g., `[7, 6, 5, 4, 3, 2, 1]`).
+- Consume the Heap Sort generator for the default fixture `[4, 7, 2, 6, 1, 5, 3]`.
 - Assert at least one `T3 Range Emphasis Tick` is emitted (active heap boundary display).
 - Assert T3 ticks only appear during Phase 2 (extraction), never during Phase 1 (build max-heap).
 - Assert that each T3 tick's `highlight_indices` forms the contiguous range `tuple(range(0, k))` for a strictly decreasing `k`.
+- Assert Phase 1 produces at least one T2 swap tick (heap violations exist in this input).
 
 ### E) Insertion Sort Tick Sequence Contract
 
-- Consume the Insertion Sort generator for `[7, 6, 5, 4, 3, 2, 1]`.
+- Consume the Insertion Sort generator for `[4, 7, 2, 6, 1, 5, 3]`.
 - For each outer pass `i`:
   - Assert the first tick is a T1 key-selection on `(i,)`.
   - Assert subsequent T1/T2 ticks alternate correctly: T1 compare, then T2 shift for each element that moves.
@@ -151,14 +153,13 @@ Run all algorithms to completion with `[7, 6, 5, 4, 3, 2, 1]` and verify:
 
 ### F) Counter Accuracy Contract
 
-- For each algorithm with `[7, 6, 5, 4, 3, 2, 1]`:
+- For each algorithm with `[4, 7, 2, 6, 1, 5, 3]`:
   - Consume generator to completion.
-  - Assert `comparisons` matches expected value (Bubble: 21, Selection: 21, Insertion: 21).
-  - Assert `writes` matches expected value (Bubble: 42, Selection: 6, Insertion: 27).
-  - Assert Heap Sort `comparisons` and `writes` are deterministic and match the calculated values for this input.
+  - Assert `comparisons` matches expected value (Bubble: 20, Selection: 21, Insertion: 17, Heap: 20).
+  - Assert `writes` matches expected value (Bubble: 26, Selection: 10, Insertion: 19, Heap: 30).
 
 ### G) T3 Step Counter Exclusion
 
-- Consume the Heap Sort generator for `[7, 6, 5, 4, 3, 2, 1]`.
+- Consume the Heap Sort generator for `[4, 7, 2, 6, 1, 5, 3]`.
 - Count all ticks where `success=True`, `is_complete=False`, and `operation_type != RANGE`.
-- Assert this count matches the panel step count (T3 ticks excluded).
+- Assert this count equals 35 (the panel step count, with T3 ticks excluded).

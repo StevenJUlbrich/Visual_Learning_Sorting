@@ -59,7 +59,7 @@ Grounding sources: Data Contracts (03), Animation Spec (10), and planning notes.
 
 ## 3) Complexity Labels (Locked)
 
-Each algorithm exposes a `complexity` string representing its **worst-case** time complexity. These are worst-case because the fixed input `[7, 6, 5, 4, 3, 2, 1]` triggers worst-case behavior for the O(n²) algorithms.
+Each algorithm exposes a `complexity` string representing its **worst-case** time complexity.
 
 - Bubble Sort: `"O(n²)"`
 - Selection Sort: `"O(n²)"`
@@ -135,17 +135,27 @@ If the loop exits because `j < 0` (key is the smallest element), no terminating 
 - Place the key: `arr[j+1] = key`. Emit `T2 Write/Mutation Tick` (OpType.SHIFT) on `(j+1,)` — shows the key dropping into its sorted position. Increment `self.writes += 1` before yielding.
 - The key sprite eases back down from its elevated position to the target slot.
 
-#### Worked Example: `[7, 6, 5, 4, 3, 2, 1]`, pass `i=2`
+#### Worked Example: `[4, 7, 2, 6, 1, 5, 3]`, pass `i=2`
 
-Array before: `[6, 7, 5, 4, 3, 2, 1]` (after i=1 completed).
+Array before: `[4, 7, 2, 6, 1, 5, 3]` (after i=1 completed — key 7 was already in position, no shifts needed).
 
-1. **Key-selection T1** on `(2,)`: `"Selecting key: 5 at index 2"`. Key 5 lifts. (No comparisons increment.)
-2. **Compare T1** on `(1, 2)`: `"Comparing index 1 (value 7) with key 5"`. comparisons → 1.
-3. **Shift T2** on `(1, 2)`: `"Shifting 7 from index 1 to index 2"`. Array → `[6, 7, 7, 4, 3, 2, 1]` (logically; 7 moves right). writes → 1.
-4. **Compare T1** on `(0, 1)`: `"Comparing index 0 (value 6) with key 5"`. comparisons → 2.
-5. **Shift T2** on `(0, 1)`: `"Shifting 6 from index 0 to index 1"`. Array → `[6, 6, 7, 4, 3, 2, 1]`. writes → 2.
+1. **Key-selection T1** on `(2,)`: `"Selecting key: 2 at index 2"`. Key 2 lifts. (No comparisons increment.)
+2. **Compare T1** on `(1, 2)`: `"Comparing index 1 (value 7) with key 2"`. comparisons → 1.
+3. **Shift T2** on `(1, 2)`: `"Shifting 7 from index 1 to index 2"`. Array → `[4, _, 7, 6, 1, 5, 3]` (logically; 7 moves right). writes → 1.
+4. **Compare T1** on `(0, 1)`: `"Comparing index 0 (value 4) with key 2"`. comparisons → 2.
+5. **Shift T2** on `(0, 1)`: `"Shifting 4 from index 0 to index 1"`. Array → `[_, 4, 7, 6, 1, 5, 3]`. writes → 2.
 6. Loop exits: `j < 0`. No terminating comparison.
-7. **Placement T2** on `(0,)`: `"Placing key 5 at index 0"`. Array → `[5, 6, 7, 4, 3, 2, 1]`. writes → 3. Key drops.
+7. **Placement T2** on `(0,)`: `"Placing key 2 at index 0"`. Array → `[2, 4, 7, 6, 1, 5, 3]`. writes → 3. Key drops.
+
+#### Worked Example: `[4, 7, 2, 6, 1, 5, 3]`, pass `i=3` (terminating comparison case)
+
+Array before: `[2, 4, 7, 6, 1, 5, 3]` (after i=2 completed).
+
+1. **Key-selection T1** on `(3,)`: `"Selecting key: 6 at index 3"`. Key 6 lifts.
+2. **Compare T1** on `(2, 3)`: `"Comparing index 2 (value 7) with key 6"`. comparisons → 1.
+3. **Shift T2** on `(2, 3)`: `"Shifting 7 from index 2 to index 3"`. Array → `[2, 4, _, 7, 1, 5, 3]`. writes → 1.
+4. **Compare T1** on `(1, 2)`: `"Comparing index 1 (value 4) with key 6"`. 4 is not > 6 — loop exits by condition. comparisons → 2. *(This is the terminating comparison.)*
+5. **Placement T2** on `(2,)`: `"Placing key 6 at index 2"`. Array → `[2, 4, 6, 7, 1, 5, 3]`. writes → 2. Key drops.
 
 Additional rules:
 
@@ -175,7 +185,7 @@ Heap Sort operates in two phases: **Build Max-Heap** and **Extraction**.
    - Emit `T2 Write/Mutation Tick` on `(i, largest)`. Increment `self.writes += 2`.
    - Continue sift-down from `largest` (repeat from step 1 with `i = largest`).
 
-**Note on `[7, 6, 5, 4, 3, 2, 1]`:** This input is already a valid max-heap (each parent is greater than both children). Phase 1 will emit only comparison ticks with no swaps. This is expected behavior — it demonstrates that the build phase verifies the heap property, even when no repairs are needed.
+**Note on `[4, 7, 2, 6, 1, 5, 3]`:** This input is **not** a valid max-heap (it has 3 heap violations), so Phase 1 performs actual sift-down swaps — the learner sees the heap being constructed with visible repairs at multiple tree levels. The build phase produces the max-heap `[7, 6, 5, 4, 1, 2, 3]`.
 
 #### Phase 2 — Extraction
 
@@ -230,12 +240,12 @@ Rationale:
 ## 7) Consistency and QA Hooks
 
 - Every yield message must describe the operation in learner-friendly text.
-  - Include both index and value for clarity: `"Comparing index 0 (value 7) and index 2 (value 5)"`.
-  - Heap extraction: `"Swapping index 0 (value 7) with index 6 (value 1) — extracting max"`.
+  - Include both index and value for clarity: `"Comparing index 0 (value 4) and index 2 (value 2)"`.
+  - Heap extraction: `"Swapping index 0 (value 7) with index 6 (value 3) — extracting max"`.
   - Range emphasis: `"Active heap: indices 0–4"`.
-  - Key selection: `"Selecting key: 5 at index 2"`.
+  - Key selection: `"Selecting key: 2 at index 2"`.
   - Shift: `"Shifting 7 from index 1 to index 2"`.
-  - Placement: `"Placing key 5 at index 0"`.
+  - Placement: `"Placing key 2 at index 0"`.
 - No tick may expose mutable `self.data` directly; snapshots must be copied.
 - Completion tick must represent a fully sorted array.
 - Tick density varies between phases; the dense sift-down phase and sparse extraction phase are intentional and instructional.
@@ -265,14 +275,14 @@ Rationale:
 
 ### What the Learner Should Observe
 
-**Bubble Sort:** The largest unsorted element "bubbles" to the right on each pass. The learner should notice that later passes get shorter as the right side of the array becomes sorted. With reverse-sorted input, every comparison triggers a swap — this is worst-case behavior.
+**Bubble Sort:** The largest unsorted element "bubbles" to the right on each pass. The learner should notice that later passes get shorter as the right side of the array becomes sorted. With `[4, 7, 2, 6, 1, 5, 3]`, some comparisons trigger swaps and some do not — the learner sees both outcomes.
 
-**Selection Sort:** The algorithm scans the entire unsorted portion to find the minimum, then places it with a single swap. The learner should observe many comparisons followed by one swap (or no swap if the minimum is already in position). Despite being O(n²), Selection Sort has very few writes — for `[7, 6, 5, 4, 3, 2, 1]`, only 3 swaps.
+**Selection Sort:** The algorithm scans the entire unsorted portion to find the minimum, then places it with a single swap. The learner should observe many comparisons followed by one swap (or no swap if the minimum is already in position). Despite being O(n²), Selection Sort has very few writes — for `[4, 7, 2, 6, 1, 5, 3]`, only 5 swaps (10 array writes).
 
-**Insertion Sort:** Elements are "picked up" from the unsorted portion and inserted into the correct position within the growing sorted portion. The learner should observe the key lifting, elements sliding right to make room, and the key dropping into place. With reverse-sorted input, every key must travel to position 0 — worst-case behavior.
+**Insertion Sort:** Elements are "picked up" from the unsorted portion and inserted into the correct position within the growing sorted portion. The learner should observe the key lifting, elements sliding right to make room, and the key dropping into place. Some keys travel far (like 1, which shifts to position 0), while others stay close (like 7, which is already in position) — the learner sees varying insertion depths.
 
-**Heap Sort:** Two distinct phases. Phase 1 (Build Max-Heap) verifies and repairs the heap property — for this input, the array is already a valid max-heap so only comparisons occur. Phase 2 (Extraction) repeatedly moves the root (maximum) to the sorted region and repairs the heap. The learner should observe the orange heap boundary shrinking by one element per extraction, directly illustrating why the sorted region grows from the right.
+**Heap Sort:** Two distinct phases. Phase 1 (Build Max-Heap) repairs 3 heap violations, showing actual swaps as the tree structure is established — the learner sees the heap being actively constructed. Phase 2 (Extraction) repeatedly moves the root (maximum) to the sorted region and repairs the heap. The learner should observe the orange heap boundary shrinking by one element per extraction, directly illustrating why the sorted region grows from the right.
 
 ### About the Race Outcome
 
-The race outcome reflects operation costs for the specific input `[7, 6, 5, 4, 3, 2, 1]` at n=7. At this small size, constant factors and per-operation costs dominate over asymptotic complexity differences (log₂ 7 ≈ 2.8, so n log n ≈ 19.6 vs n² = 49 — less than a 3x gap). Selection Sort may win the race because it performs very few swaps for this input, despite being O(n²). Heap Sort's O(n log n) advantage becomes decisive at larger array sizes, which are out of scope for v1.
+The race outcome reflects operation costs for the specific input `[4, 7, 2, 6, 1, 5, 3]` at n=7. At this small size, constant factors and per-operation costs dominate over asymptotic complexity differences (log₂ 7 ≈ 2.8, so n log n ≈ 19.6 vs n² = 49 — less than a 3x gap). Selection Sort wins the race because it performs very few swaps (the most expensive operation at 400ms each), despite being O(n²). Heap Sort's O(n log n) advantage becomes decisive at larger array sizes, which are out of scope for v1.
