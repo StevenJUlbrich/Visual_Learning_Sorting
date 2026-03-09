@@ -19,13 +19,6 @@
 - "Step" forces every active algorithm to advance its queue to the conclusion of its *current* pending logical operation, smoothly animating the sprites to their final target positions for that specific move before pausing again.
 - A single Step action processes exactly one newly fetched SortResult per active algorithm panel. If that tick produces motion, the app animates that motion to completion, then immediately returns to paused state.
 
-### Speed Toggle
-
-- Cycles deterministic multipliers: `1.0x` → `1.5x` → `2.0x` → `1.0x`.
-- Mathematically divides the operation time costs (e.g., a 400ms swap takes 200ms at 2.0x speed).
-- Speed changes apply immediately to any in-progress operation.
-- Remaining animation duration scales according to the new multiplier.
-
 ### Restart
 
 - Re-initializes all models, queues, panel counters, and elapsed timers.
@@ -34,7 +27,7 @@
 
 ## Racing and Operation Timing
 
-Time is driven by operation cost. Base costs at `1.0x` speed:
+Time is driven by operation cost. These costs are absolute and immutable:
 
 - **Compare Operation (`T1`):** `150ms` simulated cost.
 - **Write/Swap Operation (`T2`):** `400ms` simulated cost (allows time for physical sprite interpolation).
@@ -71,5 +64,4 @@ The View tracks and displays an `Elapsed Time` metric formatted to two decimal p
 | `Space` | Play / Pause |
 | `Right Arrow` | Step (resolve current operation, only while paused) |
 | `R` | Restart |
-| `S` | Speed cycle (1x → 1.5x → 2x → 1x) |
 | `Escape` | Quit app cleanly |
