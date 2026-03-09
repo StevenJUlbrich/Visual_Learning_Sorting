@@ -65,7 +65,7 @@ When <=0, next SortResult is requested.
 The controller/view computes sprite movement by comparing prior logical index ownership to the new logical index ownership after each tick. Sprite-to-slot mapping must never rely on raw value matching.
 
 - Maintain `NumberSprite` objects (tracking value, exact floating-point `(x, y)` coords, and target coords).
-- Execute linear interpolation formulas to move sprites smoothly over the `dt` window.
+- Execute time-normalized easing functions (e.g., quadratic ease-in-out) to move sprites smoothly and naturally, decoupling physical destination mapping from strict frame-rate integration.
 - Dynamically calculate resting layout coordinates based on the active Option C orientation flag.
 
 ### Controller Responsibilities
