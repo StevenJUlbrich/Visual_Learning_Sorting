@@ -56,8 +56,7 @@ Primary objective: Prevent correctness drift, ensure operation-weighted timers a
 
 ### TC-A5 Sprite Physics and Math
 
-- Unit test the `NumberSprite` float interpolation function.
-- Assert that given a start of `x=0`, a target of `x=100`, and an accumulated `dt` mapping to a `0.5` progress ratio, the exact internal `x` equals `50.0`.
+- Unit test the `NumberSprite` easing functions. Assert that given a start of $x=0$, a target of $x=100$, and a time ratio $t=0.5$, the internal $x$ reflects the midpoint of the ease-in-out curve (which is still 50.0, but acceleration/deceleration at $t=0.2$ and $t=0.8$ must be non-linear).
 - Assert that upon `progress >= 1.0`, the exact `x` snaps to the target to eliminate drift.
 
 ### TC-A6 Controller Fairness
