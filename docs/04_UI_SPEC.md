@@ -16,15 +16,14 @@ Scope: This spec locks the visual and compositional behavior for v1 UI, grounded
 
 ### 2.2 Supported Window Sizes
 
-- Default: `1280x720` (landscape).
-- Alternate: `720x996` (portrait).
+- Dynamic target based on `config.toml` window resolution.
 
 ### 2.3 Grid Layout
 
 - Main visualization area is always a `2x2` panel grid.
-- The grid manager uses these spacing/sizing tokens:
-  - Eliminate magic numbers. Grid layout uses proportional tokens: `PADDING = window_width * 0.015`, `CONTROL_BAR_HEIGHT = window_height * 0.07`.
-  - Panel and sprite dimensions are derived mathematically from these baseline proportions.
+- The grid manager eliminates hardcoded magic numbers and uses these proportional spacing tokens calculated dynamically from window dimensions:
+  - `PADDING = window_width * 0.015`
+  - `CONTROL_BAR_HEIGHT = window_height * 0.07` (reserved at bottom of window for on-screen controls)
 - The grid occupies the space above the control bar:
   - `grid_height = window_height - CONTROL_BAR_HEIGHT - PADDING`
 - Panel dimensions are computed dynamically:
@@ -46,19 +45,12 @@ Scope: This spec locks the visual and compositional behavior for v1 UI, grounded
 
 ### 2.5 Control Button Layout
 
-- The control bar contains four buttons:
+- The control bar contains three buttons:
   - Play/Pause
   - Step
   - Restart
-  - Speed
 
-Button dimensions:
-width = 120 px
-height = 32 px
-
-Spacing between buttons: 16 px
-
-Buttons are centered horizontally inside the control bar.
+Buttons scale proportionally or center horizontally inside the control bar with equal padding.
 
 ## 3) Typography Rules (Locked)
 
@@ -101,7 +93,7 @@ Each algorithm panel contains the following UI regions and elements:
 ### 4.3 Array Rendering Region
 
 - Numbers only (no bars).
-- Horizontal spacing uses internal array padding token: `ARRAY_X_PADDING = 40`.
+- Horizontal spacing uses internal array padding proportional token.
 - Number slots are evenly distributed across available width.
 - Numbers are centered in their slot. (`slot_width = (panel_width - ARRAY_X_PADDING*2) / array_size`)
 - Vertical anchor defaults to panel center (`rect.y + rect.height // 2`).
