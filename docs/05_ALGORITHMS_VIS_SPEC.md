@@ -148,3 +148,31 @@ Rationale:
 - No tick may expose mutable `self.data` directly; snapshots must be copied.
 - Completion tick must represent a fully sorted array (selection-sort regression guard).
 - Tick density may vary by algorithm; this variance is intentional and instructional.
+
+## 7) ## Operation → Animation Mapping
+
+- COMPARE
+  - Highlight compared indices.
+  - No sprite movement.
+
+- SWAP
+  - Two sprites exchange horizontal positions.
+  - Swap animation uses arc motion defined in Animation Spec.
+
+- SHIFT
+  - Sprite moves horizontally into a new index position.
+
+- RANGE
+  - Highlight contiguous range only.
+  - No sprite displacement.
+
+- TERMINAL
+  - No motion.
+  - Entire array receives completion color.
+
+## Merge Animation Sequence
+
+1. RANGE tick highlights the merge segment.
+2. On the first write inside the segment, all sprites in the range move to the auxiliary row.
+3. Write ticks reorder sprites horizontally within the auxiliary row.
+4. After the final write, the entire segment returns to the main row.

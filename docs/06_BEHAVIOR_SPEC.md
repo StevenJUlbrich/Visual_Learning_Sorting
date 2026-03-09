@@ -23,6 +23,8 @@
 
 - Cycles deterministic multipliers: `1.0x` → `1.5x` → `2.0x` → `1.0x`.
 - Mathematically divides the operation time costs (e.g., a 400ms swap takes 200ms at 2.0x speed).
+- Speed changes apply immediately to any in-progress operation.
+- Remaining animation duration scales according to the new multiplier.
 
 ### Restart
 

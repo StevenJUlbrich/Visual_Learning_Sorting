@@ -58,6 +58,11 @@ Primary objective: Prevent correctness drift, ensure operation-weighted timers a
 - Assert that given a start of `x=0`, a target of `x=100`, and an accumulated `dt` mapping to a `0.5` progress ratio, the exact internal `x` equals `50.0`.
 - Assert that upon `progress >= 1.0`, the exact `x` snaps to the target to eliminate drift.
 
+### TC-A6 Controller Fairness
+
+- Ensure all active generators receive execution opportunities.
+- No algorithm may stall while others continue progressing.
+
 ## 5) Manual Test Pass (Release Gate)
 
 - Verify startup paused state and identical initial arrays.

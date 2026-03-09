@@ -18,6 +18,13 @@ An educational desktop visualizer that shows four sorting algorithms running con
 - User presses Play, and all four algorithms begin animating simultaneously. Faster algorithms (like Merge Sort) physically complete their operations and halt their timers earlier than slower ones (like Bubble Sort).
 - User can pause mid-animation, step through logical operations, and change playback speed.
 
+### Rendering Target
+
+The application targets a render rate of 60 FPS.
+
+Minor frame variance is acceptable, but sprite motion must remain visually continuous.
+Animations must never "teleport" except when the application is paused or stepped mid-operation.
+
 ## Scope
 
 ### In Scope (v1)
@@ -29,6 +36,15 @@ An educational desktop visualizer that shows four sorting algorithms running con
 - On-screen controls + keyboard shortcuts.
 - Two supported resolutions via a config flag (Option C): 1280x720 (landscape) and 720x996 (portrait).
 - Animations follow the motion contracts defined in 10_ANIMATION_SPEC.md.
+
+### Default Dataset
+
+The visualizer always initializes with the fixed array:
+
+[7, 6, 5, 4, 3, 2, 1]
+
+Array size for v1 is always 7 elements.
+No runtime array editing exists in v1.
 
 ### Out of Scope (v1)
 

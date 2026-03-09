@@ -6,7 +6,7 @@ Scope: Reliable local development and headless CI testing for the Pygame Sorting
 
 * **Host OS:** Windows 11.
 * **Dev shell:** Ubuntu WSL.
-* **Python:** 3.11+
+* **Python:** 3.11 and Python 3.13.
 * **Package/env manager:** `uv` (or your preferred manager, such as Poetry, if you choose to migrate).
 * **Core runtime lib:** `pygame >=2.5`.
 * **Quality tools:** `ruff`, `pyright`, `pytest`.
