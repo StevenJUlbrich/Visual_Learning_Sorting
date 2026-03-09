@@ -114,6 +114,33 @@ Run all algorithms to completion with `[4, 7, 2, 6, 1, 5, 3]` and verify:
 - Count the visible T3 range emphasis highlights (should be 6 for n=7).
 - Verify the panel step count does **not** include these T3 ticks. Heap Sort's step count should be 35 (20 T1 + 15 T2), not 41.
 
+### AT-14 Accent Color Readability (AAA Contrast)
+
+- Launch app and begin sorting.
+- For each panel, when a highlight activates (compare or swap tick), verify the accent-colored number is clearly legible against the panel background:
+  - **Bubble (cyan):** bright and vivid, highest contrast.
+  - **Selection (red):** warm red, clearly distinguishable from the dark panel.
+  - **Insertion (magenta):** vibrant magenta, not muddy or dim.
+  - **Heap (orange):** warm orange, easily readable.
+- Verify that **settled/extracted** elements in the Heap Sort panel (after leaving the active heap) are clearly readable — they should appear as a muted steel-blue, visually distinct from both the vivid default blue and the orange accent, without blending into the dark panel background.
+- Verify the **completion color** (green) is bright and legible when all elements turn green at algorithm finish.
+
+### AT-15 Portrait Mode Layout Integrity
+
+- Set `config.toml` to `orientation = "portrait"` (720x996) and launch app.
+- Verify all four panels are visible in the 2x2 grid without overlapping or clipping.
+- Verify the metrics line (Big-O, elapsed time, counters) is fully visible and not truncated or overlapping with the algorithm title.
+- Verify the message line is visible and does not collide with the metrics line above or the array numbers below.
+- Verify number sprites fit within their slots without overlapping adjacent numbers.
+- Verify arc motion during swaps does not cause sprites to overlap with header text or escape the panel boundary.
+
+### AT-16 Landscape Mode Layout Integrity
+
+- Set `config.toml` to `orientation = "landscape"` (1280x720) and launch app.
+- Verify all four panels are visible in the 2x2 grid with proportional spacing.
+- Verify header, metrics, message, and array regions are vertically stacked without overlap.
+- Verify all text is anti-aliased (smooth edges, no jagged stairstepping on curves of letters like "S", "O", "C").
+
 ## Automated Acceptance Intent (for `tests/`)
 
 ### A) Minimum Correctness Checks (non-empty fixtures only)

@@ -40,13 +40,22 @@
 * **D-032 Arc motion:** Swap arcs use `arc_height = panel_height * 0.08` with `sin(pi * t)` offset. Left sprite arcs up, right sprite arcs down.
 * **D-033 Z-ordering:** During swap animations, the upward-arcing sprite draws on top. During Insertion Sort lift, the lifted sprite draws on top. Default order is array index.
 * **D-034 Font surface caching:** NumberSprites pre-render text surfaces per color state at initialization; no per-frame `font.render()` calls.
-* **D-035 Settled color:** Heap Sort extracted elements use `(60, 90, 155)` — dimmed variant of the default array value color.
+* **D-035 Settled color (REVISED by D-044):** Heap Sort extracted elements use `(130, 150, 190)` — desaturated steel-blue variant of the default array value color. See D-044 for rationale.
 * **D-036 Highlight transitions:** Highlights apply instantly at tick start and are replaced instantly by the next tick. No fade transitions.
 * **D-037 Write counter semantics:** `writes` counts individual array positions modified. Swap = 2 writes, shift = 1 write, placement = 1 write. Matches standard algorithm analysis.
 * **D-038 Comparisons counter semantics:** `comparisons` counts data comparisons only. Insertion Sort key-selection ticks use `OpType.COMPARE` for timing but do not increment the comparisons counter.
 * **D-039 Insertion Sort tick sequence:** Each shift requires both a T1 compare tick and a T2 shift tick. A terminating T1 compare is emitted when the loop exits by condition (not by `j < 0`). The key sprite remains elevated across all ticks until the T2 placement tick.
 * **D-040 Complexity string format:** Use Unicode superscript: `"O(n²)"` and `"O(n log n)"`. These represent worst-case time complexity.
 * **D-041 T3 step counter exclusion:** RANGE ticks (T3) do not increment the panel step counter. They are a visual teaching aid, not an algorithmic operation.
+* **D-042 AAA contrast compliance:** All foreground colors on panel background `(45, 45, 53)` must meet WCAG 2.1 AAA for their text-size category. Number sprites (FiraCode 28px = large text) require ≥ 4.5:1. Body text (Inter 16px = normal text) requires ≥ 7:1. Contrast ratios are documented in `04_UI_SPEC.md` Section 5.
+* **D-043 Accent color corrections:** Insertion accent changed from `(255, 0, 255)` to `(255, 50, 255)` (4.35:1 → 4.7:1). Selection accent changed from `(255, 80, 80)` to `(255, 95, 95)` (4.24:1 → 4.6:1). Both now meet AAA for large text.
+* **D-044 Settled color redesign:** Settled/extracted color changed from `(60, 90, 155)` to `(130, 150, 190)` (2.03:1 → 4.6:1). Visual distinction from default array blue `(100, 150, 255)` is now achieved through desaturation rather than dimming, because a dimmed variant cannot be darker than the default (4.8:1) while still meeting the 4.5:1 AAA floor.
+* **D-045 Secondary text uplift:** Secondary text changed from `(170, 170, 180)` to `(190, 190, 200)` (5.93:1 → 7.4:1) to meet AAA for normal text at body font size.
+* **D-046 Error text split:** Error border remains `(235, 80, 80)` (border does not require text contrast). Error message text uses `(255, 120, 120)` (5.5:1), meeting AA for normal text. True AAA (7:1) for red-hued text on dark backgrounds is not achievable without shifting to pink; AA is accepted as a practical compromise for error messages.
+* **D-047 Metrics line layout:** Metrics are rendered below the title line (not beside it on the same baseline) to prevent text overflow in portrait panels (343px width). Format: `"<Big-O> | <elapsed> | Steps: <n> | Comps: <n> | Writes: <n>"`.
+* **D-048 Header vertical rhythm:** Panel header uses proportional insets (`HEADER_INSET_X = panel_width * 0.03`, `HEADER_INSET_Y = panel_height * 0.04`) with minimum pixel floors. Title → metrics → message flow vertically with fixed gaps (4px, 6px).
+* **D-049 Font asset path:** Font files bundled in `assets/fonts/` directory. Loading attempts bundled path first, falls back to system fonts.
+* **D-050 Fixed font sizes:** Font sizes (24/16/28) are absolute pixel values, not proportional to panel dimensions. Proportional font scaling is deferred to post-v1.
 
 ## Deferred
 
