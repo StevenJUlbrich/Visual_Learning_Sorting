@@ -7,7 +7,7 @@ An educational desktop visualizer that shows four sorting algorithms running con
 ## What It Is
 
 - A Python + Pygame portfolio project focused on algorithm mechanics and animation physics.
-- A fixed 4-panel comparison for Bubble Sort, Selection Sort, Insertion Sort, and Merge Sort.
+- A fixed 4-panel comparison for Bubble Sort, Selection Sort, Insertion Sort, and Heap Sort.
 - A sprite-based visualization where numbers move fluidly across the screen.
 - A true race: algorithms operate on independent timers based on the simulated cost of their operations.
 
@@ -15,7 +15,7 @@ An educational desktop visualizer that shows four sorting algorithms running con
 
 - User opens app and sees a clean 2x2 grid with all algorithms ready.
 - App starts paused so the user can inspect the initial identical array states with the array being [7,6,5,4,3,2,1]
-- User presses Play, and all four algorithms begin animating simultaneously. Faster algorithms (like Merge Sort) physically complete their operations and halt their timers earlier than slower ones (like Bubble Sort).
+- User presses Play, and all four algorithms begin animating simultaneously. Faster algorithms physically complete their operations and halt their timers earlier than slower ones.
 - User can pause mid-animation, step through logical operations, and change playback speed.
 
 ### Rendering Target
@@ -29,7 +29,7 @@ Animations must never "teleport" except when the application is paused or steppe
 
 ### In Scope (v1)
 
-- 4 fixed algorithms: Bubble, Selection, Insertion, Merge.
+- 4 fixed algorithms: Bubble, Selection, Insertion, Heap.
 - The array will be [7,6,5,4,3,2,1] for all algorithms.
 - Pygame `Sprite` entity system for continuous `(x, y)` coordinate interpolation.
 - Independent operation queues and visual timers.
