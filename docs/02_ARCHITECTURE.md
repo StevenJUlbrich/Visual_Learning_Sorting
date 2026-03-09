@@ -81,9 +81,7 @@ The controller/view computes sprite movement by comparing prior logical index ow
 
 ## Config + Runtime Targets (Option C)
 
-- Landscape target: `1280x720`.
-- Portrait target: `720x996`.
-- Target is determined via a config flag. The View dynamically calculates origin `(x, y)` baseline slots for the arrays based on the active resolution.
+- Proportional geometry target. The View calculates `x` and `y` baselines, padding, and sprite dimensions dynamically as percentages of the active window resolution defined in `config.toml`.
 - Extensibility Rules: New algorithms must implement `BaseSortAlgorithm` and `sort_generator` contract. Max simultaneous displayed algorithms remains 4 in v1.
 
 ## Sprite Identity
