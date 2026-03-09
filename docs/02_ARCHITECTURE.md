@@ -9,7 +9,7 @@ src/visualizer/
 │   ├── contracts.py        # SortResult, OpType, BaseSortAlgorithm
 │   ├── bubble.py           # BubbleSort implementation
 │   ├── insertion.py        # InsertionSort implementation
-│   ├── merge.py            # MergeSort implementation
+│   ├── heap.py             # HeapSort implementation
 │   └── selection.py        # SelectionSort implementation
 ├── views/
 │   ├── window.py           # Pygame display init and master 2x2 grid layout
