@@ -13,6 +13,7 @@ All items below must pass:
 - Global controls map strictly to Path 2 UI expectations.
 - Panels support Option B theme accents and Option C resolution flags without rendering artifacts.
 - Sprites animate smoothly via `dt` without teleporting, and independent elapsed timers halt precisely upon algorithm completion.
+- Comparisons and writes counters accurately reflect the algorithmic operations performed.
 
 ## Acceptance Tests (Human-Checkable)
 
@@ -22,13 +23,14 @@ All items below must pass:
 - Expect paused state and 4 visible algorithm panels.
 - Expect each panel starts from the same initial values.
 - Expect all elapsed timers in the panel headers to read `0.00s`.
+- Expect all counters to read Steps: 0, Comps: 0, Writes: 0.
 
 ### AT-02 Independent Queue Progression
 
 - While paused, press Step once.
 - Expect each active algorithm to advance its independent animation queue to the conclusion of its currently pending logical operation, smoothly animating the sprites to their targets.
 - Repeat multiple times; expect deterministic progression across all panels without forced synchronization.
-- Verify the step counter only increments on successful, non-terminal yields.
+- Verify the step counter only increments on successful, non-terminal, non-RANGE yields.
 
 ### AT-03 Completion Race (All Algorithms)
 
@@ -83,6 +85,33 @@ Verify:
 - Run Heap Sort panel to completion.
 - Verify the Build Max-Heap phase completes before any extraction swap occurs (no element is swapped to its sorted position before the full heap is constructed).
 - Verify the sorted region (right side of array) grows by one element per extraction step.
+- Note: for `[7, 6, 5, 4, 3, 2, 1]` the array is already a valid max-heap, so Phase 1 consists only of comparison ticks with no swaps. This is expected and correct.
+
+### AT-11 Insertion Sort Tick Sequence
+
+- Run Insertion Sort panel, stepping through operations.
+- For each pass, verify the visible sequence:
+  1. Key element lifts above the array row.
+  2. Compare highlights appear on the element being checked and the adjacent position.
+  3. If the comparison triggers a shift, the element slides right before the next comparison.
+  4. When the insertion point is found, a final comparison highlight shows the element that is not greater than the key (if the key does not go to position 0).
+  5. The key drops into the correct position.
+- Verify the key sprite remains elevated throughout all compare and shift ticks until placement.
+
+### AT-12 Counter Accuracy
+
+Run all algorithms to completion with `[7, 6, 5, 4, 3, 2, 1]` and verify:
+
+- **Bubble Sort:** Comparisons = 21, Writes = 42 (21 swaps x 2 array writes each).
+- **Selection Sort:** Comparisons = 21, Writes = 6 (3 swaps x 2 array writes each).
+- **Insertion Sort:** Comparisons = 21, Writes = 27 (21 shifts + 6 placements, each 1 array write).
+- **Heap Sort:** Verify comparisons and writes are consistent with the sift-down traversals. Exact values depend on the sift-down path but must be deterministic for this fixed input.
+
+### AT-13 T3 Step Counter Exclusion
+
+- Run Heap Sort to completion.
+- Count the visible T3 range emphasis highlights (should be 6 for n=7).
+- Verify the panel step count does **not** include these T3 ticks. Heap Sort's step count should reflect only T1 compare ticks and T2 write ticks.
 
 ## Automated Acceptance Intent (for `tests/`)
 
@@ -110,3 +139,26 @@ Verify:
 - Assert at least one `T3 Range Emphasis Tick` is emitted (active heap boundary display).
 - Assert T3 ticks only appear during Phase 2 (extraction), never during Phase 1 (build max-heap).
 - Assert that each T3 tick's `highlight_indices` forms the contiguous range `tuple(range(0, k))` for a strictly decreasing `k`.
+
+### E) Insertion Sort Tick Sequence Contract
+
+- Consume the Insertion Sort generator for `[7, 6, 5, 4, 3, 2, 1]`.
+- For each outer pass `i`:
+  - Assert the first tick is a T1 key-selection on `(i,)`.
+  - Assert subsequent T1/T2 ticks alternate correctly: T1 compare, then T2 shift for each element that moves.
+  - If the loop exits by condition (`j >= 0`), assert a terminating T1 compare tick is emitted.
+  - Assert the final tick of the pass is a T2 placement tick on a single index.
+
+### F) Counter Accuracy Contract
+
+- For each algorithm with `[7, 6, 5, 4, 3, 2, 1]`:
+  - Consume generator to completion.
+  - Assert `comparisons` matches expected value (Bubble: 21, Selection: 21, Insertion: 21).
+  - Assert `writes` matches expected value (Bubble: 42, Selection: 6, Insertion: 27).
+  - Assert Heap Sort `comparisons` and `writes` are deterministic and match the calculated values for this input.
+
+### G) T3 Step Counter Exclusion
+
+- Consume the Heap Sort generator for `[7, 6, 5, 4, 3, 2, 1]`.
+- Count all ticks where `success=True`, `is_complete=False`, and `operation_type != RANGE`.
+- Assert this count matches the panel step count (T3 ticks excluded).

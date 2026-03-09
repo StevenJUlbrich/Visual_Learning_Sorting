@@ -39,7 +39,8 @@ The View tracks and displays an `Elapsed Time` metric formatted to two decimal p
 
 ## Tick and Counting Behavior
 
-- A panel "step" increments strictly upon receiving a `SortResult` where `success=True` and `is_complete=False`.
+- A panel "step" increments strictly upon receiving a `SortResult` where `success=True`, `is_complete=False`, and `operation_type` is **not** `OpType.RANGE`.
+- T3 Range Emphasis ticks (used by Heap Sort for boundary display) do **not** increment the step count. They are a visual teaching aid, not an algorithmic operation.
 - Completion ticks (`is_complete=True`) and failure ticks do not increment the step count.
 - Upon completion, the panel's elapsed timer permanently halts, proving its final "race" time.
 
