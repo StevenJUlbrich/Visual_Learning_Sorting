@@ -32,7 +32,7 @@ Animations operate on a time-normalized progression ($t$) to ensure sprites reac
 - Pygame `Sprite` entity system for continuous `(x, y)` coordinate interpolation.
 - Independent operation queues and visual timers.
 - On-screen controls + keyboard shortcuts.
-- Two supported resolutions via a config flag (Option C): 1280x720 (landscape) and 720x996 (portrait).
+- Dynamic proportional resolution scaling. The UI geometry calculates dynamically at startup to support arbitrary window sizes cleanly (e.g., standard 1080p).
 - Animations follow the motion contracts defined in 10_ANIMATION_SPEC.md.
 
 ### Default Dataset
