@@ -5,7 +5,9 @@ Scope: Defines how the Pygame View layer translates discrete logical operations 
 ## 1) Interpolation (Tweening) Rules
 
 - Motion must occur smoothly over the duration commanded by the Controller (e.g., 400ms for a swap).
-- Standard spatial movement utilizes float-based linear interpolation factoring in Pygame's frame delta-time (`dt`).
+- Standard spatial movement utilizes time-normalized easing functions (e.g., Quadratic or Cubic Ease-In-Out) based on elapsed operation time. The interpolation ratio ($t$) is calculated as:
+  $$t = \frac{\text{elapsed\_time}}{\text{total\_duration}}$$
+  This guarantees that regardless of Pygame's frame delta-time (`dt`), the sprite will map exactly to the easing curve and land perfectly on target at $t=1.0$, eliminating physics derailment from frame drops.
 - The internal sprite state must track `exact_x` and `exact_y` as floats to prevent rounding drift, syncing to the integer `rect` only at the final render step.
 
 ## 2) Algorithm-Specific Motion Signatures
