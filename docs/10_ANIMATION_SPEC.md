@@ -39,12 +39,56 @@ Scope: Defines how the Pygame View layer translates discrete logical operations 
 - Each sprite updates its `home_x` to the center of its newly assigned slot.
 - Sprites interpolate from their current `(exact_x, exact_y)` toward the new `(home_x, home_y)` over the operation duration.
 
+### 3.4 Compare Lane (Vertical Offset Coordinate)
+
+The **compare lane** is a conceptual vertical position above the baseline row where sprites temporarily reside during comparison or key-selection events. It is not a fixed pixel coordinate — each algorithm defines its own offset from `home_y`:
+
+| Algorithm | Offset Token | Value | Trigger | Duration |
+| --- | --- | --- | --- | --- |
+| Bubble Sort | `compare_lift_offset` | `panel_height * 0.05` | T1 compare tick on `(j, j+1)` | Transient — ascend, hold, descend within a single 150ms T1 tick |
+| Insertion Sort | `lift_offset` | `panel_height * 0.06` | T1 key-selection tick on `(i,)` | Sustained — sprite remains at `home_y - lift_offset` across all subsequent ticks until the T2 placement drop |
+| Selection Sort | — | — | — | No compare-lane motion (highlight-only) |
+| Heap Sort | — | — | — | No compare-lane motion (highlight-only; tree structure communicated via T3 pulsed highlights) |
+
+**Coordinate formula:** When a sprite is in the compare lane, its `exact_y` target is `home_y - offset` where `offset` is the algorithm-specific token above. The sprite eases to and from this position using the standard ease-in-out curve.
+
+**Design rationale:** The compare lane provides **visual isolation** — lifting sprites above the resting baseline makes the current algorithmic focus unmistakable, even at a glance. The two algorithms that use it (Bubble Sort, Insertion Sort) have different offset magnitudes and durations, creating distinct visual signatures:
+
+- Bubble Sort's compare lane is **shallow and transient** (brief pulse, both sprites) — the pair is examined and released quickly.
+- Insertion Sort's compare lane is **taller and sustained** (key hovers for the entire insertion cycle) — the key is prominently separated while multiple shifts occur beneath it.
+
+Selection Sort and Heap Sort do not use compare-lane motion because their pedagogical emphasis is elsewhere (scan/minimum tracking and tree-relationship highlighting, respectively).
+
 ## 4) Render Order (Z-Ordering)
 
-- Default draw order follows array index (index 0 drawn first, index 6 drawn last).
-- During a swap animation, the **upward-arcing sprite** (left sprite) is drawn **last** (on top) so it visually passes over the downward-arcing sprite.
-- During an Insertion Sort lift, the **lifted sprite** is drawn last (on top of shifted sprites).
-- Outside of active animations, default index order is restored.
+### 4.1 Unified Principle
+
+**Any sprite that is vertically displaced above the baseline (`exact_y < home_y`) must render on top of all sprites at the baseline.** This is the single governing rule — all algorithm-specific z-order behaviors derive from it.
+
+Rationale: Sprites in the compare lane (Section 3.4) or on an upward arc represent the current algorithmic focus. Drawing them on top prevents visual occlusion and keeps the learner's attention on the active operation.
+
+### 4.2 Default Order
+
+- When no animation is active, draw order follows array index (index 0 drawn first, index 6 drawn last).
+
+### 4.3 Lifted Sprite Rules
+
+The following situations produce lifted sprites that must draw on top of baseline sprites:
+
+| Situation | Lifted Sprite(s) | Z-Order Among Lifted |
+| --- | --- | --- |
+| **Bubble Sort compare-lift** (T1) | Both sprites at `j` and `j+1` | Default index order between the two (no z-swap) |
+| **Bubble/Selection/Heap swap arc** (T2) | Left sprite (arcs upward) | Left sprite draws on top of right sprite (which arcs downward, below baseline) |
+| **Heap Sort extraction arc** (T2) | Left sprite at index 0 (arcs upward) | Same as swap arc — left on top |
+| **Insertion Sort key lift** (sustained) | Key sprite at `(i,)` | Key draws on top of all other sprites, including shifted elements |
+
+### 4.4 Conflict Resolution
+
+If multiple lifted sprites exist simultaneously (e.g., theoretically possible during rapid frame rendering), the sprite with the **smallest `exact_y`** (highest on screen) draws last (on top). If tied, default index order breaks the tie.
+
+### 4.5 Restoration
+
+When a sprite returns to `home_y` (compare-lift descent completes, swap arc lands, key drops into place), it immediately reverts to default index-order rendering. There is no lingering z-order elevation after the animation concludes.
 
 ## 5) Algorithm-Specific Motion Signatures
 
