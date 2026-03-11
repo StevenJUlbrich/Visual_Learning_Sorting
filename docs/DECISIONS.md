@@ -24,7 +24,7 @@
 * **D-016 Failure behavior:** failure deactivates only failing algorithm; app keeps running.
 * **D-017 Theme strategy (Option B):** Each panel has a distinct accent color tinted per algorithm.
 * **D-018 Resolution targets (Option C):** Support both landscape and portrait window orientations via a config flag.
-* **D-019 Heap Sort visualization in v1:** T3 Range Emphasis ticks required during Phase 2 (extraction) to display the active heap boundary; in-place motion only (no auxiliary row).
+* **D-019 Heap Sort visualization in v1 (REVISED):** T3 Range Emphasis ticks required during both Phase 1 (build) and Phase 2 (extraction). In-place motion only (no auxiliary row or tree layout), but Heap Sort must use **multi-index pulsed highlights to simulate tree-node relationships** (parent/children) within the linear array row. Sift-down emits Logical Tree Highlight T3 ticks that flash the parent-child triangle (indices `i`, `2i+1`, `2i+2`) in orange before each level's comparisons, implying binary tree structure without a drawn tree. Boundary T3 ticks display the active heap region with a left-to-right sweep. See D-051, D-057, D-058 for detailed mechanics.
 * **D-020 Domain flow:** avoid exception-driven algorithm control flow; use explicit failure states.
 * **D-021 Message line visibility:** `message` line is always visible in the panel UI.
 * **D-022 Keyboard bindings:** Space=play/pause, Right Arrow=step, R=restart, Escape=quit.
@@ -40,7 +40,7 @@
 * **D-032 Arc motion:** Swap arcs use `arc_height = panel_height * 0.08` with `sin(pi * t)` offset. Left sprite arcs up, right sprite arcs down.
 * **D-033 Z-ordering:** During swap animations, the upward-arcing sprite draws on top. During Insertion Sort lift, the lifted sprite draws on top. Default order is array index.
 * **D-034 Font surface caching:** NumberSprites pre-render text surfaces per color state at initialization; no per-frame `font.render()` calls.
-* **D-035 Settled color (REVISED by D-044):** Heap Sort extracted elements use `(130, 150, 190)` — desaturated steel-blue variant of the default array value color. See D-044 for rationale.
+* **D-035 Settled color (REVISED by D-044, confirmed by D-055):** Heap Sort extracted elements use `(130, 150, 190)` — desaturated steel-blue that provides the "sorted region" contrast seen in the Heap Sort reference video (`docs/Reference/Heap_Sort_Video_Reference.md` Section 3.2). Elements extracted from the heap permanently transition to this color, visually separating the growing sorted region (right side, steel-blue) from the shrinking active heap (left side, default blue / orange highlights). See D-044 for contrast rationale, D-054 for accent scope, D-055 for lifecycle rules.
 * **D-036 Highlight transitions:** Highlights apply instantly at tick start and are replaced instantly by the next tick. No fade transitions.
 * **D-037 Write counter semantics:** `writes` counts individual array positions modified. Swap = 2 writes, shift = 1 write, placement = 1 write. Matches standard algorithm analysis.
 * **D-038 Comparisons counter semantics:** `comparisons` counts data comparisons only. Insertion Sort key-selection ticks use `OpType.COMPARE` for timing but do not increment the comparisons counter.
