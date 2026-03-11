@@ -58,6 +58,21 @@ Scope: Defines how the Pygame View layer translates discrete logical operations 
   - Right sprite (higher index): `exact_y = home_y + arc_offset` (arcs downward).
 - The arc peaks at `t=0.5` and returns to `home_y` at `t=1.0`.
 
+#### 5.1.1 Bubble Sort Compare-Lift (T1 Motion)
+
+Bubble Sort T1 compare ticks trigger a **temporary vertical offset** on the adjacent pair `(j, j+1)`, isolating them from the baseline row so the learner can clearly identify which two elements are being compared — even when no swap follows.
+
+- **Lift offset:** `compare_lift_offset = panel_height * 0.05`.
+- **Timing within the 150ms T1 duration:**
+  - **Ascent (0–60ms, 40%):** Both sprites at `j` and `j+1` ease upward from `home_y` to `home_y - compare_lift_offset` using the standard ease-in-out curve.
+  - **Hold (60–100ms, 27%):** Both sprites hold at the lifted position. The comparison is visually prominent.
+  - **Descent (100–150ms, 33%):** Both sprites ease back down to `home_y` using the standard ease-in-out curve.
+- **Both sprites lift as a unit** — they share the same vertical offset at all times. This emphasizes that Bubble Sort evaluates *pairs*, unlike Insertion Sort which isolates a single key.
+- **No horizontal movement** occurs during the compare-lift. Horizontal displacement happens only on the subsequent T2 swap arc (if a swap is needed).
+- **Z-ordering:** During the lift, both lifted sprites draw on top of all non-lifted sprites. Between the two lifted sprites, default index order is maintained.
+- **Scope:** This compare-lift applies **only to Bubble Sort** T1 ticks. Selection Sort T1 ticks remain highlight-only with no vertical offset — Selection Sort's visual emphasis is on the scan cursor and minimum tracking, not pair isolation.
+- **Transition to swap:** If a T2 swap tick immediately follows, the swap arc motion begins from `home_y` (baseline). The compare-lift descent completes before the T2 tick starts, so there is no overlap between the lift return and the swap arc.
+
 ### 5.2 Insertion Sort (Lift, Shift, and Drop)
 
 - **Action:** A key is selected, elements shift right, and the key is placed at its sorted position.
