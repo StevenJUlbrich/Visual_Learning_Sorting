@@ -68,23 +68,67 @@ Scope: Defines how the Pygame View layer translates discrete logical operations 
   3. **Drop (T2 placement tick):** The lifted key sprite eases horizontally to its destination slot `home_x` and simultaneously eases vertically from `home_y - lift_offset` back to `home_y`, using the standard easing curve over the T2 duration.
 - Easing for all three sub-motions uses the same ease-in-out curve as swaps.
 
-### 5.3 Heap Sort (In-Place Swaps with Boundary Highlight)
+### 5.3 Heap Sort (In-Place Swaps with Tree Highlight and Extraction Arc)
 
 - **Action:** Two elements exchange indices during sift-down or root extraction.
-- **Motion:** Identical arc swap motion to Bubble and Selection Sort — both sprites interpolate their `x` coordinates to each other's home position. Left sprite arcs upward, right sprite arcs downward. Same `arc_height` and sine formula.
-- **Heap Boundary Emphasis (T3):** On a Range Emphasis tick, the sprites at indices `0..heap_size-1` render in the panel accent color (orange) for the T3 duration (200ms) with no positional change. This visually communicates the active heap region to the learner.
+- **Sift-down swap motion:** Identical arc swap motion to Bubble and Selection Sort — both sprites interpolate their `x` coordinates to each other's home position. Left sprite arcs upward, right sprite arcs downward. Standard `arc_height = panel_height * 0.08` and sine formula.
+- **Extraction swap motion:** When the root (index 0) swaps with the end of the heap region, a **higher arc** is used to visually distinguish this phase-transition move from internal sift-down repairs:
+  - `extraction_arc_height = panel_height * 0.14` (1.75× the standard arc height).
+  - Same sine formula: `arc_offset = extraction_arc_height * sin(pi * t)`.
+  - Left sprite (index 0) arcs upward, right sprite (index `end`) arcs downward.
+  - The dramatic height signals to the learner that this is the major structural event — extracting the maximum from the heap — not a routine repair.
+- **Logical Tree Highlight (T3):** Before each sift-down level's comparisons (in both Phase 1 and Phase 2), a T3 tick highlights the **parent-child triangle** — the parent index and its existing children within the heap boundary. The accent color (orange) renders simultaneously on the triangle members for 200ms with no positional change. The non-contiguous highlight pattern (e.g., indices 1, 3, 4) implies the binary tree structure within the flat row.
+- **Heap Boundary Emphasis (T3) with Sweep:** At the start of each extraction step, a T3 tick highlights the contiguous range `0..heap_size-1` in accent color. Rather than appearing instantly on all indices, the highlight **sweeps** from index 0 to `end` over the T3 duration (200ms), creating a left-to-right "refresh" effect that visually re-establishes the heap boundary before each extraction (see Section 5.3.1).
+- **Sift-Down Cadence:** After an extraction swap completes, the subsequent sift-down repair sequence uses **reduced simulated costs** to create a rapid-fire "ripple" effect, visually conveying that sift-down is a fast internal repair rather than a major structural event (see Section 5.3.2).
 - **No auxiliary row:** All Heap Sort motion occurs on the main array `y` row. There is no secondary animation row for Heap Sort.
+
+#### 5.3.1 Heap Boundary Sweep
+
+When a Boundary Emphasis T3 tick fires for Heap Sort extraction, the View renders the highlight as a **staggered sweep** rather than an instant flash:
+
+- The total T3 duration remains **200ms**.
+- Each index in the range `0..end` receives its orange accent highlight at a staggered offset: `highlight_delay(i) = (i / end) * sweep_window`, where `sweep_window = 120ms`.
+- The remaining time (`200ms - sweep_window = 80ms`) is the **hold phase** — all indices are highlighted simultaneously before the tick completes.
+- The per-index delay is purely visual (View-layer rendering). The Controller still treats the T3 tick as a single 200ms operation. The algorithm model is not affected.
+- The sweep direction is always left-to-right (index 0 highlights first), reinforcing the array's index ordering.
+
+**Implementation note:** The sweep can be achieved by tracking per-index elapsed time in the View. Each index transitions from default color to accent color when `elapsed >= highlight_delay(i)`. No easing is applied to individual index transitions — each index snaps to accent color at its delay threshold.
+
+#### 5.3.2 Sift-Down Cadence (Post-Extraction)
+
+After an extraction swap (T2 on `(0, end)`), the sift-down repair sequence that follows uses **reduced operation durations** to create a rapid, cascading visual rhythm:
+
+| Tick Type | Standard Duration | Sift-Down Cadence Duration |
+| --- | --- | --- |
+| T1 Compare | 150ms | **100ms** |
+| T2 Swap | 400ms | **250ms** |
+| T3 Logical Tree Highlight | 200ms | **130ms** |
+
+**Scope:** The reduced cadence applies **only** to sift-down ticks that immediately follow an extraction swap within the same extraction step. It does not apply to:
+
+- Phase 1 (Build Max-Heap) sift-down ticks — these use standard durations because the learner needs time to absorb the heap construction process.
+- The extraction swap itself — always 400ms with elevated arc.
+- The boundary T3 tick — always 200ms with sweep.
+
+**Controller mechanism:** The Controller tracks a `sift_down_cadence` flag per Heap Sort panel. The flag is set to `True` after dispatching an extraction T2 swap, and reset to `False` when the next boundary T3 tick fires (start of the next extraction step) or when the algorithm completes. While the flag is active, the Controller applies the reduced duration table when mapping `OpType` to simulated cost for that panel.
+
+**Rationale:** The reference video (see `docs/Reference/Heap_Sort_Video_Reference.md`) shows sift-down repairs as a rapid-fire cascade after each extraction. The reduced durations create this visual rhythm while remaining slow enough for the learner to follow the parent-child comparisons. The 250ms swap duration still allows readable arc motion — the easing curve compresses but does not lose legibility. Phase 1 retains standard timing because building the heap is the conceptually dense phase where the learner first encounters tree relationships.
+
+**Race impact:** The reduced sift-down durations decrease Heap Sort's total elapsed time, making it more competitive in the race. This is intentional — it reflects the algorithmic reality that sift-down is an O(log n) repair, and the visual pacing should convey that these repairs are efficient relative to the extraction event that triggers them.
 
 #### Heap Sort Extraction Visual Sequence (per extraction step)
 
-1. T3 tick fires: indices `0..end` render in accent color for 200ms (no movement).
-2. T2 swap tick fires: root (index 0) and end (index `end`) exchange positions via arc motion over 400ms.
-3. Sift-down T1/T2 ticks fire: comparisons highlight and swaps arc within the shrinking heap boundary.
+1. **Boundary T3** tick fires: indices `0..end` highlight via left-to-right sweep over 200ms (no movement).
+2. **Extraction T2** swap tick fires: root (index 0) and end (index `end`) exchange positions via **elevated arc motion** (`extraction_arc_height`) over 400ms. Controller sets `sift_down_cadence = True`.
+3. **Sift-down sequence** (reduced cadence): For each level of sift-down repair:
+   a. **Logical Tree T3** tick fires: parent-child triangle renders in accent color for **130ms** (no movement).
+   b. **T1** compare ticks fire: highlight compared indices for **100ms**.
+   c. **T2** swap tick fires (if needed): sprites arc with standard arc height over **250ms**.
 4. The element now at index `end` renders in the settled/extracted color to show it has left the active heap.
 
 ## 6) Highlight Behavior
 
-- Highlights apply **instantly** at tick start. There is no fade-in or fade-out transition.
+- Highlights apply **instantly** at tick start. There is no fade-in or fade-out transition. **Exception:** Heap Sort boundary T3 ticks use a staggered left-to-right sweep (see Section 5.3.1); per-index highlights still snap on (no fade), but their start times are offset across the sweep window.
 - When the next tick begins, the previous tick's highlights are **replaced** by the new tick's `highlight_indices`. Indices not in the new set revert to their default color immediately.
 - During pause, the current tick's highlights remain visible and frozen.
 - During step mode, the stepped tick's highlights are visible for the duration of the step animation and persist until the next step or play action.

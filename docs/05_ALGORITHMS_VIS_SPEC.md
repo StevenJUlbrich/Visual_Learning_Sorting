@@ -165,6 +165,8 @@ Additional rules:
 
 Heap Sort operates in two phases: **Build Max-Heap** and **Extraction**.
 
+Phase 1 is not merely a sequence of array swaps — it is a **structural transformation** that converts an arbitrary array into a valid max-heap. The sift-down procedure must visually communicate the **parent-child triangle** relationship (indices `i`, `2i+1`, `2i+2`) at each level of repair, so the learner understands the tree structure being enforced even though elements are displayed in a flat row.
+
 #### Phase 1 — Build Max-Heap
 
 - Iterate `i` from `n // 2 - 1` down to `0`, calling sift-down for each node.
@@ -174,25 +176,28 @@ Heap Sort operates in two phases: **Build Max-Heap** and **Extraction**.
 
 1. Set `largest = i`.
 2. Compute `left = 2*i + 1` and `right = 2*i + 2`.
-3. If `left < heap_size`:
+3. **Logical Tree Highlight (T3):** Before any comparison at this sift-down level, emit a `T3 Range Emphasis Tick` highlighting the **parent-child triangle** — the tuple of existing indices from `(i, left, right)` where `left` and `right` are included only if they fall within `heap_size`. This tick communicates which tree relationship is about to be evaluated. Duration: 200ms. The accent color (orange) renders simultaneously on the parent and its children, implying the binary tree structure within the flat array layout.
+   - Message format: `"Heapify: examining node {i} (value {arr[i]}) with children [{left_desc}, {right_desc}]"` where each child description includes its index and value, or is omitted if the child does not exist.
+   - This T3 tick does **not** increment the step counter (consistent with all T3 ticks).
+4. If `left < heap_size`:
    - Emit `T1 Compare Tick` on `(largest, left)` — compares current largest with left child. Increment `self.comparisons += 1`.
    - If `arr[left] > arr[largest]`, update `largest = left`.
-4. If `right < heap_size`:
-   - Emit `T1 Compare Tick` on `(largest, right)` — compares current largest with right child. **Note:** if `largest` was updated to `left` in step 3, this comparison is now between the left child and the right child, which is correct (finding the larger of the two children to potentially swap with the parent). Increment `self.comparisons += 1`.
+5. If `right < heap_size`:
+   - Emit `T1 Compare Tick` on `(largest, right)` — compares current largest with right child. **Note:** if `largest` was updated to `left` in step 4, this comparison is now between the left child and the right child, which is correct (finding the larger of the two children to potentially swap with the parent). Increment `self.comparisons += 1`.
    - If `arr[right] > arr[largest]`, update `largest = right`.
-5. If `largest != i`:
+6. If `largest != i`:
    - Perform swap `arr[i], arr[largest] = arr[largest], arr[i]`.
    - Emit `T2 Write/Mutation Tick` on `(i, largest)`. Increment `self.writes += 2`.
    - Continue sift-down from `largest` (repeat from step 1 with `i = largest`).
 
-**Note on `[4, 7, 2, 6, 1, 5, 3]`:** This input is **not** a valid max-heap (it has 3 heap violations), so Phase 1 performs actual sift-down swaps — the learner sees the heap being constructed with visible repairs at multiple tree levels. The build phase produces the max-heap `[7, 6, 5, 4, 1, 2, 3]`.
+**Note on `[4, 7, 2, 6, 1, 5, 3]`:** This input is **not** a valid max-heap (it has 3 heap violations), so Phase 1 performs actual sift-down swaps — the learner sees the heap being constructed with visible repairs at multiple tree levels. The build phase produces the max-heap `[7, 6, 5, 4, 1, 2, 3]`. The Logical Tree Highlight ticks make each repair's tree context visible: the learner can identify the parent and its children before each comparison-and-swap decision.
 
 #### Phase 2 — Extraction
 
 - Iterate `end` from `n - 1` down to `1`:
-  1. Emit `T3 Range Emphasis Tick` on `tuple(range(0, end + 1))` to highlight the active heap boundary before the extraction swap.
-  2. Swap root (`index 0`) with `end`, then emit `T2 Write/Mutation Tick` on `(0, end)`. Increment `self.writes += 2`.
-  3. Call sift-down from `index 0` with `heap_size = end`, yielding T1/T2 ticks per comparison and swap as described above.
+  1. Emit `T3 Range Emphasis Tick` on `tuple(range(0, end + 1))` to highlight the active heap boundary before the extraction swap. The View renders this as a left-to-right sweep (see Animation Spec Section 5.3.1).
+  2. **Extraction Swap:** Swap root (`index 0`) with `end`, then emit `T2 Write/Mutation Tick` on `(0, end)`. Increment `self.writes += 2`. This swap uses the **elevated extraction arc** (`panel_height * 0.14`) rather than the standard arc height, visually distinguishing it as a phase-transition move (see Section 6.2 and Animation Spec Section 5.3).
+  3. Call sift-down from `index 0` with `heap_size = end`. Sift-down emits Logical Tree Highlight T3 ticks before each level's comparisons, plus T1/T2 ticks per comparison and swap as described in Phase 1. The Controller applies **reduced sift-down cadence** durations (T1: 100ms, T2: 250ms, T3: 130ms) to create a rapid cascading rhythm (see Animation Spec Section 5.3.2).
 
 Additional rules:
 
@@ -221,9 +226,15 @@ Additional rules:
 - Heap extraction range emphasis highlights `tuple(range(0, heap_size))`.
 - This shows the learner exactly which portion of the array is still an active max-heap before each root extraction.
 
+### Heap Logical Tree Highlights
+
+- Sift-down parent-child triangle highlights the tuple of `(parent, left_child, right_child)` where children exist within the heap boundary.
+- This shows the learner which tree relationship is being evaluated, even though elements are displayed in a flat row.
+- The highlight pattern is **non-contiguous** (e.g., indices `(1, 3, 4)`), distinguishing it from the contiguous boundary highlights.
+
 ## 6) Heap Sort Visual Phasing Decision
 
-Decision: **Two-phase visual distinction is required in v1.**
+Decision: **Two-phase visual distinction is required in v1, enhanced with Logical Tree Highlights.**
 
 Required behavior in v1:
 
@@ -231,9 +242,30 @@ Required behavior in v1:
 - T1/T2 ticks during sift-down communicate individual comparisons and swaps within the heap.
 - No separate auxiliary row animation is used; all Heap Sort motion is in-place on the main array row.
 
+### 6.1 Logical Tree Highlight (v1 Required)
+
+While v1 does not render a tree layout, it must **imply** tree structure through targeted highlighting during sift-down operations. This bridges the gap between the flat array display and the binary heap relationships the algorithm operates on.
+
+**Mechanism:** Before each sift-down level's comparisons (in both Phase 1 and Phase 2), the algorithm emits a T3 tick that highlights the **parent-child triangle** — the parent index and its existing children. The accent color (orange) renders simultaneously on all members of the triangle for 200ms.
+
+**Visual effect:** The learner sees 2–3 numbers flash orange together in a pattern that is *not* contiguous (e.g., indices 1, 3, 4). This non-contiguous grouping is the visual cue that a tree relationship exists — the learner intuitively perceives that index 1 "owns" indices 3 and 4, even without drawn edges.
+
+**Distinction from boundary T3 ticks:** Boundary T3 ticks highlight a contiguous range (`0..heap_size-1`) and appear once per extraction step. Logical Tree Highlight T3 ticks highlight a non-contiguous parent-child group and appear before each sift-down level's comparisons. Both use the same T3 tick type and accent color; the viewer distinguishes them by the highlight pattern (contiguous = boundary, scattered = tree relationship).
+
+### 6.2 Extraction Swap Visual Distinction (v1 Required)
+
+The extraction swap (root element to end of heap) is a **phase-transition move** that fundamentally differs from intra-heap sift-down swaps. To communicate this visually, extraction swaps use an elevated arc height:
+
+- **Extraction arc height:** `extraction_arc_height = panel_height * 0.14` (1.75× the standard `arc_height` of `panel_height * 0.08`).
+- **Standard sift-down arc height:** unchanged at `panel_height * 0.08`.
+
+The taller arc on extraction swaps gives the root-to-end move a visually dramatic quality, signaling to the learner that this is the major structural event (removing the max from the heap) rather than an internal repair. This is defined in the Animation Spec (10_ANIMATION_SPEC.md Section 5.3).
+
 Rationale:
 
 - The shrinking boundary communicates the core O(n log n) behavior of heap extraction.
+- The Logical Tree Highlight communicates parent-child relationships without requiring a tree layout, drawing on the reference video's emphasis on tree structure (see `docs/Reference/Heap_Sort_Video_Reference.md`).
+- The elevated extraction arc visually separates the "extract max" event from routine sift-down swaps, reinforcing the two-phase teaching model.
 - Range highlighting preserves clarity without introducing additional drawing complexity.
 - In-place motion is visually consistent with Bubble and Selection Sort panels.
 
@@ -259,6 +291,7 @@ Rationale:
 - SWAP
   - Two sprites exchange horizontal positions.
   - Swap animation uses arc motion defined in Animation Spec.
+  - Heap Sort extraction swaps (root ↔ end) use the elevated arc height (`panel_height * 0.14`); all other swaps use the standard arc height (`panel_height * 0.08`).
 
 - SHIFT
   - Sprite moves horizontally into a new index position.
@@ -281,7 +314,7 @@ Rationale:
 
 **Insertion Sort:** Elements are "picked up" from the unsorted portion and inserted into the correct position within the growing sorted portion. The learner should observe the key lifting, elements sliding right to make room, and the key dropping into place. Some keys travel far (like 1, which shifts to position 0), while others stay close (like 7, which is already in position) — the learner sees varying insertion depths.
 
-**Heap Sort:** Two distinct phases. Phase 1 (Build Max-Heap) repairs 3 heap violations, showing actual swaps as the tree structure is established — the learner sees the heap being actively constructed. Phase 2 (Extraction) repeatedly moves the root (maximum) to the sorted region and repairs the heap. The learner should observe the orange heap boundary shrinking by one element per extraction, directly illustrating why the sorted region grows from the right.
+**Heap Sort:** Two distinct phases with tree-aware visual cues. Phase 1 (Build Max-Heap) repairs 3 heap violations, showing actual swaps as the tree structure is established — before each sift-down level, a Logical Tree Highlight flashes the parent-child triangle (e.g., indices 1, 3, 4) in orange, letting the learner perceive the binary tree relationships within the flat row. Phase 2 (Extraction) repeatedly moves the root (maximum) to the sorted region via a dramatically tall arc swap (1.75× standard height), visually distinguishing this phase-transition event from routine sift-down repairs. The learner should observe the orange heap boundary shrinking by one element per extraction, directly illustrating why the sorted region grows from the right.
 
 ### About the Race Outcome
 

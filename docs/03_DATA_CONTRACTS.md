@@ -30,8 +30,10 @@ class SortResult:
 COMPARE → highlight only, no sprite position change
 SWAP → exchange two sprite home slots with arc path, duration = T2
 SHIFT → source/destination horizontal slide, duration = T2
-RANGE → highlight contiguous range only, no sprite displacement; used by Heap Sort to
-        show the active heap boundary (indices 0..heap_size-1) at the start of each extraction step
+RANGE → highlight index set, no sprite displacement; used by Heap Sort for two purposes:
+        (a) Boundary emphasis: contiguous range 0..heap_size-1 at the start of each extraction step
+        (b) Logical Tree Highlight: non-contiguous parent-child triangle during sift-down
+        See "OpType.RANGE — Heap Sort Highlight Variants" below for full rules
 TERMINAL → no motion; apply completion styling
 
 ### highlight_indices rules
@@ -39,6 +41,33 @@ TERMINAL → no motion; apply completion styling
 - Indices must be unique.
 - Order does not affect rendering.
 - Indices must exist within array_state bounds.
+
+### OpType.RANGE — Heap Sort Highlight Variants
+
+Heap Sort emits two distinct variants of `OpType.RANGE` ticks. Both use the same `OpType` enum value and the same accent color (orange), but differ in highlight pattern and purpose.
+
+#### Variant A — Boundary Emphasis
+
+- **Purpose:** Show the active heap region before each extraction swap.
+- **highlight_indices:** `tuple(range(0, heap_size))` — a contiguous range.
+- **When emitted:** Once per extraction step, before the extraction swap.
+- **Active sift-down parent rule:** If a boundary T3 tick fires while a sift-down is conceptually in progress (e.g., during Phase 1 build or between extraction steps), the parent node currently being sifted must be **included** in the highlight set even if boundary semantics alone would not require it. In practice, boundary ticks fire *before* sift-down begins within each extraction step, so this rule serves as a safety contract: **the highlight set must always contain the sift-down parent if one is active**. This ensures the "active node" is never visually lost during the boundary-to-sift-down transition.
+
+#### Variant B — Logical Tree Highlight
+
+- **Purpose:** Show the parent-child triangle being evaluated during sift-down.
+- **highlight_indices:** Non-contiguous tuple of `(parent, left_child, right_child)` where children exist within the heap boundary. Example: `(1, 3, 4)`.
+- **When emitted:** Before each sift-down level's comparisons, in both Phase 1 (Build Max-Heap) and Phase 2 (Extraction sift-down).
+- **Active sift-down parent rule:** The sift-down parent index (`i`) must **always** be the first member of the highlight tuple. This is a contract invariant — the parent is the anchor of the tree relationship being communicated. If only one child exists (e.g., a left child with no right sibling), the tuple is `(parent, left_child)`. The parent is never omitted.
+
+#### Distinguishing the two variants
+
+The View layer distinguishes Boundary from Logical Tree T3 ticks by the **contiguity** of the highlight set:
+
+- If `highlight_indices == tuple(range(min_idx, max_idx + 1))` (contiguous from 0), it is a Boundary Emphasis tick → render with sweep (Section 5.3.1 of Animation Spec).
+- Otherwise (non-contiguous, or not starting at 0), it is a Logical Tree Highlight tick → render as simultaneous accent flash.
+
+This distinction is deterministic and requires no additional metadata on `SortResult`.
 
 ## Field Semantics
 
@@ -80,8 +109,9 @@ Invalid combinations are contract violations.
 - Compare tick: highlights compared indices.
 - Swap tick: highlights swapped indices and new snapshot.
 - Shift/placement tick: highlights moved/placed indices and new snapshot.
-- Range emphasis tick: highlights a contiguous range of indices; used by Heap Sort for active
-  heap boundary display (range tuple expanded to indices 0..heap_size-1).
+- Range emphasis tick: used by Heap Sort for two highlight variants:
+  - Boundary emphasis: contiguous range `0..heap_size-1` showing the active heap region.
+  - Logical Tree Highlight: non-contiguous parent-child triangle `(parent, left, right)` showing the tree relationship under evaluation. The sift-down parent is always included.
 - Terminal completion tick: final sorted array snapshot with full-array highlight (`highlight_indices=tuple(range(size))`).
 - Failure tick: explicit error state with message.
 

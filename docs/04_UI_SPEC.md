@@ -185,7 +185,7 @@ All colors are verified against panel background `(45, 45, 53)` for WCAG 2.1 con
 | Complete state | `(80, 220, 120)` | 7.7:1 | AAA normal |
 | Error border | `(235, 80, 80)` | 3.8:1 | AA large (border only) |
 | Error text | `(255, 120, 120)` | 5.5:1 | AA normal, AAA large |
-| Settled/extracted | `(130, 150, 190)` | 4.6:1 | AAA large |
+| Settled/extracted | `(130, 150, 190)` | 4.6:1 | AAA large (Heap Sort only) |
 
 ### 5.2 Algorithm Accent Mapping
 
@@ -199,6 +199,10 @@ All accent colors are applied to number sprites rendered at FiraCode 28px (large
 | Selection | `(255, 95, 95)` red | 4.6:1 | AAA large |
 
 Mapping is fixed by algorithm name and does not rotate at runtime.
+
+#### Heap Sort Accent Scope
+
+The Heap accent color (orange) is **reserved exclusively for active heap members** — elements at indices `0..heap_size-1` that are still participating in the heap data structure. Once an element is extracted from the heap (swapped to the sorted region beyond the heap boundary), it permanently loses its orange accent eligibility and transitions to the settled/extracted color (see Section 5.1). This ensures a clear visual contract: **orange = still in the heap; steel-blue = sorted and done**.
 
 ### 5.3 Color Changes from Prior Spec (Rationale)
 
@@ -217,9 +221,16 @@ The following colors were adjusted to meet AAA accessibility requirements:
   - Non-highlighted indices → default array color.
   - `highlight_indices` → panel accent color.
   - Step counter increments only on successful non-terminal ticks (defined in data contracts).
+- Settled/extracted state (Heap Sort only):
+  - Applies to elements in the **sorted region** of the Heap Sort panel — indices beyond the current heap boundary (`index >= heap_size`) that have been extracted via root-to-end swaps.
+  - These elements render in the settled/extracted color `(130, 150, 190)` (desaturated steel-blue) **permanently** for the remainder of the sort, even when not highlighted.
+  - Settled elements are **never** rendered in the orange accent color. If a T3 boundary highlight or a Logical Tree Highlight tick fires, settled indices outside the heap boundary are excluded from the highlight set.
+  - The transition is one-way: once an element enters the sorted region after an extraction swap, it does not revert to the default array color.
+  - This creates a progressive visual narrative in the Heap Sort panel: the right side of the array gradually fills with steel-blue numbers while the left side (active heap) remains in default blue or orange highlights. The learner sees the heap physically shrinking.
 - Complete tick:
   - Entire array row uses completion color.
   - Panel remains visible and static.
+  - For Heap Sort, the settled/extracted color is **replaced** by the completion color — all seven numbers turn green uniformly.
 - Failure tick:
   - Panel gets error border and failure text.
   - Message line switches to error text color.
