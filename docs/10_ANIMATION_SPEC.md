@@ -102,6 +102,11 @@ When a sprite returns to `home_y` (compare-lift descent completes, swap arc land
   - Right sprite (higher index): `exact_y = home_y + arc_offset` (arcs downward).
 - The arc peaks at `t=0.5` and returns to `home_y` at `t=1.0`.
 
+**Confirmed: identical arc motion for both algorithms.** The same arc swap applies to Bubble Sort and Selection Sort without exception. The only difference between the two is the T1 behavior (Bubble Sort adds a compare-lift; Selection Sort is highlight-only) — the T2 swap arc is shared:
+
+- **Bubble Sort:** T2 swap on `(j, j+1)`. The sprite at index `j` (left) arcs upward; the sprite at index `j+1` (right) arcs downward.
+- **Selection Sort:** T2 swap on `(i, min_idx)`. The sprite at index `i` (left, the sorted-region destination) arcs upward; the sprite at index `min_idx` (right, the discovered minimum) arcs downward. Because `i < min_idx` is always true during Selection Sort swaps (the sorted region grows from the left), the left/right arc assignment is deterministic. The upward arc on `i` and downward arc on `min_idx` produce the clean crossing exchange seen in the reference video, with no visual collision at the midpoint.
+
 #### 5.1.1 Bubble Sort Compare-Lift (T1 Motion)
 
 Bubble Sort T1 compare ticks trigger a **temporary vertical offset** on the adjacent pair `(j, j+1)`, isolating them from the baseline row so the learner can clearly identify which two elements are being compared — even when no swap follows.

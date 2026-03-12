@@ -100,20 +100,40 @@ Counter behavior:
 
 ### 4.2 Selection Sort
 
-Required sequence per outer index `i`:
+Selection Sort follows a strict two-phase "scan-then-swap" pattern per outer index `i`, mirroring the instructional pacing observed in the reference video (`docs/Reference/Selection_Sort_Video_Reference.md`).
 
-1. During scan (`j = i+1..end`), emit `T1 Compare Tick` on `(min_idx, j)`.
-2. If `min_idx != i`, perform swap then emit `T2 Write/Mutation Tick` on `(i, min_idx)`.
+#### Phase 1 — Scan (Find Minimum)
+
+For each `j` from `i+1` to `n-1`:
+
+1. Compare `arr[j]` against `arr[min_idx]`. If `arr[j] < arr[min_idx]`, update `min_idx = j`.
+2. Emit `T1 Compare Tick` with `highlight_indices = (min_idx, j)`.
+
+**Highlight contract:** Every T1 tick during the scan **must** include both `min_idx` and `j` in `highlight_indices`. This two-index highlight serves a dual purpose:
+- `min_idx` represents the **running minimum pointer** — the best candidate found so far. By including it on every tick, the learner can visually track the minimum as it "jumps" to a new position whenever a smaller element is found.
+- `j` represents the **scan cursor** — the element currently being evaluated.
+
+When `min_idx` updates (a new minimum is found), the next T1 tick's highlight reflects the updated `min_idx`, so the learner sees the minimum pointer relocate. When `min_idx` does not change, both highlights persist on the same pair, reinforcing that the current scan element was not smaller.
+
+**Message format:** `"Comparing index {min_idx} (value {arr[min_idx]}) and index {j} (value {arr[j]})"`. If `min_idx` updates, an additional message variant may note: `"New minimum found: {arr[j]} at index {j}"`.
+
+#### Phase 2 — Swap (Place Minimum)
+
+After the scan completes:
+
+- If `min_idx != i`: the minimum is not already in its sorted position. Perform `arr[i], arr[min_idx] = arr[min_idx], arr[i]` and emit `T2 Write/Mutation Tick` on `(i, min_idx)`. The View triggers a standard swap arc animation — both sprites exchange horizontal positions with the left sprite arcing upward and the right sprite arcing downward (see Animation Spec Section 5.1). This single swap places the minimum into its final sorted position.
+- If `min_idx == i`: the minimum is already in position. No T2 tick is emitted — the algorithm advances to the next outer index silently. The learner observes many comparisons followed by no swap, which reinforces that Selection Sort only writes when necessary.
 
 Additional rules:
 
-- Search phase is comparison-heavy; swap phase is sparse and explicit.
+- The scan phase is comparison-heavy; the swap phase is sparse and explicit. For `[4, 7, 2, 6, 1, 5, 3]`, there are 21 comparisons but only 5 swaps.
+- No vertical offset or compare-lane motion applies to Selection Sort T1 ticks — the visual emphasis is on the scan cursor and minimum tracking via highlight color, not spatial displacement. This distinguishes Selection Sort's visual signature from Bubble Sort (pair-lift) and Insertion Sort (key-lift).
 - Must emit final `T4 Completion Tick`.
 
 Counter behavior:
 
 - `self.comparisons += 1` before every T1 compare tick.
-- `self.writes += 2` before every T2 swap tick.
+- `self.writes += 2` before every T2 swap tick (a swap modifies two array positions).
 
 ### 4.3 Insertion Sort
 

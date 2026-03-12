@@ -116,7 +116,12 @@ Invalid combinations are contract violations.
 
 ## Tick Taxonomy
 
-- Compare tick: highlights compared indices.
+- Compare tick: highlights compared indices. Algorithm-specific semantics:
+  - **Bubble Sort:** T1 on `(j, j+1)` — compares adjacent pair. Message: `"Comparing index {j} (value {arr[j]}) and index {j+1} (value {arr[j+1]})"`.
+  - **Selection Sort (Scan phase):** T1 on `(min_idx, j)` — compares scan cursor `j` against the running minimum `min_idx`. The `highlight_indices` always includes both the current minimum and the element under evaluation, so the learner can track the minimum pointer as it moves through the unsorted region. Message must reference the current minimum: `"Comparing index {j} (value {arr[j]}) with current min {arr[min_idx]} at index {min_idx}"`. When a new minimum is found, the message should note: `"New minimum: {arr[j]} at index {j}"`.
+  - **Insertion Sort (key-selection):** T1 on `(i,)` — single-index highlight, no data comparison. Message: `"Selecting key: {arr[i]} at index {i}"`.
+  - **Insertion Sort (compare-during-shift):** T1 on `(j, j+1)` — compares element against lifted key. Message: `"Comparing index {j} (value {arr[j]}) with key {key}"`.
+  - **Heap Sort (sift-down):** T1 on `(largest, child_idx)` — compares parent/largest with child. Message: `"Comparing index {largest} (value {arr[largest]}) and index {child_idx} (value {arr[child_idx]})"`.
 - Swap tick: highlights swapped indices and new snapshot.
 - Shift/placement tick: highlights moved/placed indices and new snapshot.
 - Range emphasis tick: **non-mutating visual aid** — no sprite movement, no array mutation, no counter increments. Used by Heap Sort for two highlight variants:
