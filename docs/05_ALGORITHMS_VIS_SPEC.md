@@ -235,6 +235,77 @@ Phase 1 is not merely a sequence of array swaps — it is a **structural transfo
    - Emit `T2 Write/Mutation Tick` on `(i, largest)`. Increment `self.writes += 2`.
    - Continue sift-down from `largest` (repeat from step 1 with `i = largest`).
 
+**Logical Tree Highlight Integration (Mandatory):** Before comparing a parent to its children at any sift-down level (in both Phase 1 and Phase 2), a T3 tick **must** be yielded containing the indices of the parent and any valid children. This T3 tick is a precursor to every comparison level — no T1 compare tick may be emitted at a given sift-down level without a preceding T3 tick for that level's parent-child triangle.
+
+**Yield Sequence Example (per sift-down level):**
+
+```python
+# Phase 1 or 2 Sift-Down Level
+# 1. T3: Logical Tree Highlight (Parent + Children)
+yield SortResult(..., highlight_indices=(i, left, right), op_type=OpType.RANGE, ...)
+
+# 2. T1: Compare Parent/Largest with Left
+yield SortResult(..., highlight_indices=(largest, left), op_type=OpType.COMPARE, ...)
+
+# 3. T1: Compare Largest with Right
+yield SortResult(..., highlight_indices=(largest, right), op_type=OpType.COMPARE, ...)
+
+# 4. T2: Swap if necessary
+yield SortResult(..., highlight_indices=(i, largest), op_type=OpType.WRITE, ...)
+```
+
+**Reference Implementation Logic (`sift_down` generator):**
+
+The `sift_down` generator in `heap.py` should follow this structure to ensure the correct tick sequence is sent to the Controller:
+
+```python
+def sift_down(arr, i, heap_size):
+    while True:
+        largest = i
+        left = 2 * i + 1
+        right = 2 * i + 2
+
+        # --- T3: Logical Tree Highlight (Branching Visual) ---
+        # Yield the 'branch' (parent + existing children)
+        triangle = [i]
+        if left < heap_size: triangle.append(left)
+        if right < heap_size: triangle.append(right)
+
+        yield SortResult(
+            success=True,
+            array_state=list(arr),
+            highlight_indices=tuple(triangle),
+            op_type=OpType.RANGE,  # Triggers T3 duration/color
+            message=f"Examining tree branch at index {i}"
+        )
+
+        # --- T1: Standard Comparisons ---
+        if left < heap_size:
+            yield SortResult(..., highlight_indices=(largest, left), op_type=OpType.COMPARE, ...)
+            if arr[left] > arr[largest]:
+                largest = left
+
+        if right < heap_size:
+            yield SortResult(..., highlight_indices=(largest, right), op_type=OpType.COMPARE, ...)
+            if arr[right] > arr[largest]:
+                largest = right
+
+        # --- T2: Mutation ---
+        if largest != i:
+            arr[i], arr[largest] = arr[largest], arr[i]
+            yield SortResult(..., highlight_indices=(i, largest), op_type=OpType.WRITE, ...)
+            i = largest
+        else:
+            break
+```
+
+Key structural points:
+- The `while True` loop with `i = largest` at the bottom implements iterative sift-down (no recursion), satisfying the "iteratively or as an inner generator" requirement.
+- The T3 tick is emitted at the **top** of the loop, guaranteeing it precedes every comparison level — including levels reached after a swap cascades downward.
+- The `triangle` list dynamically includes only children within `heap_size`, handling leaf nodes and single-child parents correctly.
+- The `largest` variable tracks the running winner across comparisons, so the T1 highlight on `(largest, right)` correctly reflects the left-vs-right comparison when the left child won the first comparison.
+- The `break` when `largest == i` terminates the sift-down when the heap property is satisfied — no T2 tick is emitted for that level.
+
 **Note on `[4, 7, 2, 6, 1, 5, 3]`:** This input is **not** a valid max-heap (it has 3 heap violations), so Phase 1 performs actual sift-down swaps — the learner sees the heap being constructed with visible repairs at multiple tree levels. The build phase produces the max-heap `[7, 6, 5, 4, 1, 2, 3]`. The Logical Tree Highlight ticks make each repair's tree context visible: the learner can identify the parent and its children before each comparison-and-swap decision.
 
 #### Phase 2 — Extraction
