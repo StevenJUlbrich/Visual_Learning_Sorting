@@ -61,11 +61,23 @@ Scope: Defines how the Pygame View layer translates discrete logical operations 
 ### 5.2 Insertion Sort (Lift, Shift, and Drop)
 
 - **Action:** A key is selected, elements shift right, and the key is placed at its sorted position.
-- **Lift height:** `lift_offset = panel_height * 0.06` (proportional, not a fixed pixel value).
+
+#### 5.2.1 Lift Offset Geometry
+
+- **Lift height:** `lift_offset = panel_height * 0.06` — a **proportional** value, not a fixed pixel count.
+- **Rationale:** Tying the offset to `panel_height` guarantees visual consistency across both landscape and portrait orientations. In landscape mode (panel height ≈ 490px), the lift is ≈ 29px; in portrait mode (panel height ≈ 350px), it is ≈ 21px. Both produce a clearly visible separation from the baseline without colliding with the header region (capped at 35% of panel height per D-062). A fixed pixel value would either be too subtle in landscape or too aggressive in portrait.
+- **Relationship to other offsets:** The Insertion Sort lift (`0.06`) is intentionally taller than Bubble Sort's compare-lift (`0.05`) because the key remains elevated for the duration of the entire pass (potentially many ticks), whereas Bubble Sort's lift is a transient pulse within a single 150ms T1 tick. The greater height ensures the sustained key is unmistakably separated from shifted elements below it.
+
+#### 5.2.2 Motion Sequence
+
 - **Motion sequence within the Insertion Sort tick group:**
-  1. **Lift (key-selection T1 tick):** The selected key sprite eases from `home_y` to `home_y - lift_offset` over the T1 duration. The sprite remains elevated across all subsequent compare and shift ticks until the placement drop.
+  1. **Lift (key-selection T1 tick):** The selected key sprite eases from `home_y` to `home_y - lift_offset` over the T1 duration (150ms). This is the **first visual event** of the pass. The sprite remains elevated across all subsequent compare and shift ticks until the placement drop.
   2. **Compare and Shift (T1 compare + T2 shift ticks):** Shifted elements ease horizontally from their current slot to the adjacent slot using the standard easing curve. The lifted key sprite holds its elevated `y` position and does not move horizontally during compare or shift ticks.
-  3. **Drop (T2 placement tick):** The lifted key sprite eases horizontally to its destination slot `home_x` and simultaneously eases vertically from `home_y - lift_offset` back to `home_y`, using the standard easing curve over the T2 duration.
+  3. **Drop / Settle (T2 placement tick):** The **final visual event** of the pass. The lifted key sprite interpolates **both axes simultaneously** over the T2 duration (400ms), creating a diagonal drop trajectory:
+     - **Horizontal:** `exact_x` eases from current `home_x` (the key's original slot, or wherever it visually resides) to the destination slot's `home_x`.
+     - **Vertical:** `exact_y` eases from `home_y - lift_offset` back down to `home_y`.
+     - Both axes share the **same time parameter `t`** and the **same ease-in-out curve**, so horizontal and vertical progress are perfectly synchronized. At `t=0` the key is elevated at its pre-drop position; at `t=1` it rests precisely in its sorted slot at baseline.
+     - **Visual effect:** The combined motion produces a smooth diagonal arc from the compare lane to the target slot — the key visibly "settles" into position rather than dropping straight down and then sliding sideways (or vice versa). This diagonal trajectory matches professional sorting animations where the key glides into its final home in a single fluid gesture.
 - Easing for all three sub-motions uses the same ease-in-out curve as swaps.
 
 ### 5.3 Heap Sort (In-Place Swaps with Tree Highlight and Extraction Arc)
