@@ -32,7 +32,7 @@ Grounding sources: Data Contracts (03), Animation Spec (10), and planning notes.
 - Fields: `success=True`, `is_complete=False`, copied `array_state`.
 - Highlight: compared indices.
 - Duration: 150ms simulated cost.
-- No sprite position change.
+- No **logical** position change — the `array_state` snapshot is unchanged from the prior tick. However, algorithm-specific **temporary visual offsets** (e.g., Bubble Sort compare-lift) may apply during the T1 duration. These offsets are View-layer animations that return to baseline by tick end; they do not alter slot assignments or home positions.
 
 ### T2 - Write/Mutation Tick
 
@@ -72,13 +72,26 @@ Each algorithm exposes a `complexity` string representing its **worst-case** tim
 
 Required sequence per inner iteration `j`:
 
-1. `T1 Compare Tick` on `(j, j+1)` before any swap decision.
-2. If swap needed, perform swap then emit `T2 Write/Mutation Tick` on `(j, j+1)`.
+1. `T1 Compare Tick` on `(j, j+1)` before any swap decision. The View applies a **compare-lift** to the adjacent pair: both sprites at indices `j` and `j+1` ease upward from `home_y` to `home_y - compare_lift_offset` over the first half of the T1 duration, hold briefly, then ease back to `home_y` by tick end (see Animation Spec Section 5.1.1). This temporary vertical isolation makes every comparison visually readable — even comparisons that do not result in a swap.
+2. If swap needed, perform swap then emit `T2 Write/Mutation Tick` on `(j, j+1)`. The swap arc motion begins from the baseline (`home_y`), not from the lifted position — the compare-lift has already returned to baseline before the T2 tick starts.
+3. If no swap needed, the algorithm advances to the next `j`. The compare-lift's return to baseline serves as the visual "release" signal that the pair was inspected but left in place.
 
 Additional rules:
 
 - Early-exit optimization allowed (`swapped=False` pass).
 - Must still emit one final `T4 Completion Tick`.
+- The compare-lift is a **View-layer animation only**. The algorithm model does not track lift state — it emits standard T1 ticks. The View recognizes Bubble Sort T1 ticks by the panel's algorithm identity and applies the lift choreography automatically.
+
+#### Compare-Lift Motion Contract
+
+- **Lift offset:** `compare_lift_offset = panel_height * 0.05` (proportional). This is intentionally smaller than Insertion Sort's `lift_offset` (`0.06`) to maintain visual hierarchy — the Insertion Sort lift is a sustained, prominent displacement across multiple ticks, while the Bubble Sort compare-lift is a brief pulse within a single T1 tick.
+- **Timing within the 150ms T1 duration:**
+  - `0–60ms` (40%): both sprites ease upward from `home_y` to `home_y - compare_lift_offset`.
+  - `60–100ms` (27%): hold at lifted position (comparison is visually prominent).
+  - `100–150ms` (33%): both sprites ease back down to `home_y`.
+- **Easing:** Standard ease-in-out curve for both ascent and descent.
+- **Both sprites lift equally** — unlike Insertion Sort where only the key lifts, Bubble Sort lifts the entire adjacent pair as a unit, emphasizing that the algorithm evaluates *pairs*, not individual elements.
+- **Z-ordering during lift:** Both lifted sprites draw on top of non-lifted sprites. Between the two lifted sprites, default index order is maintained (no z-order swap until the T2 arc begins).
 
 Counter behavior:
 
@@ -115,7 +128,7 @@ Required sequence per outer index `i` (from `1` to `n-1`):
 - This tick does **not** increment `self.comparisons` — it is a key-selection signal, not a data comparison.
 - The key sprite begins its visual lift to the compare lane (`home_y - lift_offset`) on this tick and **remains elevated** across all subsequent ticks in the pass until the T2 Placement tick drops it (see Step 4). See Animation Spec Section 5.2.
 
-#### Step 2 — Compare-and-Shift Loop
+#### Step 2 — Compare-and-Shift Loop (Sequential Shift Guarantee)
 
 Starting from `j = i - 1`, while `j >= 0` and `arr[j] > key`:
 
@@ -124,6 +137,16 @@ Starting from `j = i - 1`, while `j >= 0` and `arr[j] > key`:
 3. Decrement `j`.
 
 The lifted key sprite remains elevated and stationary during all compare and shift ticks.
+
+**Sequential Shift Guarantee:** Each element that needs to shift right is processed as its own **individual compare-then-shift tick pair** (T1 + T2). Elements must never shift simultaneously as a batch or block. This one-at-a-time pacing is a core pedagogical requirement — the learner must observe each shift as a discrete, identifiable event:
+
+- The compare tick (T1) shows *which* element is being evaluated against the key.
+- The shift tick (T2) shows *that specific element* sliding one slot to the right.
+- Only after the shift animation completes does the algorithm proceed to compare the next element leftward.
+
+This sequential cadence ensures the learner can trace the "ripple" of shifts moving leftward through the sorted region. If multiple elements need to shift (e.g., key `1` in `[2, 4, 6, 7, 1, 5, 3]` requires 4 shifts), each shift is fully visible as a separate motion event with its own 150ms compare + 400ms shift cycle. The total animation time scales linearly with shift count, which directly communicates the O(n) cost of deep insertions.
+
+**Anti-pattern: block shift.** An implementation that batches multiple shifts into a single T2 tick (moving several elements simultaneously) violates this guarantee. The worked examples below demonstrate the correct one-at-a-time sequence.
 
 #### Step 3 — Terminating Comparison (when loop exits by condition)
 
@@ -211,7 +234,7 @@ Additional rules:
 ### Compare Highlights
 
 - Compare operations highlight exactly the indices being compared.
-- Bubble: `(j, j+1)`.
+- Bubble: `(j, j+1)`. Additionally, the View applies a temporary **compare-lift** (vertical offset) to both sprites during the T1 duration, isolating the pair from the baseline row (see Section 4.1).
 - Selection: `(min_idx, j)`.
 - Insertion compare-during-shift: `(j, j+1)` — the element at `j` is compared against the lifted key (visually above the array).
 - Insertion key-selection: `(i,)` — single-index highlight on the key being extracted.
@@ -288,7 +311,10 @@ Rationale:
 
 - COMPARE
   - Highlight compared indices.
-  - No sprite movement.
+  - No logical position change. Algorithm-specific temporary visual offsets may apply:
+    - **Bubble Sort:** Compare-lift — both sprites in the adjacent pair temporarily ease upward and return to baseline within the T1 duration (see Section 4.1, Animation Spec Section 5.1.1).
+    - **Insertion Sort key-selection:** Key sprite begins sustained lift (see Section 4.3, Animation Spec Section 5.2).
+    - **All others:** No sprite movement.
 
 - SWAP
   - Two sprites exchange horizontal positions.
@@ -310,7 +336,7 @@ Rationale:
 
 ### What the Learner Should Observe
 
-**Bubble Sort:** The largest unsorted element "bubbles" to the right on each pass. The learner should notice that later passes get shorter as the right side of the array becomes sorted. With `[4, 7, 2, 6, 1, 5, 3]`, some comparisons trigger swaps and some do not — the learner sees both outcomes.
+**Bubble Sort:** The largest unsorted element "bubbles" to the right on each pass. Each adjacent pair **lifts briefly above the baseline** during comparison, making every comparison visually prominent — including comparisons that do *not* result in a swap. The learner should notice that the lift-and-release rhythm provides a consistent visual "heartbeat" for the scan, while swaps add the dramatic arc motion on top. Later passes get shorter as the right side of the array becomes sorted. With `[4, 7, 2, 6, 1, 5, 3]`, some comparisons trigger swaps and some do not — the learner sees both outcomes clearly because even non-swap comparisons have visible motion.
 
 **Selection Sort:** The algorithm scans the entire unsorted portion to find the minimum, then places it with a single swap. The learner should observe many comparisons followed by one swap (or no swap if the minimum is already in position). Despite being O(n²), Selection Sort has very few writes — for `[4, 7, 2, 6, 1, 5, 3]`, only 5 swaps (10 array writes).
 
