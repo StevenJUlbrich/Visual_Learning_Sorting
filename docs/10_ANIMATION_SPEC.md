@@ -33,13 +33,30 @@ Scope: Defines how the Pygame View layer translates discrete logical operations 
   `home_y = panel_rect.y + panel_rect.height // 2`
 - When a sprite is at rest (no active animation), `exact_x == home_x` and `exact_y == home_y`.
 
-### 3.3 Slot Assignment
+### 3.3 Sprite Identity Enforcement
 
-- When a `SortResult` provides a new `array_state`, the controller computes index transitions between the previous and new array states.
-- Each sprite updates its `home_x` to the center of its newly assigned slot.
+The Controller must track sprites by their **unique ID** assigned at initialization — never by the numeric value they display. This is a hard constraint that prevents visual corruption when duplicate values exist in the array.
+
+**Why value matching fails:** Consider the `duplicates_7` fixture `[3, 1, 3, 2, 1, 2, 3]`. If the Controller identifies sprites by value, a swap involving one of the three `3`s cannot be resolved — the wrong sprite may receive the movement command, causing it to "teleport" to a new position instead of arcing smoothly. This is especially destructive during Heap Sort extraction swaps, where the root-to-end arc is a high-stakes visual event (elevated arc height, 400ms duration). A teleporting sprite destroys the phase-transition signal entirely.
+
+**Identity rules:**
+
+1. Each `NumberSprite` receives a **permanent unique ID** at initialization (e.g., sequential integer or UUID). This ID never changes for the lifetime of the sprite.
+2. The Controller maintains a mapping of `sprite_id → current_slot_index` that represents the current logical position of each sprite.
+3. When a new `SortResult` arrives with an updated `array_state`, the Controller must compute the **index delta** between the previous `array_state` and the new `array_state` to determine which sprite moved where. It must not scan the new `array_state` for value matches.
+4. For swap operations (T2 with two indices), the delta is deterministic: the values at the two indices have exchanged. The Controller identifies the two sprites currently occupying those slots (by the `sprite_id → slot` mapping) and assigns each to the other's slot.
+5. For shift operations (Insertion Sort T2), the delta shows one value sliding from index `j` to `j+1`. The Controller identifies the sprite at slot `j` and reassigns it to slot `j+1`.
+6. After computing the delta and updating the `sprite_id → slot` mapping, each affected sprite's `home_x` is recalculated for its new slot. The sprite then interpolates from its current `(exact_x, exact_y)` to the new `(home_x, home_y)`.
+
+**Cross-reference:** This constraint is also stated in `02_ARCHITECTURE.md` Section "Sprite Identity" — the animation spec reiterates it here because incorrect identity resolution manifests as visual bugs (teleporting, wrong sprite arcing) that are difficult to diagnose from model-layer tests alone.
+
+### 3.4 Slot Assignment
+
+- When a `SortResult` provides a new `array_state`, the Controller computes the index delta between the previous and new array states using the sprite identity mapping (see Section 3.3).
+- Each affected sprite updates its `home_x` to the center of its newly assigned slot.
 - Sprites interpolate from their current `(exact_x, exact_y)` toward the new `(home_x, home_y)` over the operation duration.
 
-### 3.4 Compare Lane (Vertical Offset Coordinate)
+### 3.5 Compare Lane (Vertical Offset Coordinate)
 
 The **compare lane** is a conceptual vertical position above the baseline row where sprites temporarily reside during comparison or key-selection events. It is not a fixed pixel coordinate — each algorithm defines its own offset from `home_y`:
 
@@ -65,7 +82,7 @@ Selection Sort and Heap Sort do not use compare-lane motion because their pedago
 
 **Any sprite that is vertically displaced above the baseline (`exact_y < home_y`) must render on top of all sprites at the baseline.** This is the single governing rule — all algorithm-specific z-order behaviors derive from it.
 
-Rationale: Sprites in the compare lane (Section 3.4) or on an upward arc represent the current algorithmic focus. Drawing them on top prevents visual occlusion and keeps the learner's attention on the active operation.
+Rationale: Sprites in the compare lane (Section 3.5) or on an upward arc represent the current algorithmic focus. Drawing them on top prevents visual occlusion and keeps the learner's attention on the active operation.
 
 ### 4.2 Default Order
 

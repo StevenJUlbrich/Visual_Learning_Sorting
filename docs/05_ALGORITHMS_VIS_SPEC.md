@@ -18,6 +18,45 @@ Grounding sources: Data Contracts (03), Animation Spec (10), and planning notes.
   - full-array highlight (`tuple(range(size))`)
 - For empty input (`len(data) == 0`), the algorithm must yield exactly one failure tick (`success=False`) and stop. No completion tick is emitted.
 
+### Failure Tick Contract (T0) — All Algorithms
+
+Domain-level errors (empty input, invalid data) must **never** raise Python exceptions. An unhandled exception propagates through the Controller and crashes the Pygame event loop, killing all four panels — including the three healthy algorithms mid-race. Instead, the algorithm must yield a `T0 Failure Tick` and return, allowing the Controller to deactivate that single panel while the remaining algorithms continue.
+
+**Anti-pattern — exception instead of T0:**
+
+```python
+# WRONG: Crashes the entire application
+def sort_generator(self):
+    if len(self.data) == 0:
+        raise ValueError("Cannot sort empty array")  # Kills Pygame event loop
+```
+
+**Correct pattern — T0 yield:**
+
+```python
+# CORRECT: Signals failure through the tick contract
+def sort_generator(self):
+    if len(self.data) == 0:
+        yield SortResult(
+            success=False,
+            array_state=[],
+            highlight_indices=(),
+            op_type=OpType.COMPARE,  # OpType is irrelevant for failure ticks
+            message="Cannot sort: empty array",
+            comparisons=0,
+            writes=0,
+            is_complete=False,
+        )
+        return  # Generator exits cleanly — no completion tick
+```
+
+**Key rules:**
+- `success=False` is the signal. The Controller checks this field and transitions the panel to `failed` state (see 02_ARCHITECTURE.md Panel Runtime State Machine).
+- `is_complete=False` — a failure is not a successful completion.
+- `message` is required — it appears in the panel's message line so the learner sees a human-readable explanation.
+- The generator must `return` after yielding the failure tick. No further ticks (including T4 completion) may be emitted.
+- This contract applies identically to all four algorithms. Each algorithm's `sort_generator` must begin with an empty-input guard that yields T0 and returns.
+
 ## 2) Tick Taxonomy (Locked)
 
 ### T0 - Failure Tick
@@ -324,6 +363,34 @@ Additional rules:
 
 - Sift-down must be implemented iteratively or as an inner generator; `yield from` may be used for a sift-down sub-generator provided failure bubbling remains explicit.
 - Must emit final `T4 Completion Tick`.
+
+#### Heap Sort Negative Case (Empty Input)
+
+Heap Sort is particularly susceptible to exception-based failures because `n // 2 - 1` evaluates to `-1` for an empty array, and iterating `range(-1, -1, -1)` produces no sift-down calls — but the subsequent extraction phase may attempt to access `arr[0]` on an empty list, raising an `IndexError`.
+
+**Required behavior:** The generator must guard against empty input at the top of `sort_generator`, before any phase logic executes:
+
+```python
+def sort_generator(self):
+    if len(self.data) == 0:
+        yield SortResult(
+            success=False,
+            array_state=[],
+            highlight_indices=(),
+            op_type=OpType.COMPARE,
+            message="Cannot sort: empty array",
+            comparisons=0,
+            writes=0,
+            is_complete=False,
+        )
+        return  # No Phase 1, no Phase 2, no completion tick
+
+    # Phase 1 — Build Max-Heap
+    # Phase 2 — Extraction
+    # ... (normal algorithm logic)
+```
+
+The same guard pattern applies to single-element input (`len(data) == 1`), which should skip both phases and immediately emit a T4 completion tick — a single-element array is trivially sorted.
 
 ## 5) Highlight Semantics (Locked)
 
