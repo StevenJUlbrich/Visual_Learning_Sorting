@@ -149,6 +149,26 @@ Run all algorithms to completion with `[4, 7, 2, 6, 1, 5, 3]` and verify:
 - Verify header, metrics, message, and array regions are vertically stacked without overlap.
 - Verify all text is anti-aliased (smooth edges, no jagged stairstepping on curves of letters like "S", "O", "C").
 
+### AT-17 Selection Sort Min Tracking
+
+- Run Selection Sort panel, stepping through operations one tick at a time.
+- For each outer pass `i`, observe the scan phase (`j = i+1` through `n-1`):
+  1. On each T1 compare tick, verify that **two** indices are highlighted in the panel accent color (red): the current scan cursor `j` and the running minimum `min_idx`.
+  2. When a new, smaller element is found at index `j`, verify the minimum highlight **moves** to `j` on the next tick — the previous `min_idx` loses its accent and `j` becomes the new `min_idx`.
+  3. When the element at `j` is not smaller than the current minimum, verify the minimum highlight **stays** on `min_idx` — it does not flicker or disappear between ticks.
+- Verify the message line references the current minimum on every scan tick (e.g., `"Comparing index 3 (value 6) with current min 2 at index 2"`).
+- **Regression guard:** If the minimum highlight disappears or jumps to an index that is not the actual running minimum, the test fails.
+
+### AT-18 Selection Sort Sorted Region Stability
+
+- Run Selection Sort panel to completion, stepping through operations.
+- After each swap (T2 tick placing the minimum at index `i`), verify:
+  1. The element now at index `i` transitions to the **settled/extracted color** `(130, 150, 190)` (desaturated steel-blue) — it is visually distinct from both the default array blue and the active accent red.
+  2. On all subsequent passes, the settled elements at indices `0..i` are **never** highlighted by the scan cursor. The scan only operates on the unsorted region (`i+1..n-1`); settled elements remain steel-blue and visually inert.
+  3. The sorted region grows from left to right — after pass `i`, exactly `i+1` elements on the left side of the array display the settled color.
+- On the completion tick, all settled elements transition from steel-blue to the global completion color (green), matching the behavior defined for Heap Sort extracted elements.
+- **Note:** This extends the settled/extracted color to Selection Sort (previously v1 scope was Heap Sort only per D-063). The visual contract is identical: settled = "this element is in its final position, but the algorithm is still working."
+
 ## Automated Acceptance Intent (for `tests/`)
 
 ### A) Minimum Correctness Checks (non-empty fixtures only)
