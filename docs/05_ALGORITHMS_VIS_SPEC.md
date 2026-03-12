@@ -217,6 +217,10 @@ Phase 1 is not merely a sequence of array swaps — it is a **structural transfo
 - Iterate `i` from `n // 2 - 1` down to `0`, calling sift-down for each node.
 - Sift-down sequence for a node at index `i` with heap boundary `heap_size`:
 
+**Strict Sift-Down Tick Sequence (Mandatory):**
+
+The sift-down procedure is defined as a strict, invariant sequence at each tree level: **T3 (Logical Tree Highlight) → T1 (Compare) → T2 (Swap/Mutation)**. This ordering is not advisory — it is a hard contract. The T3 tick is a mandatory precursor that establishes the parent-child context before any comparison or mutation occurs at that level. Violating this ordering (e.g., emitting a T1 before the T3, or omitting the T3 entirely) breaks the visual learning contract because the learner would see comparisons without first understanding which tree relationship is being evaluated.
+
 **Sift-down tick-by-tick procedure:**
 
 1. Set `largest = i`.
@@ -347,6 +351,14 @@ Additional rules:
 - Sift-down parent-child triangle highlights the tuple of `(parent, left_child, right_child)` where children exist within the heap boundary.
 - This shows the learner which tree relationship is being evaluated, even though elements are displayed in a flat row.
 - The highlight pattern is **non-contiguous** (e.g., indices `(1, 3, 4)`), distinguishing it from the contiguous boundary highlights.
+
+#### Branching Visualization
+
+The Logical Tree Highlight serves as the primary mechanism for **bridging the flat array display and the binary tree logic** that Heap Sort operates on. Because v1 does not render a tree layout, the learner's only cue to the tree structure is the simultaneous non-contiguous highlight pattern emitted by the T3 tick.
+
+**Data contract for `highlight_indices`:** The T3 tick's `highlight_indices` field must contain a tuple of `(i, 2*i+1, 2*i+2)` — the parent and its children — filtered to include only indices that fall within `heap_size`. This is the model's explicit declaration of the tree branch being evaluated, and the View relies on it to render the branching visual.
+
+**Pedagogical invariant:** The learner must be able to perceive the binary tree structure solely from these highlights. When indices `(1, 3, 4)` flash orange simultaneously while surrounding indices remain unhighlighted, the non-contiguous grouping implies that index 1 is the parent of indices 3 and 4. This pattern repeats at every sift-down level, reinforcing the tree mental model throughout both phases of the algorithm.
 
 ## 6) Heap Sort Visual Phasing Decision
 
