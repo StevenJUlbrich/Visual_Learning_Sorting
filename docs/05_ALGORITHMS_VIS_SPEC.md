@@ -235,6 +235,25 @@ Phase 1 is not merely a sequence of array swaps — it is a **structural transfo
    - Emit `T2 Write/Mutation Tick` on `(i, largest)`. Increment `self.writes += 2`.
    - Continue sift-down from `largest` (repeat from step 1 with `i = largest`).
 
+**Logical Tree Highlight Integration (Mandatory):** Before comparing a parent to its children at any sift-down level (in both Phase 1 and Phase 2), a T3 tick **must** be yielded containing the indices of the parent and any valid children. This T3 tick is a precursor to every comparison level — no T1 compare tick may be emitted at a given sift-down level without a preceding T3 tick for that level's parent-child triangle.
+
+**Yield Sequence Example (per sift-down level):**
+
+```python
+# Phase 1 or 2 Sift-Down Level
+# 1. T3: Logical Tree Highlight (Parent + Children)
+yield SortResult(..., highlight_indices=(i, left, right), op_type=OpType.RANGE, ...)
+
+# 2. T1: Compare Parent/Largest with Left
+yield SortResult(..., highlight_indices=(largest, left), op_type=OpType.COMPARE, ...)
+
+# 3. T1: Compare Largest with Right
+yield SortResult(..., highlight_indices=(largest, right), op_type=OpType.COMPARE, ...)
+
+# 4. T2: Swap if necessary
+yield SortResult(..., highlight_indices=(i, largest), op_type=OpType.WRITE, ...)
+```
+
 **Note on `[4, 7, 2, 6, 1, 5, 3]`:** This input is **not** a valid max-heap (it has 3 heap violations), so Phase 1 performs actual sift-down swaps — the learner sees the heap being constructed with visible repairs at multiple tree levels. The build phase produces the max-heap `[7, 6, 5, 4, 1, 2, 3]`. The Logical Tree Highlight ticks make each repair's tree context visible: the learner can identify the parent and its children before each comparison-and-swap decision.
 
 #### Phase 2 — Extraction
