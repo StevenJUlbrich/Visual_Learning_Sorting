@@ -212,18 +212,17 @@ All simulated elapsed time accumulation must use **integer milliseconds** intern
 ### TC-A7 Heap Sort Phase Contract
 
 - Consume Heap Sort generator for `default_7` fixture.
-- Assert at least one T3 Range Emphasis Tick is emitted.
-- Assert T3 ticks only appear after the build-max-heap phase concludes.
-- Assert Phase 1 produces at least one T2 swap tick (verifying the input has heap violations).
-- Assert each T3 tick's `highlight_indices` is `tuple(range(0, k))` for strictly decreasing `k` values across successive T3 ticks.
-- Assert sorted region grows by exactly one element between each pair of consecutive T3 ticks.
+- Assert T3 ticks are emitted in both phases:
+  - **Phase 1 (Build Max-Heap):** Assert Logical Tree Highlight T3 ticks (non-contiguous `highlight_indices`) are emitted during sift-down. Assert Phase 1 produces at least one T2 swap tick (verifying the input has heap violations).
+  - **Phase 2 (Extraction):** Assert Boundary Emphasis T3 ticks (contiguous `highlight_indices` matching `tuple(range(0, k))`) are emitted at the start of each extraction step, with strictly decreasing `k` values. Assert Logical Tree Highlight T3 ticks are emitted during post-extraction sift-down repairs.
+- Assert sorted region grows by exactly one element between each pair of consecutive boundary T3 ticks.
 - Marker: `@pytest.mark.unit`
 
 ### TC-A8 Heap Sort Sift-Down Correctness
 
 - Unit-test the sift-down function in isolation with known max-heap violations.
 - Assert that after sift-down, the subtree rooted at the target index satisfies the max-heap property.
-- Assert that only T1/T2 ticks are emitted by sift-down (no T3 ticks inside sift-down).
+- Assert that sift-down emits T3 (Logical Tree Highlight), T1 (Compare), and T2 (Swap) ticks in the mandatory sequence defined by the sift-down tick contract (see TC-A19).
 - Marker: `@pytest.mark.unit`
 
 ### TC-A9 Insertion Sort Tick Sequence
@@ -315,6 +314,82 @@ All simulated elapsed time accumulation must use **integer milliseconds** intern
 - Assert all counters (steps, comparisons, writes) are `0`.
 - Assert generators are re-created from the original initial array.
 - Marker: `@pytest.mark.integration`
+
+### TC-A19 Heap Sort Sift-Down Tick Sequence Contract (Visual Trace)
+
+**Motivation:** An implementation can pass sortedness and counter tests while silently violating the visual learning contract — e.g., omitting the T3 Logical Tree Highlight before comparisons, or emitting T1 before T3 at a sift-down level. Because the tick sequence *is* the visual experience, a log-based trace of `OpType` values is the most effective self-verification mechanism.
+
+**Procedure:**
+
+- Instantiate HeapSort with `default_7` fixture (`[4, 7, 2, 6, 1, 5, 3]`).
+- Consume the full generator, collecting every tick's `op_type` into an ordered trace list.
+- Identify sift-down regions in the trace: contiguous subsequences bounded by `RANGE` (T3 Logical Tree Highlight) ticks that are **not** boundary emphasis ticks. Boundary T3 ticks are distinguished by having contiguous `highlight_indices` (`tuple(range(0, k))`); Logical Tree T3 ticks have non-contiguous `highlight_indices`.
+- For **each** sift-down level (each Logical Tree T3 tick), assert the following sequence contract:
+
+```
+RANGE (T3)  →  COMPARE (T1) [1 or 2]  →  WRITE (T2) [0 or 1]
+```
+
+Specifically:
+1. The sift-down level **must** begin with exactly one `OpType.RANGE` tick whose `highlight_indices` is non-contiguous (the parent-child triangle).
+2. The `RANGE` tick **must** be immediately followed by 1 or 2 `OpType.COMPARE` ticks (left child comparison, optionally right child comparison).
+3. No `COMPARE` tick may appear at a sift-down level without a preceding `RANGE` tick at that same level.
+4. If a swap occurs, exactly one `OpType.WRITE` tick follows the comparisons. If no swap occurs (heap property satisfied), no `WRITE` tick is emitted and the sift-down terminates.
+5. If a `WRITE` tick is emitted, the next tick must be either another `RANGE` tick (sift-down continues at the next tree level) or a non-sift-down tick (sift-down complete).
+
+**Assertion examples for `default_7`:**
+
+- Phase 1 (Build Max-Heap): Assert that every sift-down invocation begins each level with a Logical Tree T3 tick. For the input `[4, 7, 2, 6, 1, 5, 3]`, Phase 1 processes nodes at indices 2, 1, 0 and produces 3 swap events — each preceded by the T3 → T1 sequence.
+- Phase 2 (Extraction): Assert that after each boundary T3 tick and extraction T2 swap, the subsequent sift-down repair follows the same T3 → T1 → T2 contract at every level, with no T1 tick appearing before its level's T3 tick.
+
+**Anti-patterns this test catches:**
+- T3 tick omitted entirely (comparisons happen without tree context).
+- T3 tick emitted after T1 (learner sees comparison before understanding which branch is active).
+- Multiple T3 ticks emitted at the same sift-down level (visual stutter).
+- T1 compare tick emitted for the right child without a preceding T3 tick at that level.
+
+**Implementation guidance:** The test should build a structured trace, not just a flat `OpType` list. A helper function can segment the trace into sift-down levels by detecting Logical Tree T3 ticks (non-contiguous `highlight_indices`) and validating each segment independently. Example:
+
+```python
+def extract_sift_down_levels(ticks):
+    """Group ticks into sift-down levels, each starting with a Logical Tree T3."""
+    levels = []
+    current_level = []
+    for tick in ticks:
+        if tick.op_type == OpType.RANGE and not _is_contiguous(tick.highlight_indices):
+            if current_level:
+                levels.append(current_level)
+            current_level = [tick]
+        elif current_level:  # Only collect if inside a sift-down level
+            current_level.append(tick)
+            if tick.op_type == OpType.WRITE:
+                levels.append(current_level)
+                current_level = []
+    if current_level:
+        levels.append(current_level)
+    return levels
+
+
+def assert_sift_down_level_contract(level_ticks):
+    """Assert T3 -> T1{1,2} -> T2{0,1} ordering for a single sift-down level."""
+    assert level_ticks[0].op_type == OpType.RANGE, "Level must start with T3"
+    assert not _is_contiguous(level_ticks[0].highlight_indices), "Must be tree highlight, not boundary"
+
+    compare_count = 0
+    write_count = 0
+    for tick in level_ticks[1:]:
+        if tick.op_type == OpType.COMPARE:
+            assert write_count == 0, "T1 compare must not follow T2 write within same level"
+            compare_count += 1
+        elif tick.op_type == OpType.WRITE:
+            assert compare_count >= 1, "T2 write must follow at least one T1 compare"
+            write_count += 1
+
+    assert 1 <= compare_count <= 2, f"Expected 1-2 compares, got {compare_count}"
+    assert write_count <= 1, f"Expected 0-1 writes, got {write_count}"
+```
+
+- Marker: `@pytest.mark.unit`
 
 ## 6) Manual Test Pass (Release Gate)
 
