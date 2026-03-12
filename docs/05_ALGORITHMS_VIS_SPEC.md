@@ -108,11 +108,12 @@ Insertion Sort requires a precise tick sequence to correctly visualize the key-s
 
 Required sequence per outer index `i` (from `1` to `n-1`):
 
-#### Step 1 — Key Selection
+#### Step 1 — Key Selection (First Visual Event)
 
 - Emit `T1 Compare Tick` on `(i,)` highlighting the selected key.
+- This tick is the **first visual event** of every outer loop pass — no other tick (compare, shift, or placement) may precede it within the pass. The lift establishes the key's identity before any comparisons or shifts occur, giving the learner a clear "this is the element being inserted" moment.
 - This tick does **not** increment `self.comparisons` — it is a key-selection signal, not a data comparison.
-- The key sprite begins its visual lift (see Animation Spec Section 5.2).
+- The key sprite begins its visual lift to the compare lane (`home_y - lift_offset`) on this tick and **remains elevated** across all subsequent ticks in the pass until the T2 Placement tick drops it (see Step 4). See Animation Spec Section 5.2.
 
 #### Step 2 — Compare-and-Shift Loop
 
@@ -130,10 +131,11 @@ If the loop exits because `arr[j] <= key` (not because `j < 0`), emit one final 
 
 If the loop exits because `j < 0` (key is the smallest element), no terminating comparison tick is emitted — there is no element to compare against.
 
-#### Step 4 — Placement
+#### Step 4 — Placement / Settle (Final Visual Event)
 
 - Place the key: `arr[j+1] = key`. Emit `T2 Write/Mutation Tick` (OpType.SHIFT) on `(j+1,)` — shows the key dropping into its sorted position. Increment `self.writes += 1` before yielding.
-- The key sprite eases back down from its elevated position to the target slot.
+- This T2 Placement tick is the **final action of the pass** — no other tick may follow it within the same outer loop iteration. It closes the pass that was opened by the key-selection T1 tick in Step 1.
+- **Settle motion:** The key sprite eases simultaneously in both axes — horizontally to the destination slot's `home_x` and vertically from the compare lane (`home_y - lift_offset`) back down to `home_y` — over the T2 duration (400ms) using the standard ease-in-out curve. This smooth "settle" into position gives the learner a clear visual signal that the insertion is complete before the next pass begins. See Animation Spec Section 5.2.
 
 #### Worked Example: `[4, 7, 2, 6, 1, 5, 3]`, pass `i=2`
 
