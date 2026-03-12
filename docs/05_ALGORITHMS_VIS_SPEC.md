@@ -223,18 +223,19 @@ The sift-down procedure is defined as a strict, invariant sequence at each tree 
 
 **Sift-down tick-by-tick procedure:**
 
-1. Set `largest = i`.
-2. Compute `left = 2*i + 1` and `right = 2*i + 2`.
-3. **Logical Tree Highlight (T3):** Before any comparison at this sift-down level, emit a `T3 Range Emphasis Tick` highlighting the **parent-child triangle** — the tuple of existing indices from `(i, left, right)` where `left` and `right` are included only if they fall within `heap_size`. This tick communicates which tree relationship is about to be evaluated. Duration: 200ms. The accent color (orange) renders simultaneously on the parent and its children, implying the binary tree structure within the flat array layout.
+At each sift-down level, set `largest = i`, compute `left = 2*i + 1` and `right = 2*i + 2`, then execute the following tick sequence:
+
+1. **Logical Tree Highlight (T3) — FIRST TICK OF EVERY LEVEL:** Before any comparison or mutation at this sift-down level, emit a `T3 Range Emphasis Tick` that visually "draws" the tree branch being evaluated. The `highlight_indices` field must contain the **parent and both existing children** — the tuple `(i, left, right)` where `left` and `right` are included only if they fall within `heap_size`. This is the first yielded tick at every sift-down level, without exception. The accent color (orange) renders simultaneously on all members of the triangle, visually drawing the parent-child branch within the flat array layout. Duration: 200ms.
+   - **Branching contract:** `highlight_indices` must always include the parent index `i`. It must include `left` (`2*i+1`) if `left < heap_size`, and `right` (`2*i+2`) if `right < heap_size`. The resulting tuple of 1–3 indices is the model's declaration of the tree branch — the View uses this non-contiguous grouping to imply the binary tree structure. A T3 tick that omits the parent or includes indices outside the parent-child relationship violates the branching contract.
    - Message format: `"Heapify: examining node {i} (value {arr[i]}) with children [{left_desc}, {right_desc}]"` where each child description includes its index and value, or is omitted if the child does not exist.
    - This T3 tick does **not** increment the step counter (consistent with all T3 ticks).
-4. If `left < heap_size`:
+2. If `left < heap_size`:
    - Emit `T1 Compare Tick` on `(largest, left)` — compares current largest with left child. Increment `self.comparisons += 1`.
    - If `arr[left] > arr[largest]`, update `largest = left`.
-5. If `right < heap_size`:
-   - Emit `T1 Compare Tick` on `(largest, right)` — compares current largest with right child. **Note:** if `largest` was updated to `left` in step 4, this comparison is now between the left child and the right child, which is correct (finding the larger of the two children to potentially swap with the parent). Increment `self.comparisons += 1`.
+3. If `right < heap_size`:
+   - Emit `T1 Compare Tick` on `(largest, right)` — compares current largest with right child. **Note:** if `largest` was updated to `left` in step 2, this comparison is now between the left child and the right child, which is correct (finding the larger of the two children to potentially swap with the parent). Increment `self.comparisons += 1`.
    - If `arr[right] > arr[largest]`, update `largest = right`.
-6. If `largest != i`:
+4. If `largest != i`:
    - Perform swap `arr[i], arr[largest] = arr[largest], arr[i]`.
    - Emit `T2 Write/Mutation Tick` on `(i, largest)`. Increment `self.writes += 2`.
    - Continue sift-down from `largest` (repeat from step 1 with `i = largest`).
@@ -352,13 +353,20 @@ Additional rules:
 - This shows the learner which tree relationship is being evaluated, even though elements are displayed in a flat row.
 - The highlight pattern is **non-contiguous** (e.g., indices `(1, 3, 4)`), distinguishing it from the contiguous boundary highlights.
 
-#### Branching Visualization
+#### Branching Visualization (Branching Contract)
 
-The Logical Tree Highlight serves as the primary mechanism for **bridging the flat array display and the binary tree logic** that Heap Sort operates on. Because v1 does not render a tree layout, the learner's only cue to the tree structure is the simultaneous non-contiguous highlight pattern emitted by the T3 tick.
+The Logical Tree Highlight serves as the primary mechanism for **visually "drawing" the binary tree branches** within the flat array display. Because v1 does not render a tree layout, the T3 tick's non-contiguous highlight pattern is the learner's only cue that a parent-child relationship exists between specific array positions.
 
-**Data contract for `highlight_indices`:** The T3 tick's `highlight_indices` field must contain a tuple of `(i, 2*i+1, 2*i+2)` — the parent and its children — filtered to include only indices that fall within `heap_size`. This is the model's explicit declaration of the tree branch being evaluated, and the View relies on it to render the branching visual.
+**Branching contract for `highlight_indices`:** The T3 tick's `highlight_indices` field must satisfy all of the following:
+- **Must include** the parent index `i` — always present.
+- **Must include** `left` (`2*i+1`) if `left < heap_size` — draws the left branch.
+- **Must include** `right` (`2*i+2`) if `right < heap_size` — draws the right branch.
+- **Must not include** any index outside the parent-child triple — extraneous indices would corrupt the branch visual by implying tree relationships that do not exist.
+- The resulting tuple contains 1–3 indices depending on the node's position in the tree (leaf nodes have no children, last internal node may have only a left child).
 
-**Pedagogical invariant:** The learner must be able to perceive the binary tree structure solely from these highlights. When indices `(1, 3, 4)` flash orange simultaneously while surrounding indices remain unhighlighted, the non-contiguous grouping implies that index 1 is the parent of indices 3 and 4. This pattern repeats at every sift-down level, reinforcing the tree mental model throughout both phases of the algorithm.
+This contract is the model's explicit declaration of which tree branch is being evaluated. The View consumes `highlight_indices` directly to render the branching visual — there is no secondary branch-detection logic. If the model emits incorrect indices, the View will draw incorrect branches.
+
+**Pedagogical invariant:** The learner must be able to perceive the binary tree structure solely from these highlights. When indices `(1, 3, 4)` flash orange simultaneously while surrounding indices remain unhighlighted, the non-contiguous grouping visually "draws" the branch from parent 1 to its children 3 and 4 — the learner intuitively perceives the ownership relationship even without drawn edges. This pattern repeats at every sift-down level (as the mandatory first tick — see Section 4.4 step 1), reinforcing the tree mental model throughout both phases of the algorithm.
 
 ## 6) Heap Sort Visual Phasing Decision
 
