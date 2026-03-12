@@ -95,7 +95,7 @@ The controller/view computes sprite movement by comparing prior logical index ow
 Each panel maintains one of the following states:
 
 - idle_paused
-- animating_operation
+- animating_operation (includes both motion animations and static highlight durations)
 - waiting_for_next_tick
 - completed
 - failed
@@ -113,6 +113,8 @@ waiting_for_next_tick → failed when failure tick received
 The `animating_operation` state processes **one tick at a time** — it does not batch or group ticks. A single "logical" sift-down step in Heap Sort spans multiple ticks (T3 → T1 → T1 → T2), but the state machine treats each tick as an independent `animating_operation → waiting_for_next_tick` cycle. The Controller does not need to know that these ticks are part of the same logical sift-down level.
 
 This preserves MVC decoupling: the Model decides tick ordering and content (the strict T3 → T1 → T2 sequence defined in 05_ALGORITHMS_VIS_SPEC Section 4.4), while the Controller simply maps each tick's `OpType` to a duration and dispatches sprite commands. The Controller's only Heap Sort-specific behavior is the `sift_down_cadence` flag (see 10_ANIMATION_SPEC Section 5.3.2), which adjusts duration selection — it does not alter the state machine topology.
+
+**Static highlight durations within `animating_operation`:** Not all ticks in `animating_operation` produce sprite movement. T3 Range Emphasis ticks (Heap Sort boundary highlights and Logical Tree Highlights) consume `dt` against `current_operation_remaining_ms` like any other tick, but they dispatch **no `(x, y)` target changes** to sprites. The Controller must not attempt to compute or force movement logic for these ticks — they are purely chromatic (highlight color applied, duration elapses, state transitions to `waiting_for_next_tick`). This is a key distinction: `animating_operation` means "a tick is active and consuming time," not "sprites are in motion." The same applies to T1 compare ticks for Selection Sort and Heap Sort, which apply highlights without positional displacement (unlike Bubble Sort's compare-lift or Insertion Sort's key-lift, which do move sprites during T1).
 
 **Invariant:** The state machine transition graph is identical for all four algorithms. Algorithm-specific behavior is expressed through tick content (`OpType`, `highlight_indices`) and duration selection, never through additional states or transitions.
 
