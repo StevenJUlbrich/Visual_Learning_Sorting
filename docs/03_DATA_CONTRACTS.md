@@ -13,7 +13,7 @@ class OpType(Enum):
     COMPARE = auto()  # Maps to T1 (150ms)
     SWAP = auto()     # Maps to T2 (400ms)
     SHIFT = auto()    # Maps to T2 (400ms)
-    RANGE = auto()    # Maps to T3 (200ms) — active heap boundary or region emphasis
+    RANGE = auto()    # Maps to T3 (200ms) — non-mutating visual aid; accent color only, no sprite movement
     TERMINAL = auto()  # Used for completion ticks
     FAILURE = auto()   # Used for explicit failure ticks
 
@@ -30,8 +30,18 @@ class SortResult:
 COMPARE → highlight only, no sprite position change
 SWAP → exchange two sprite home slots with arc path, duration = T2
 SHIFT → source/destination horizontal slide, duration = T2
-RANGE → highlight contiguous range only, no sprite displacement; used by Heap Sort to
-        show the active heap boundary (indices 0..heap_size-1) at the start of each extraction step
+RANGE → **non-mutating visual aid**; refreshes accent color on highlighted indices only.
+        Invariants:
+        - No sprite displacement (no `exact_x`/`exact_y` target changes).
+        - No `array_state` mutation — the snapshot is identical to the prior tick's.
+        - No `writes` or `comparisons` counter increments.
+        - Does not increment the panel step counter (see Step Counter Definition).
+        Used by Heap Sort for two purposes:
+        (a) Boundary emphasis: contiguous range 0..heap_size-1, rendered as a left-to-right sweep
+            (see Animation Spec Section 5.3.1). Refreshes the orange accent on the active heap region.
+        (b) Logical Tree Highlight: non-contiguous parent-child triangle during sift-down,
+            rendered as a simultaneous accent flash on the parent and its children.
+        See "OpType.RANGE — Heap Sort Highlight Variants" below for full rules
 TERMINAL → no motion; apply completion styling
 
 ### highlight_indices rules
@@ -39,6 +49,35 @@ TERMINAL → no motion; apply completion styling
 - Indices must be unique.
 - Order does not affect rendering.
 - Indices must exist within array_state bounds.
+
+### OpType.RANGE — Heap Sort Highlight Variants
+
+Heap Sort emits two distinct variants of `OpType.RANGE` ticks. Both use the same `OpType` enum value and the same accent color (orange), but differ in highlight pattern and purpose.
+
+**Non-mutation guarantee (applies to both variants):** A RANGE tick is a pure visual aid. It must not modify `self.data`, must not change any sprite's target position, must not increment `self.comparisons` or `self.writes`, and must not increment the panel step counter. The `array_state` snapshot in a RANGE tick must be **identical** to the snapshot from the immediately preceding tick — if the View or a test harness detects a difference, it is a contract violation. The Controller consumes the tick's simulated cost (200ms standard, or 130ms under sift-down cadence) for race timing, but the cost represents **display time**, not computational work.
+
+#### Variant A — Boundary Emphasis
+
+- **Purpose:** Show the active heap region before each extraction swap.
+- **highlight_indices:** `tuple(range(0, heap_size))` — a contiguous range.
+- **When emitted:** Once per extraction step, before the extraction swap.
+- **Active sift-down parent rule:** If a boundary T3 tick fires while a sift-down is conceptually in progress (e.g., during Phase 1 build or between extraction steps), the parent node currently being sifted must be **included** in the highlight set even if boundary semantics alone would not require it. In practice, boundary ticks fire *before* sift-down begins within each extraction step, so this rule serves as a safety contract: **the highlight set must always contain the sift-down parent if one is active**. This ensures the "active node" is never visually lost during the boundary-to-sift-down transition.
+
+#### Variant B — Logical Tree Highlight
+
+- **Purpose:** Show the parent-child triangle being evaluated during sift-down.
+- **highlight_indices:** Non-contiguous tuple of `(parent, left_child, right_child)` where children exist within the heap boundary. Example: `(1, 3, 4)`.
+- **When emitted:** Before each sift-down level's comparisons, in both Phase 1 (Build Max-Heap) and Phase 2 (Extraction sift-down).
+- **Active sift-down parent rule:** The sift-down parent index (`i`) must **always** be the first member of the highlight tuple. This is a contract invariant — the parent is the anchor of the tree relationship being communicated. If only one child exists (e.g., a left child with no right sibling), the tuple is `(parent, left_child)`. The parent is never omitted.
+
+#### Distinguishing the two variants
+
+The View layer distinguishes Boundary from Logical Tree T3 ticks by the **contiguity** of the highlight set:
+
+- If `highlight_indices == tuple(range(min_idx, max_idx + 1))` (contiguous from 0), it is a Boundary Emphasis tick → render with sweep (Section 5.3.1 of Animation Spec).
+- Otherwise (non-contiguous, or not starting at 0), it is a Logical Tree Highlight tick → render as simultaneous accent flash.
+
+This distinction is deterministic and requires no additional metadata on `SortResult`.
 
 ## Field Semantics
 
@@ -77,11 +116,17 @@ Invalid combinations are contract violations.
 
 ## Tick Taxonomy
 
-- Compare tick: highlights compared indices.
+- Compare tick: highlights compared indices. Algorithm-specific semantics:
+  - **Bubble Sort:** T1 on `(j, j+1)` — compares adjacent pair. Message: `"Comparing index {j} (value {arr[j]}) and index {j+1} (value {arr[j+1]})"`.
+  - **Selection Sort (Scan phase):** T1 on `(min_idx, j)` — compares scan cursor `j` against the running minimum `min_idx`. The `highlight_indices` always includes both the current minimum and the element under evaluation, so the learner can track the minimum pointer as it moves through the unsorted region. Message must reference the current minimum: `"Comparing index {j} (value {arr[j]}) with current min {arr[min_idx]} at index {min_idx}"`. When a new minimum is found, the message should note: `"New minimum: {arr[j]} at index {j}"`.
+  - **Insertion Sort (key-selection):** T1 on `(i,)` — single-index highlight, no data comparison. Message: `"Selecting key: {arr[i]} at index {i}"`.
+  - **Insertion Sort (compare-during-shift):** T1 on `(j, j+1)` — compares element against lifted key. Message: `"Comparing index {j} (value {arr[j]}) with key {key}"`.
+  - **Heap Sort (sift-down):** T1 on `(largest, child_idx)` — compares parent/largest with child. Message: `"Comparing index {largest} (value {arr[largest]}) and index {child_idx} (value {arr[child_idx]})"`.
 - Swap tick: highlights swapped indices and new snapshot.
 - Shift/placement tick: highlights moved/placed indices and new snapshot.
-- Range emphasis tick: highlights a contiguous range of indices; used by Heap Sort for active
-  heap boundary display (range tuple expanded to indices 0..heap_size-1).
+- Range emphasis tick: **non-mutating visual aid** — no sprite movement, no array mutation, no counter increments. Used by Heap Sort for two highlight variants:
+  - Boundary emphasis: contiguous range `0..heap_size-1` — refreshes orange accent on the active heap region via left-to-right sweep.
+  - Logical Tree Highlight: non-contiguous parent-child triangle `(parent, left, right)` — refreshes orange accent on the tree relationship under evaluation. The sift-down parent is always included.
 - Terminal completion tick: final sorted array snapshot with full-array highlight (`highlight_indices=tuple(range(size))`).
 - Failure tick: explicit error state with message.
 
@@ -110,11 +155,36 @@ Each algorithm tracks its own `comparisons` and `writes` counters as instance at
 ### Writes Counter
 
 - `writes`: incremented by the algorithm to reflect the number of **individual array positions modified** by each mutation.
-- Increment rules per operation type:
-  - **Swap** (`OpType.SWAP`): `writes += 2` — a swap modifies two array positions.
-  - **Shift** (`OpType.SHIFT`): `writes += 1` — a shift writes one element to an adjacent position.
-  - **Placement** (`OpType.SHIFT` for insertion): `writes += 1` — placing a key writes one element.
-- This matches standard algorithm analysis where array writes are counted individually, enabling accurate cross-algorithm comparison.
+- **Counting unit: array positions, not operations.** A single swap *operation* modifies two array positions, so it counts as 2 writes. A single shift *operation* modifies one array position, so it counts as 1 write. This per-position granularity matches standard algorithm analysis (e.g., Knuth, Sedgewick) and enables the learner to make accurate cross-algorithm comparisons from the metrics line.
+
+#### Per-Operation Increment Rules
+
+| Operation | OpType | `writes` Increment | Rationale |
+| --- | --- | --- | --- |
+| **Swap** | `SWAP` | `+= 2` | Both `arr[i]` and `arr[j]` are overwritten |
+| **Shift** | `SHIFT` | `+= 1` | `arr[j+1] = arr[j]` — one position written |
+| **Placement** | `SHIFT` | `+= 1` | `arr[j+1] = key` — one position written |
+| **Compare** | `COMPARE` | `+= 0` | Read-only operation — no array mutation |
+| **Range** | `RANGE` | `+= 0` | Non-mutating visual aid — no array mutation |
+| **Terminal** | `TERMINAL` | `+= 0` | No mutation on completion or failure |
+
+#### Per-Algorithm Expected Write Totals for `[4, 7, 2, 6, 1, 5, 3]`
+
+These expected values serve as QA verification anchors for the default dataset:
+
+| Algorithm | Write Operations | Calculation | Expected `writes` |
+| --- | --- | --- | --- |
+| **Bubble Sort** | 8 swaps (with early exit) | 8 × 2 = 16 | **16** |
+| **Selection Sort** | 5 swaps | 5 × 2 = 10 | **10** |
+| **Insertion Sort** | 13 shifts + 6 placements | 13 × 1 + 6 × 1 = 19 | **19** |
+| **Heap Sort** | 3 build swaps + 6 extraction swaps + sift-down swaps | varies by sift-down depth | **~22** (exact count depends on sift-down paths) |
+
+**Note:** These totals are derived from the specific input `[4, 7, 2, 6, 1, 5, 3]`. Different inputs produce different write counts. The values above are for QA regression testing, not general algorithm properties.
+
+#### Invariants
+
+- `writes` is incremented by the algorithm model **before** yielding the corresponding `SortResult`. The counter value visible to the View at render time already includes the current tick's writes.
+- `writes` must never be incremented on COMPARE, RANGE, TERMINAL, or FAILURE ticks.
 - Initialized to `0` in `__init__` and reset on re-instantiation (restart).
 
 ### Counter Display

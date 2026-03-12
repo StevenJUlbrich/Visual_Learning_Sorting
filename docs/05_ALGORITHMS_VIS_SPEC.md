@@ -32,7 +32,7 @@ Grounding sources: Data Contracts (03), Animation Spec (10), and planning notes.
 - Fields: `success=True`, `is_complete=False`, copied `array_state`.
 - Highlight: compared indices.
 - Duration: 150ms simulated cost.
-- No sprite position change.
+- No **logical** position change — the `array_state` snapshot is unchanged from the prior tick. However, algorithm-specific **temporary visual offsets** (e.g., Bubble Sort compare-lift) may apply during the T1 duration. These offsets are View-layer animations that return to baseline by tick end; they do not alter slot assignments or home positions.
 
 ### T2 - Write/Mutation Tick
 
@@ -72,13 +72,26 @@ Each algorithm exposes a `complexity` string representing its **worst-case** tim
 
 Required sequence per inner iteration `j`:
 
-1. `T1 Compare Tick` on `(j, j+1)` before any swap decision.
-2. If swap needed, perform swap then emit `T2 Write/Mutation Tick` on `(j, j+1)`.
+1. `T1 Compare Tick` on `(j, j+1)` before any swap decision. The View applies a **compare-lift** to the adjacent pair: both sprites at indices `j` and `j+1` ease upward from `home_y` to `home_y - compare_lift_offset` over the first half of the T1 duration, hold briefly, then ease back to `home_y` by tick end (see Animation Spec Section 5.1.1). This temporary vertical isolation makes every comparison visually readable — even comparisons that do not result in a swap.
+2. If swap needed, perform swap then emit `T2 Write/Mutation Tick` on `(j, j+1)`. The swap arc motion begins from the baseline (`home_y`), not from the lifted position — the compare-lift has already returned to baseline before the T2 tick starts.
+3. If no swap needed, the algorithm advances to the next `j`. The compare-lift's return to baseline serves as the visual "release" signal that the pair was inspected but left in place.
 
 Additional rules:
 
 - Early-exit optimization allowed (`swapped=False` pass).
 - Must still emit one final `T4 Completion Tick`.
+- The compare-lift is a **View-layer animation only**. The algorithm model does not track lift state — it emits standard T1 ticks. The View recognizes Bubble Sort T1 ticks by the panel's algorithm identity and applies the lift choreography automatically.
+
+#### Compare-Lift Motion Contract
+
+- **Lift offset:** `compare_lift_offset = panel_height * 0.05` (proportional). This is intentionally smaller than Insertion Sort's `lift_offset` (`0.06`) to maintain visual hierarchy — the Insertion Sort lift is a sustained, prominent displacement across multiple ticks, while the Bubble Sort compare-lift is a brief pulse within a single T1 tick.
+- **Timing within the 150ms T1 duration:**
+  - `0–60ms` (40%): both sprites ease upward from `home_y` to `home_y - compare_lift_offset`.
+  - `60–100ms` (27%): hold at lifted position (comparison is visually prominent).
+  - `100–150ms` (33%): both sprites ease back down to `home_y`.
+- **Easing:** Standard ease-in-out curve for both ascent and descent.
+- **Both sprites lift equally** — unlike Insertion Sort where only the key lifts, Bubble Sort lifts the entire adjacent pair as a unit, emphasizing that the algorithm evaluates *pairs*, not individual elements.
+- **Z-ordering during lift:** Both lifted sprites draw on top of non-lifted sprites. Between the two lifted sprites, default index order is maintained (no z-order swap until the T2 arc begins).
 
 Counter behavior:
 
@@ -87,20 +100,40 @@ Counter behavior:
 
 ### 4.2 Selection Sort
 
-Required sequence per outer index `i`:
+Selection Sort follows a strict two-phase "scan-then-swap" pattern per outer index `i`, mirroring the instructional pacing observed in the reference video (`docs/Reference/Selection_Sort_Video_Reference.md`).
 
-1. During scan (`j = i+1..end`), emit `T1 Compare Tick` on `(min_idx, j)`.
-2. If `min_idx != i`, perform swap then emit `T2 Write/Mutation Tick` on `(i, min_idx)`.
+#### Phase 1 — Scan (Find Minimum)
+
+For each `j` from `i+1` to `n-1`:
+
+1. Compare `arr[j]` against `arr[min_idx]`. If `arr[j] < arr[min_idx]`, update `min_idx = j`.
+2. Emit `T1 Compare Tick` with `highlight_indices = (min_idx, j)`.
+
+**Highlight contract:** Every T1 tick during the scan **must** include both `min_idx` and `j` in `highlight_indices`. This two-index highlight serves a dual purpose:
+- `min_idx` represents the **running minimum pointer** — the best candidate found so far. By including it on every tick, the learner can visually track the minimum as it "jumps" to a new position whenever a smaller element is found.
+- `j` represents the **scan cursor** — the element currently being evaluated.
+
+When `min_idx` updates (a new minimum is found), the next T1 tick's highlight reflects the updated `min_idx`, so the learner sees the minimum pointer relocate. When `min_idx` does not change, both highlights persist on the same pair, reinforcing that the current scan element was not smaller.
+
+**Message format:** `"Comparing index {min_idx} (value {arr[min_idx]}) and index {j} (value {arr[j]})"`. If `min_idx` updates, an additional message variant may note: `"New minimum found: {arr[j]} at index {j}"`.
+
+#### Phase 2 — Swap (Place Minimum)
+
+After the scan completes:
+
+- If `min_idx != i`: the minimum is not already in its sorted position. Perform `arr[i], arr[min_idx] = arr[min_idx], arr[i]` and emit `T2 Write/Mutation Tick` on `(i, min_idx)`. The View triggers a standard swap arc animation — both sprites exchange horizontal positions with the left sprite arcing upward and the right sprite arcing downward (see Animation Spec Section 5.1). This single swap places the minimum into its final sorted position.
+- If `min_idx == i`: the minimum is already in position. No T2 tick is emitted — the algorithm advances to the next outer index silently. The learner observes many comparisons followed by no swap, which reinforces that Selection Sort only writes when necessary.
 
 Additional rules:
 
-- Search phase is comparison-heavy; swap phase is sparse and explicit.
+- The scan phase is comparison-heavy; the swap phase is sparse and explicit. For `[4, 7, 2, 6, 1, 5, 3]`, there are 21 comparisons but only 5 swaps.
+- No vertical offset or compare-lane motion applies to Selection Sort T1 ticks — the visual emphasis is on the scan cursor and minimum tracking via highlight color, not spatial displacement. This distinguishes Selection Sort's visual signature from Bubble Sort (pair-lift) and Insertion Sort (key-lift).
 - Must emit final `T4 Completion Tick`.
 
 Counter behavior:
 
 - `self.comparisons += 1` before every T1 compare tick.
-- `self.writes += 2` before every T2 swap tick.
+- `self.writes += 2` before every T2 swap tick (a swap modifies two array positions).
 
 ### 4.3 Insertion Sort
 
@@ -108,13 +141,14 @@ Insertion Sort requires a precise tick sequence to correctly visualize the key-s
 
 Required sequence per outer index `i` (from `1` to `n-1`):
 
-#### Step 1 — Key Selection
+#### Step 1 — Key Selection (First Visual Event)
 
 - Emit `T1 Compare Tick` on `(i,)` highlighting the selected key.
+- This tick is the **first visual event** of every outer loop pass — no other tick (compare, shift, or placement) may precede it within the pass. The lift establishes the key's identity before any comparisons or shifts occur, giving the learner a clear "this is the element being inserted" moment.
 - This tick does **not** increment `self.comparisons` — it is a key-selection signal, not a data comparison.
-- The key sprite begins its visual lift (see Animation Spec Section 5.2).
+- The key sprite begins its visual lift to the compare lane (`home_y - lift_offset`) on this tick and **remains elevated** across all subsequent ticks in the pass until the T2 Placement tick drops it (see Step 4). See Animation Spec Section 5.2.
 
-#### Step 2 — Compare-and-Shift Loop
+#### Step 2 — Compare-and-Shift Loop (Sequential Shift Guarantee)
 
 Starting from `j = i - 1`, while `j >= 0` and `arr[j] > key`:
 
@@ -124,16 +158,27 @@ Starting from `j = i - 1`, while `j >= 0` and `arr[j] > key`:
 
 The lifted key sprite remains elevated and stationary during all compare and shift ticks.
 
+**Sequential Shift Guarantee:** Each element that needs to shift right is processed as its own **individual compare-then-shift tick pair** (T1 + T2). Elements must never shift simultaneously as a batch or block. This one-at-a-time pacing is a core pedagogical requirement — the learner must observe each shift as a discrete, identifiable event:
+
+- The compare tick (T1) shows *which* element is being evaluated against the key.
+- The shift tick (T2) shows *that specific element* sliding one slot to the right.
+- Only after the shift animation completes does the algorithm proceed to compare the next element leftward.
+
+This sequential cadence ensures the learner can trace the "ripple" of shifts moving leftward through the sorted region. If multiple elements need to shift (e.g., key `1` in `[2, 4, 6, 7, 1, 5, 3]` requires 4 shifts), each shift is fully visible as a separate motion event with its own 150ms compare + 400ms shift cycle. The total animation time scales linearly with shift count, which directly communicates the O(n) cost of deep insertions.
+
+**Anti-pattern: block shift.** An implementation that batches multiple shifts into a single T2 tick (moving several elements simultaneously) violates this guarantee. The worked examples below demonstrate the correct one-at-a-time sequence.
+
 #### Step 3 — Terminating Comparison (when loop exits by condition)
 
 If the loop exits because `arr[j] <= key` (not because `j < 0`), emit one final `T1 Compare Tick` on `(j, j+1)` — shows the comparison that determined the insertion point. Increment `self.comparisons += 1`. This tells the learner *why* the key is placed here: the element at `j` is not greater than the key.
 
 If the loop exits because `j < 0` (key is the smallest element), no terminating comparison tick is emitted — there is no element to compare against.
 
-#### Step 4 — Placement
+#### Step 4 — Placement / Settle (Final Visual Event)
 
 - Place the key: `arr[j+1] = key`. Emit `T2 Write/Mutation Tick` (OpType.SHIFT) on `(j+1,)` — shows the key dropping into its sorted position. Increment `self.writes += 1` before yielding.
-- The key sprite eases back down from its elevated position to the target slot.
+- This T2 Placement tick is the **final action of the pass** — no other tick may follow it within the same outer loop iteration. It closes the pass that was opened by the key-selection T1 tick in Step 1.
+- **Settle motion:** The key sprite eases simultaneously in both axes — horizontally to the destination slot's `home_x` and vertically from the compare lane (`home_y - lift_offset`) back down to `home_y` — over the T2 duration (400ms) using the standard ease-in-out curve. This smooth "settle" into position gives the learner a clear visual signal that the insertion is complete before the next pass begins. See Animation Spec Section 5.2.
 
 #### Worked Example: `[4, 7, 2, 6, 1, 5, 3]`, pass `i=2`
 
@@ -165,6 +210,8 @@ Additional rules:
 
 Heap Sort operates in two phases: **Build Max-Heap** and **Extraction**.
 
+Phase 1 is not merely a sequence of array swaps — it is a **structural transformation** that converts an arbitrary array into a valid max-heap. The sift-down procedure must visually communicate the **parent-child triangle** relationship (indices `i`, `2i+1`, `2i+2`) at each level of repair, so the learner understands the tree structure being enforced even though elements are displayed in a flat row.
+
 #### Phase 1 — Build Max-Heap
 
 - Iterate `i` from `n // 2 - 1` down to `0`, calling sift-down for each node.
@@ -174,25 +221,28 @@ Heap Sort operates in two phases: **Build Max-Heap** and **Extraction**.
 
 1. Set `largest = i`.
 2. Compute `left = 2*i + 1` and `right = 2*i + 2`.
-3. If `left < heap_size`:
+3. **Logical Tree Highlight (T3):** Before any comparison at this sift-down level, emit a `T3 Range Emphasis Tick` highlighting the **parent-child triangle** — the tuple of existing indices from `(i, left, right)` where `left` and `right` are included only if they fall within `heap_size`. This tick communicates which tree relationship is about to be evaluated. Duration: 200ms. The accent color (orange) renders simultaneously on the parent and its children, implying the binary tree structure within the flat array layout.
+   - Message format: `"Heapify: examining node {i} (value {arr[i]}) with children [{left_desc}, {right_desc}]"` where each child description includes its index and value, or is omitted if the child does not exist.
+   - This T3 tick does **not** increment the step counter (consistent with all T3 ticks).
+4. If `left < heap_size`:
    - Emit `T1 Compare Tick` on `(largest, left)` — compares current largest with left child. Increment `self.comparisons += 1`.
    - If `arr[left] > arr[largest]`, update `largest = left`.
-4. If `right < heap_size`:
-   - Emit `T1 Compare Tick` on `(largest, right)` — compares current largest with right child. **Note:** if `largest` was updated to `left` in step 3, this comparison is now between the left child and the right child, which is correct (finding the larger of the two children to potentially swap with the parent). Increment `self.comparisons += 1`.
+5. If `right < heap_size`:
+   - Emit `T1 Compare Tick` on `(largest, right)` — compares current largest with right child. **Note:** if `largest` was updated to `left` in step 4, this comparison is now between the left child and the right child, which is correct (finding the larger of the two children to potentially swap with the parent). Increment `self.comparisons += 1`.
    - If `arr[right] > arr[largest]`, update `largest = right`.
-5. If `largest != i`:
+6. If `largest != i`:
    - Perform swap `arr[i], arr[largest] = arr[largest], arr[i]`.
    - Emit `T2 Write/Mutation Tick` on `(i, largest)`. Increment `self.writes += 2`.
    - Continue sift-down from `largest` (repeat from step 1 with `i = largest`).
 
-**Note on `[4, 7, 2, 6, 1, 5, 3]`:** This input is **not** a valid max-heap (it has 3 heap violations), so Phase 1 performs actual sift-down swaps — the learner sees the heap being constructed with visible repairs at multiple tree levels. The build phase produces the max-heap `[7, 6, 5, 4, 1, 2, 3]`.
+**Note on `[4, 7, 2, 6, 1, 5, 3]`:** This input is **not** a valid max-heap (it has 3 heap violations), so Phase 1 performs actual sift-down swaps — the learner sees the heap being constructed with visible repairs at multiple tree levels. The build phase produces the max-heap `[7, 6, 5, 4, 1, 2, 3]`. The Logical Tree Highlight ticks make each repair's tree context visible: the learner can identify the parent and its children before each comparison-and-swap decision.
 
 #### Phase 2 — Extraction
 
 - Iterate `end` from `n - 1` down to `1`:
-  1. Emit `T3 Range Emphasis Tick` on `tuple(range(0, end + 1))` to highlight the active heap boundary before the extraction swap.
-  2. Swap root (`index 0`) with `end`, then emit `T2 Write/Mutation Tick` on `(0, end)`. Increment `self.writes += 2`.
-  3. Call sift-down from `index 0` with `heap_size = end`, yielding T1/T2 ticks per comparison and swap as described above.
+  1. Emit `T3 Range Emphasis Tick` on `tuple(range(0, end + 1))` to highlight the active heap boundary before the extraction swap. The View renders this as a left-to-right sweep (see Animation Spec Section 5.3.1).
+  2. **Extraction Swap:** Swap root (`index 0`) with `end`, then emit `T2 Write/Mutation Tick` on `(0, end)`. Increment `self.writes += 2`. This swap uses the **elevated extraction arc** (`panel_height * 0.14`) rather than the standard arc height, visually distinguishing it as a phase-transition move (see Section 6.2 and Animation Spec Section 5.3).
+  3. Call sift-down from `index 0` with `heap_size = end`. Sift-down emits Logical Tree Highlight T3 ticks before each level's comparisons, plus T1/T2 ticks per comparison and swap as described in Phase 1. The Controller applies **reduced sift-down cadence** durations (T1: 100ms, T2: 250ms, T3: 130ms) to create a rapid cascading rhythm (see Animation Spec Section 5.3.2).
 
 Additional rules:
 
@@ -204,7 +254,7 @@ Additional rules:
 ### Compare Highlights
 
 - Compare operations highlight exactly the indices being compared.
-- Bubble: `(j, j+1)`.
+- Bubble: `(j, j+1)`. Additionally, the View applies a temporary **compare-lift** (vertical offset) to both sprites during the T1 duration, isolating the pair from the baseline row (see Section 4.1).
 - Selection: `(min_idx, j)`.
 - Insertion compare-during-shift: `(j, j+1)` — the element at `j` is compared against the lifted key (visually above the array).
 - Insertion key-selection: `(i,)` — single-index highlight on the key being extracted.
@@ -221,9 +271,15 @@ Additional rules:
 - Heap extraction range emphasis highlights `tuple(range(0, heap_size))`.
 - This shows the learner exactly which portion of the array is still an active max-heap before each root extraction.
 
+### Heap Logical Tree Highlights
+
+- Sift-down parent-child triangle highlights the tuple of `(parent, left_child, right_child)` where children exist within the heap boundary.
+- This shows the learner which tree relationship is being evaluated, even though elements are displayed in a flat row.
+- The highlight pattern is **non-contiguous** (e.g., indices `(1, 3, 4)`), distinguishing it from the contiguous boundary highlights.
+
 ## 6) Heap Sort Visual Phasing Decision
 
-Decision: **Two-phase visual distinction is required in v1.**
+Decision: **Two-phase visual distinction is required in v1, enhanced with Logical Tree Highlights.**
 
 Required behavior in v1:
 
@@ -231,9 +287,30 @@ Required behavior in v1:
 - T1/T2 ticks during sift-down communicate individual comparisons and swaps within the heap.
 - No separate auxiliary row animation is used; all Heap Sort motion is in-place on the main array row.
 
+### 6.1 Logical Tree Highlight (v1 Required)
+
+While v1 does not render a tree layout, it must **imply** tree structure through targeted highlighting during sift-down operations. This bridges the gap between the flat array display and the binary heap relationships the algorithm operates on.
+
+**Mechanism:** Before each sift-down level's comparisons (in both Phase 1 and Phase 2), the algorithm emits a T3 tick that highlights the **parent-child triangle** — the parent index and its existing children. The accent color (orange) renders simultaneously on all members of the triangle for 200ms.
+
+**Visual effect:** The learner sees 2–3 numbers flash orange together in a pattern that is *not* contiguous (e.g., indices 1, 3, 4). This non-contiguous grouping is the visual cue that a tree relationship exists — the learner intuitively perceives that index 1 "owns" indices 3 and 4, even without drawn edges.
+
+**Distinction from boundary T3 ticks:** Boundary T3 ticks highlight a contiguous range (`0..heap_size-1`) and appear once per extraction step. Logical Tree Highlight T3 ticks highlight a non-contiguous parent-child group and appear before each sift-down level's comparisons. Both use the same T3 tick type and accent color; the viewer distinguishes them by the highlight pattern (contiguous = boundary, scattered = tree relationship).
+
+### 6.2 Extraction Swap Visual Distinction (v1 Required)
+
+The extraction swap (root element to end of heap) is a **phase-transition move** that fundamentally differs from intra-heap sift-down swaps. To communicate this visually, extraction swaps use an elevated arc height:
+
+- **Extraction arc height:** `extraction_arc_height = panel_height * 0.14` (1.75× the standard `arc_height` of `panel_height * 0.08`).
+- **Standard sift-down arc height:** unchanged at `panel_height * 0.08`.
+
+The taller arc on extraction swaps gives the root-to-end move a visually dramatic quality, signaling to the learner that this is the major structural event (removing the max from the heap) rather than an internal repair. This is defined in the Animation Spec (10_ANIMATION_SPEC.md Section 5.3).
+
 Rationale:
 
 - The shrinking boundary communicates the core O(n log n) behavior of heap extraction.
+- The Logical Tree Highlight communicates parent-child relationships without requiring a tree layout, drawing on the reference video's emphasis on tree structure (see `docs/Reference/Heap_Sort_Video_Reference.md`).
+- The elevated extraction arc visually separates the "extract max" event from routine sift-down swaps, reinforcing the two-phase teaching model.
 - Range highlighting preserves clarity without introducing additional drawing complexity.
 - In-place motion is visually consistent with Bubble and Selection Sort panels.
 
@@ -254,11 +331,15 @@ Rationale:
 
 - COMPARE
   - Highlight compared indices.
-  - No sprite movement.
+  - No logical position change. Algorithm-specific temporary visual offsets may apply:
+    - **Bubble Sort:** Compare-lift — both sprites in the adjacent pair temporarily ease upward and return to baseline within the T1 duration (see Section 4.1, Animation Spec Section 5.1.1).
+    - **Insertion Sort key-selection:** Key sprite begins sustained lift (see Section 4.3, Animation Spec Section 5.2).
+    - **All others:** No sprite movement.
 
 - SWAP
   - Two sprites exchange horizontal positions.
   - Swap animation uses arc motion defined in Animation Spec.
+  - Heap Sort extraction swaps (root ↔ end) use the elevated arc height (`panel_height * 0.14`); all other swaps use the standard arc height (`panel_height * 0.08`).
 
 - SHIFT
   - Sprite moves horizontally into a new index position.
@@ -275,13 +356,13 @@ Rationale:
 
 ### What the Learner Should Observe
 
-**Bubble Sort:** The largest unsorted element "bubbles" to the right on each pass. The learner should notice that later passes get shorter as the right side of the array becomes sorted. With `[4, 7, 2, 6, 1, 5, 3]`, some comparisons trigger swaps and some do not — the learner sees both outcomes.
+**Bubble Sort:** The largest unsorted element "bubbles" to the right on each pass. Each adjacent pair **lifts briefly above the baseline** during comparison, making every comparison visually prominent — including comparisons that do *not* result in a swap. The learner should notice that the lift-and-release rhythm provides a consistent visual "heartbeat" for the scan, while swaps add the dramatic arc motion on top. Later passes get shorter as the right side of the array becomes sorted. With `[4, 7, 2, 6, 1, 5, 3]`, some comparisons trigger swaps and some do not — the learner sees both outcomes clearly because even non-swap comparisons have visible motion.
 
 **Selection Sort:** The algorithm scans the entire unsorted portion to find the minimum, then places it with a single swap. The learner should observe many comparisons followed by one swap (or no swap if the minimum is already in position). Despite being O(n²), Selection Sort has very few writes — for `[4, 7, 2, 6, 1, 5, 3]`, only 5 swaps (10 array writes).
 
 **Insertion Sort:** Elements are "picked up" from the unsorted portion and inserted into the correct position within the growing sorted portion. The learner should observe the key lifting, elements sliding right to make room, and the key dropping into place. Some keys travel far (like 1, which shifts to position 0), while others stay close (like 7, which is already in position) — the learner sees varying insertion depths.
 
-**Heap Sort:** Two distinct phases. Phase 1 (Build Max-Heap) repairs 3 heap violations, showing actual swaps as the tree structure is established — the learner sees the heap being actively constructed. Phase 2 (Extraction) repeatedly moves the root (maximum) to the sorted region and repairs the heap. The learner should observe the orange heap boundary shrinking by one element per extraction, directly illustrating why the sorted region grows from the right.
+**Heap Sort:** Two distinct phases with tree-aware visual cues. Phase 1 (Build Max-Heap) repairs 3 heap violations, showing actual swaps as the tree structure is established — before each sift-down level, a Logical Tree Highlight flashes the parent-child triangle (e.g., indices 1, 3, 4) in orange, letting the learner perceive the binary tree relationships within the flat row. Phase 2 (Extraction) repeatedly moves the root (maximum) to the sorted region via a dramatically tall arc swap (1.75× standard height), visually distinguishing this phase-transition event from routine sift-down repairs. The learner should observe the orange heap boundary shrinking by one element per extraction, directly illustrating why the sorted region grows from the right.
 
 ### About the Race Outcome
 

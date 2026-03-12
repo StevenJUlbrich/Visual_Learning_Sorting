@@ -35,6 +35,8 @@ Time is driven by absolute simulated operation costs:
 - **Write/Swap Operation (`T2`):** `400ms` simulated cost (allows time for physical sprite interpolation).
 - **Range Emphasis (`T3`):** `200ms` simulated cost — used by Heap Sort to display the active heap boundary before each extraction swap.
 
+**Heap Sort Sift-Down Cadence Override:** After a Heap Sort extraction swap completes, the Controller applies reduced simulated costs to the subsequent sift-down repair ticks: T1 → `100ms`, T2 → `250ms`, T3 (Logical Tree) → `130ms`. This creates a rapid cascading visual rhythm. The override resets at the start of the next extraction step. Phase 1 (Build Max-Heap) sift-down uses standard durations. Full specification in `10_ANIMATION_SPEC.md` Section 5.3.2.
+
 The View tracks and displays an `Elapsed Time` metric formatted to two decimal places (e.g., `03.45s`) for each panel.
 
 ## Tick and Counting Behavior

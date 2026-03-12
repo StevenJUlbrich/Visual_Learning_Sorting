@@ -88,16 +88,24 @@ Verify:
 - For `[4, 7, 2, 6, 1, 5, 3]`, verify that after Phase 1 the array becomes a valid max-heap (`[7, 6, 5, 4, 1, 2, 3]`).
 - Verify the sorted region (right side of array) grows by one element per extraction step.
 
-### AT-11 Insertion Sort Tick Sequence
+### AT-11 Insertion Sort Lift-and-Settle Sequence
 
-- Run Insertion Sort panel, stepping through operations.
-- For each pass, verify the visible sequence:
-  1. Key element lifts above the array row.
-  2. Compare highlights appear on the element being checked and the adjacent position.
-  3. If the comparison triggers a shift, the element slides right before the next comparison.
-  4. When the insertion point is found, a final comparison highlight shows the element that is not greater than the key (if the key does not go to position 0).
-  5. The key drops into the correct position.
-- Verify the key sprite remains elevated throughout all compare and shift ticks until placement.
+- Run Insertion Sort panel, stepping through operations one tick at a time.
+- For each outer loop pass (i = 1 through 6), verify the following visual sequence:
+
+  **First event — Key Lift:**
+  1. The very first tick of the pass lifts the key element above the array row into the compare lane. No other tick (compare, shift, or placement) precedes it. The key is highlighted on a single index `(i,)`.
+
+  **Mid-pass — Sustained Elevation:**
+  2. After the key lifts, step through all subsequent compare and shift ticks for the pass. **At every tick**, verify the key sprite remains visually elevated above the baseline — it must never drop back to the array row or flicker to baseline between ticks.
+  3. Compare highlights appear on the element being checked and the adjacent position. The key stays lifted.
+  4. If the comparison triggers a shift, the element slides right one slot before the next comparison. The key stays lifted.
+  5. When the insertion point is found, a final comparison highlight shows the element that is not greater than the key (if the key does not go to position 0). The key stays lifted.
+
+  **Final event — Settle / Drop:**
+  6. The last tick of the pass is a T2 placement tick. The key sprite eases diagonally — simultaneously moving horizontally to the destination slot and vertically from the compare lane back down to the baseline — in a single smooth motion. After this tick completes, the key is at rest in its sorted position at `home_y`.
+
+- **Regression guard:** If the key visually drops to baseline at any point before the placement tick, or if any tick other than the key-selection T1 appears first in a pass, the test fails.
 
 ### AT-12 Counter Accuracy
 
@@ -141,6 +149,26 @@ Run all algorithms to completion with `[4, 7, 2, 6, 1, 5, 3]` and verify:
 - Verify header, metrics, message, and array regions are vertically stacked without overlap.
 - Verify all text is anti-aliased (smooth edges, no jagged stairstepping on curves of letters like "S", "O", "C").
 
+### AT-17 Selection Sort Min Tracking
+
+- Run Selection Sort panel, stepping through operations one tick at a time.
+- For each outer pass `i`, observe the scan phase (`j = i+1` through `n-1`):
+  1. On each T1 compare tick, verify that **two** indices are highlighted in the panel accent color (red): the current scan cursor `j` and the running minimum `min_idx`.
+  2. When a new, smaller element is found at index `j`, verify the minimum highlight **moves** to `j` on the next tick — the previous `min_idx` loses its accent and `j` becomes the new `min_idx`.
+  3. When the element at `j` is not smaller than the current minimum, verify the minimum highlight **stays** on `min_idx` — it does not flicker or disappear between ticks.
+- Verify the message line references the current minimum on every scan tick (e.g., `"Comparing index 3 (value 6) with current min 2 at index 2"`).
+- **Regression guard:** If the minimum highlight disappears or jumps to an index that is not the actual running minimum, the test fails.
+
+### AT-18 Selection Sort Sorted Region Stability
+
+- Run Selection Sort panel to completion, stepping through operations.
+- After each swap (T2 tick placing the minimum at index `i`), verify:
+  1. The element now at index `i` transitions to the **settled/extracted color** `(130, 150, 190)` (desaturated steel-blue) — it is visually distinct from both the default array blue and the active accent red.
+  2. On all subsequent passes, the settled elements at indices `0..i` are **never** highlighted by the scan cursor. The scan only operates on the unsorted region (`i+1..n-1`); settled elements remain steel-blue and visually inert.
+  3. The sorted region grows from left to right — after pass `i`, exactly `i+1` elements on the left side of the array display the settled color.
+- On the completion tick, all settled elements transition from steel-blue to the global completion color (green), matching the behavior defined for Heap Sort extracted elements.
+- **Note:** This extends the settled/extracted color to Selection Sort (previously v1 scope was Heap Sort only per D-063). The visual contract is identical: settled = "this element is in its final position, but the algorithm is still working."
+
 ## Automated Acceptance Intent (for `tests/`)
 
 ### A) Minimum Correctness Checks (non-empty fixtures only)
@@ -172,11 +200,20 @@ Run all algorithms to completion with `[4, 7, 2, 6, 1, 5, 3]` and verify:
 ### E) Insertion Sort Tick Sequence Contract
 
 - Consume the Insertion Sort generator for `[4, 7, 2, 6, 1, 5, 3]`.
-- For each outer pass `i`:
-  - Assert the first tick is a T1 key-selection on `(i,)`.
-  - Assert subsequent T1/T2 ticks alternate correctly: T1 compare, then T2 shift for each element that moves.
-  - If the loop exits by condition (`j >= 0`), assert a terminating T1 compare tick is emitted.
-  - Assert the final tick of the pass is a T2 placement tick on a single index.
+- For each outer pass `i` (from 1 to 6):
+
+  **Pass boundary checks:**
+  - Assert the **first tick** of the pass is a T1 key-selection (`OpType.COMPARE`) with `highlight_indices == (i,)` — a single-element tuple. Any other tick type, or a multi-element highlight, is a contract violation.
+  - Assert the **last tick** of the pass is a T2 placement (`OpType.SHIFT`) with `highlight_indices` containing exactly one index — the destination slot.
+
+  **Mid-pass sequence checks:**
+  - Assert subsequent T1/T2 ticks alternate correctly: T1 compare on `(j, j+1)`, then T2 shift on `(j, j+1)` for each element that moves. No two consecutive T1s or two consecutive T2s within the shift loop.
+  - If the loop exits by condition (`j >= 0`), assert a terminating T1 compare tick is emitted on `(j, j+1)`.
+
+  **Counter checks:**
+  - Assert the key-selection T1 tick does **not** increment `comparisons` (it is a selection signal, not a data comparison).
+  - Assert every other T1 tick in the pass **does** increment `comparisons` by 1.
+  - Assert every T2 shift tick increments `writes` by 1, and the T2 placement tick increments `writes` by 1.
 
 ### F) Counter Accuracy Contract
 

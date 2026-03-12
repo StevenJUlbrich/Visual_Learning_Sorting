@@ -118,26 +118,73 @@ Each algorithm panel contains the following UI regions and elements, laid out ve
 
 ### 4.1 Header Region
 
-- **Title line:** Algorithm name in title font, left-aligned.
-  - Anchor: `x = rect.x + HEADER_INSET_X`, `y = rect.y + HEADER_INSET_Y`.
-  - `HEADER_INSET_X = panel_width * 0.03` (minimum 12px).
-  - `HEADER_INSET_Y = panel_height * 0.04` (minimum 10px).
-  - Color: primary text `(240, 240, 245)`.
+The header is a **strictly vertical stack**: Title → Metrics → Message, rendered top-to-bottom with no horizontal adjacency between elements. This vertical stacking is a layout invariant that prevents text overflow in narrow panels (portrait mode at 343px width) and provides a consistent visual rhythm across all resolutions.
 
-- **Metrics line:** Displayed below the title line, not beside it. This prevents overflow in narrow panels (portrait mode).
-  - Anchor: `x = rect.x + HEADER_INSET_X`, `y = title_y + title_height + METRICS_GAP`.
-  - `METRICS_GAP = 4` px.
-  - Format: `"<Big-O> | <elapsed> | Steps: <n> | Comps: <n> | Writes: <n>"`.
-  - Example: `"O(n²) | 03.45s | Steps: 35 | Comps: 21 | Writes: 30"`.
-  - Color: secondary text `(190, 190, 200)`.
-  - Font: body font (Inter-Regular 16).
+#### 4.1.1 Header Vertical Rhythm
 
-### 4.2 Message Line (Required)
+The three header elements flow downward from the panel's top-left inset corner, separated by fixed pixel gaps:
 
-- A message line is included and shows latest `SortResult.message`.
+```
+┌─ Panel ─────────────────────────────────────────┐
+│  ↕ HEADER_INSET_Y                               │
+│  ← HEADER_INSET_X →                             │
+│  ┌─ Title ────────────────────────────────────┐  │
+│  │ "Heap Sort"  (Inter-Bold 24, primary text) │  │
+│  └────────────────────────────────────────────┘  │
+│  ↕ METRICS_GAP (4px)                             │
+│  ┌─ Metrics ──────────────────────────────────┐  │
+│  │ "O(n log n) | 03.45s | Steps: 35 | ..."   │  │
+│  └────────────────────────────────────────────┘  │
+│  ↕ MESSAGE_GAP (6px)                             │
+│  ┌─ Message ──────────────────────────────────┐  │
+│  │ "Swapping index 0 (value 7) with index 6…" │  │
+│  └────────────────────────────────────────────┘  │
+│                                                   │
+│  ═══════ Array Rendering Region ═══════           │
+│         4   7   2   6   1   5   3                 │
+│                                                   │
+└───────────────────────────────────────────────────┘
+```
+
+**Spacing tokens:**
+
+- `HEADER_INSET_X = panel_width * 0.03` (minimum 12px) — left margin from panel edge.
+- `HEADER_INSET_Y = panel_height * 0.04` (minimum 10px) — top margin from panel edge.
+- `METRICS_GAP = 4px` — fixed gap between title bottom and metrics top.
+- `MESSAGE_GAP = 6px` — fixed gap between metrics bottom and message top.
+
+**Total header height budget:**
+
+`header_total = HEADER_INSET_Y + title_height + METRICS_GAP + metrics_height + MESSAGE_GAP + message_height`
+
+At fixed font sizes (24px title, 16px body × 2 lines), the approximate header height is:
+
+- Landscape (296px panel): ~24 + 4 + 16 + 6 + 16 = 66px rendered content + ~12px top inset = **~78px** (26% of panel height).
+- Portrait (441px panel): same pixel height = **~78px** (18% of panel height).
+
+The header must never exceed **35% of panel height**. If a future font or resolution change would exceed this budget, the message line is the first element to be omitted (metrics and title are mandatory).
+
+#### Title Line
+
+- Algorithm name in title font, left-aligned.
+- Anchor: `x = rect.x + HEADER_INSET_X`, `y = rect.y + HEADER_INSET_Y`.
+- Color: primary text `(240, 240, 245)`.
+
+#### Metrics Line
+
+- Displayed **below** the title line, never beside it. This vertical separation is the primary overflow prevention mechanism for portrait panels (343px width), where a side-by-side layout would exceed available horizontal space.
+- Anchor: `x = rect.x + HEADER_INSET_X`, `y = title_y + title_height + METRICS_GAP`.
+- Format: `"<Big-O> | <elapsed> | Steps: <n> | Comps: <n> | Writes: <n>"`.
+- Example: `"O(n²) | 03.45s | Steps: 35 | Comps: 21 | Writes: 30"`.
+- Color: secondary text `(190, 190, 200)`.
+- Font: body font (Inter-Regular 16).
+- **Portrait overflow rule:** If the metrics string exceeds `panel_width - (HEADER_INSET_X * 2)`, the view truncates with an ellipsis (`…`) from the right. Counter labels are never abbreviated — the string truncates from the `Writes:` field leftward, preserving Big-O and elapsed time as highest priority.
+
+#### Message Line
+
+- Shows latest `SortResult.message`.
 - Purpose: expose current action/error semantics for learning clarity.
 - Anchor: `x = rect.x + HEADER_INSET_X`, `y = metrics_y + metrics_height + MESSAGE_GAP`.
-- `MESSAGE_GAP = 6` px.
 - Styling: body font + secondary text color in normal state, error text color `(255, 120, 120)` in failure state.
 - If the message text exceeds panel width minus insets, it is truncated with an ellipsis (`…`) rather than wrapping.
 
@@ -154,7 +201,21 @@ Each algorithm panel contains the following UI regions and elements, laid out ve
 - Each panel draws directly to the main display surface. Panels do not use independent `pygame.Surface` objects or `subsurface`.
 - Rounded corners are achieved via `pygame.draw.rect` with `border_radius`. Child elements are positioned within insets and do not require clipping.
 
-### 4.5 State Overlays
+### 4.5 Sprite Z-Ordering Rule (Locked)
+
+Within each panel, sprites are drawn in a defined order to prevent visual occlusion of the active algorithmic focus:
+
+1. **Baseline sprites** (sprites at rest, `exact_y == home_y`) are drawn in array-index order (index 0 first, index 6 last).
+2. **Lifted sprites** — any sprite whose `exact_y < home_y` — **must always render on top of all baseline sprites.** This includes:
+   - Insertion Sort keys elevated in the compare lane during a pass.
+   - Bubble Sort adjacent pairs during a compare-lift pulse.
+   - The upward-arcing sprite in a swap animation.
+3. **Among multiple lifted sprites**, the sprite with the **smallest `exact_y`** (highest on screen) draws last (topmost). If tied, array-index order breaks the tie.
+4. **Restoration:** When a lifted sprite returns to `home_y` (lift descent completes, swap arc lands, key settles into place), it immediately reverts to default index-order rendering. No z-elevation persists after the animation concludes.
+
+This rule is a **layout integrity invariant**: a lifted key must never disappear behind a shifting baseline element, regardless of panel dimensions or orientation. The full motion-level specification is in `10_ANIMATION_SPEC.md` Section 4. See also D-033.
+
+### 4.6 State Overlays
 
 - Completion state: all numbers in completion color.
 - Error state: error border + readable failure message.
@@ -200,7 +261,35 @@ All accent colors are applied to number sprites rendered at FiraCode 28px (large
 
 Mapping is fixed by algorithm name and does not rotate at runtime.
 
-### 5.3 Color Changes from Prior Spec (Rationale)
+#### Heap Sort Accent Scope
+
+The Heap accent color (orange) is **reserved exclusively for active heap members** — elements at indices `0..heap_size-1` that are still participating in the heap data structure. Once an element is extracted from the heap (swapped to the sorted region beyond the heap boundary), it permanently loses its orange accent eligibility and transitions to the settled/extracted color (see Section 5.3). This ensures a clear visual contract: **orange = still in the heap; steel-blue = sorted and done**.
+
+### 5.3 Settled/Extracted State Color (Formalized)
+
+The **settled/extracted color** `(130, 150, 190)` (desaturated steel-blue) represents elements that have **permanently left the active unsorted region** and entered their final sorted position. This color serves a specific pedagogical purpose: it provides a visible "sorted history" layer that tracks algorithm progress *without* using the vibrant completion green `(80, 220, 120)`, which is reserved exclusively for the final completion tick when the entire array is confirmed sorted.
+
+#### Visual Contract
+
+- **Settled ≠ Complete.** Settled steel-blue communicates "this element is done, but the algorithm is still working." Completion green communicates "the entire sort has finished." This distinction prevents the learner from mistaking a partially sorted region for a fully sorted array.
+- **Desaturated, not dimmed.** The steel-blue is visually distinct from the vivid default array blue `(100, 150, 255)` through **desaturation** rather than dimming. The learner perceives settled elements as "quieter" — still readable, but no longer demanding attention.
+- **One-way transition.** Once an element enters the settled state, it does not revert to the default array color. It remains steel-blue until the completion tick, at which point it transitions to green with all other elements.
+
+#### v1 Scope — Heap Sort
+
+In v1, the settled/extracted color applies **exclusively to Heap Sort** extracted elements — elements at indices `>= heap_size` that have been swapped out of the active heap via root-to-end extraction. This creates the progressive visual narrative described in Section 6: steel-blue accumulates from the right (sorted region) while orange/blue remains on the left (active heap).
+
+Other algorithms in v1 do not use the settled color because:
+
+- **Bubble Sort:** The right-side "settled" elements (positions that have received their final value via bubbling) are not explicitly tracked by the algorithm's tick sequence — the spec uses early-exit optimization but does not emit boundary ticks.
+- **Selection Sort:** Elements swapped into the sorted left region could semantically qualify, but Selection Sort's visual emphasis is on the scan/minimum pattern, and adding a third color state would clutter a panel that already has accent + default + highlight transitions.
+- **Insertion Sort:** The growing sorted region on the left is conceptually similar, but the key-lift/shift/drop choreography already provides strong visual separation between "sorted" and "unsorted" without needing a color distinction.
+
+#### Post-v1 Extensibility
+
+The settled color is designed to be algorithm-agnostic. If future versions add sorted-region visualization to Bubble, Selection, or Insertion Sort (e.g., via boundary markers or progressive color transitions), the same `(130, 150, 190)` can be applied without palette changes. The WCAG AAA contrast (4.6:1 for large text) ensures readability across all panels.
+
+### 5.4 Color Changes from Prior Spec (Rationale)
 
 The following colors were adjusted to meet AAA accessibility requirements:
 
@@ -217,9 +306,17 @@ The following colors were adjusted to meet AAA accessibility requirements:
   - Non-highlighted indices → default array color.
   - `highlight_indices` → panel accent color.
   - Step counter increments only on successful non-terminal ticks (defined in data contracts).
+- Settled/extracted state (Heap Sort only):
+  - Applies to elements in the **sorted region** of the Heap Sort panel — indices beyond the current heap boundary (`index >= heap_size`) that have been extracted via root-to-end swaps.
+  - These elements render in the settled/extracted color `(130, 150, 190)` (desaturated steel-blue) **permanently** for the remainder of the sort, even when not highlighted.
+  - Settled elements are **never** rendered in the orange accent color. If a T3 boundary highlight or a Logical Tree Highlight tick fires, settled indices outside the heap boundary are excluded from the highlight set.
+  - The transition is one-way: once an element enters the sorted region after an extraction swap, it does not revert to the default array color.
+  - **Progressive sorted-boundary transition:** The settled region grows from right to left as extractions proceed. After each extraction swap, the sorted boundary advances one position leftward (from index `n-1` toward index `1`), and the newly placed element immediately adopts the settled color. The View determines settled status by comparing each element's current array index against `heap_size`: any element at index `≥ heap_size` renders in settled color. This produces a progressive visual history — the learner watches the right side of the array gradually fill with steel-blue numbers, one element per extraction, while the active heap on the left (default blue / orange highlights) visibly shrinks. The growing steel-blue region directly illustrates that the sorted output is being built incrementally from the maximum downward.
+  - **Extraction sequence for `[4, 7, 2, 6, 1, 5, 3]`:** After the max-heap `[7, 6, 5, 4, 1, 2, 3]` is built, the first extraction places `7` at index 6 (settled). The next places `6` at index 5 (settled). The boundary continues leftward: indices 6, 5, 4, 3, 2, 1 transition in sequence. After the final extraction, only index 0 remains in the active heap — it is the last element and needs no swap, so it transitions on the completion tick when all elements turn green.
 - Complete tick:
   - Entire array row uses completion color.
   - Panel remains visible and static.
+  - For Heap Sort, the settled/extracted color is **replaced** by the completion color — all seven numbers turn green uniformly.
 - Failure tick:
   - Panel gets error border and failure text.
   - Message line switches to error text color.
