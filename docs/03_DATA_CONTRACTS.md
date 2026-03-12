@@ -13,7 +13,7 @@ class OpType(Enum):
     COMPARE = auto()  # Maps to T1 (150ms)
     SWAP = auto()     # Maps to T2 (400ms)
     SHIFT = auto()    # Maps to T2 (400ms)
-    RANGE = auto()    # Maps to T3 (200ms) — active heap boundary or region emphasis
+    RANGE = auto()    # Maps to T3 (200ms) — non-mutating visual aid; accent color only, no sprite movement
     TERMINAL = auto()  # Used for completion ticks
     FAILURE = auto()   # Used for explicit failure ticks
 
@@ -30,9 +30,17 @@ class SortResult:
 COMPARE → highlight only, no sprite position change
 SWAP → exchange two sprite home slots with arc path, duration = T2
 SHIFT → source/destination horizontal slide, duration = T2
-RANGE → highlight index set, no sprite displacement; used by Heap Sort for two purposes:
-        (a) Boundary emphasis: contiguous range 0..heap_size-1 at the start of each extraction step
-        (b) Logical Tree Highlight: non-contiguous parent-child triangle during sift-down
+RANGE → **non-mutating visual aid**; refreshes accent color on highlighted indices only.
+        Invariants:
+        - No sprite displacement (no `exact_x`/`exact_y` target changes).
+        - No `array_state` mutation — the snapshot is identical to the prior tick's.
+        - No `writes` or `comparisons` counter increments.
+        - Does not increment the panel step counter (see Step Counter Definition).
+        Used by Heap Sort for two purposes:
+        (a) Boundary emphasis: contiguous range 0..heap_size-1, rendered as a left-to-right sweep
+            (see Animation Spec Section 5.3.1). Refreshes the orange accent on the active heap region.
+        (b) Logical Tree Highlight: non-contiguous parent-child triangle during sift-down,
+            rendered as a simultaneous accent flash on the parent and its children.
         See "OpType.RANGE — Heap Sort Highlight Variants" below for full rules
 TERMINAL → no motion; apply completion styling
 
@@ -45,6 +53,8 @@ TERMINAL → no motion; apply completion styling
 ### OpType.RANGE — Heap Sort Highlight Variants
 
 Heap Sort emits two distinct variants of `OpType.RANGE` ticks. Both use the same `OpType` enum value and the same accent color (orange), but differ in highlight pattern and purpose.
+
+**Non-mutation guarantee (applies to both variants):** A RANGE tick is a pure visual aid. It must not modify `self.data`, must not change any sprite's target position, must not increment `self.comparisons` or `self.writes`, and must not increment the panel step counter. The `array_state` snapshot in a RANGE tick must be **identical** to the snapshot from the immediately preceding tick — if the View or a test harness detects a difference, it is a contract violation. The Controller consumes the tick's simulated cost (200ms standard, or 130ms under sift-down cadence) for race timing, but the cost represents **display time**, not computational work.
 
 #### Variant A — Boundary Emphasis
 
@@ -109,9 +119,9 @@ Invalid combinations are contract violations.
 - Compare tick: highlights compared indices.
 - Swap tick: highlights swapped indices and new snapshot.
 - Shift/placement tick: highlights moved/placed indices and new snapshot.
-- Range emphasis tick: used by Heap Sort for two highlight variants:
-  - Boundary emphasis: contiguous range `0..heap_size-1` showing the active heap region.
-  - Logical Tree Highlight: non-contiguous parent-child triangle `(parent, left, right)` showing the tree relationship under evaluation. The sift-down parent is always included.
+- Range emphasis tick: **non-mutating visual aid** — no sprite movement, no array mutation, no counter increments. Used by Heap Sort for two highlight variants:
+  - Boundary emphasis: contiguous range `0..heap_size-1` — refreshes orange accent on the active heap region via left-to-right sweep.
+  - Logical Tree Highlight: non-contiguous parent-child triangle `(parent, left, right)` — refreshes orange accent on the tree relationship under evaluation. The sift-down parent is always included.
 - Terminal completion tick: final sorted array snapshot with full-array highlight (`highlight_indices=tuple(range(size))`).
 - Failure tick: explicit error state with message.
 
@@ -140,11 +150,36 @@ Each algorithm tracks its own `comparisons` and `writes` counters as instance at
 ### Writes Counter
 
 - `writes`: incremented by the algorithm to reflect the number of **individual array positions modified** by each mutation.
-- Increment rules per operation type:
-  - **Swap** (`OpType.SWAP`): `writes += 2` — a swap modifies two array positions.
-  - **Shift** (`OpType.SHIFT`): `writes += 1` — a shift writes one element to an adjacent position.
-  - **Placement** (`OpType.SHIFT` for insertion): `writes += 1` — placing a key writes one element.
-- This matches standard algorithm analysis where array writes are counted individually, enabling accurate cross-algorithm comparison.
+- **Counting unit: array positions, not operations.** A single swap *operation* modifies two array positions, so it counts as 2 writes. A single shift *operation* modifies one array position, so it counts as 1 write. This per-position granularity matches standard algorithm analysis (e.g., Knuth, Sedgewick) and enables the learner to make accurate cross-algorithm comparisons from the metrics line.
+
+#### Per-Operation Increment Rules
+
+| Operation | OpType | `writes` Increment | Rationale |
+| --- | --- | --- | --- |
+| **Swap** | `SWAP` | `+= 2` | Both `arr[i]` and `arr[j]` are overwritten |
+| **Shift** | `SHIFT` | `+= 1` | `arr[j+1] = arr[j]` — one position written |
+| **Placement** | `SHIFT` | `+= 1` | `arr[j+1] = key` — one position written |
+| **Compare** | `COMPARE` | `+= 0` | Read-only operation — no array mutation |
+| **Range** | `RANGE` | `+= 0` | Non-mutating visual aid — no array mutation |
+| **Terminal** | `TERMINAL` | `+= 0` | No mutation on completion or failure |
+
+#### Per-Algorithm Expected Write Totals for `[4, 7, 2, 6, 1, 5, 3]`
+
+These expected values serve as QA verification anchors for the default dataset:
+
+| Algorithm | Write Operations | Calculation | Expected `writes` |
+| --- | --- | --- | --- |
+| **Bubble Sort** | 8 swaps (with early exit) | 8 × 2 = 16 | **16** |
+| **Selection Sort** | 5 swaps | 5 × 2 = 10 | **10** |
+| **Insertion Sort** | 13 shifts + 6 placements | 13 × 1 + 6 × 1 = 19 | **19** |
+| **Heap Sort** | 3 build swaps + 6 extraction swaps + sift-down swaps | varies by sift-down depth | **~22** (exact count depends on sift-down paths) |
+
+**Note:** These totals are derived from the specific input `[4, 7, 2, 6, 1, 5, 3]`. Different inputs produce different write counts. The values above are for QA regression testing, not general algorithm properties.
+
+#### Invariants
+
+- `writes` is incremented by the algorithm model **before** yielding the corresponding `SortResult`. The counter value visible to the View at render time already includes the current tick's writes.
+- `writes` must never be incremented on COMPARE, RANGE, TERMINAL, or FAILURE ticks.
 - Initialized to `0` in `__init__` and reset on re-instantiation (restart).
 
 ### Counter Display
