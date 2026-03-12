@@ -148,11 +148,13 @@ Bubble Sort T1 compare ticks trigger a **temporary vertical offset** on the adja
 
 - **Action:** Two elements exchange indices during sift-down or root extraction.
 - **Sift-down swap motion:** Identical arc swap motion to Bubble and Selection Sort — both sprites interpolate their `x` coordinates to each other's home position. Left sprite arcs upward, right sprite arcs downward. Standard `arc_height = panel_height * 0.08` and sine formula.
-- **Extraction swap motion:** When the root (index 0) swaps with the end of the heap region, a **higher arc** is used to visually distinguish this phase-transition move from internal sift-down repairs:
-  - `extraction_arc_height = panel_height * 0.14` (1.75× the standard arc height).
+- **Extraction swap motion:** When the root (index 0) swaps with the end of the heap region, a **higher arc** is used to visually distinguish this **phase-transition move** from internal sift-down repairs. This elevated arc is mandatory for root-to-end swaps and must not be used for any other swap type:
+  - `extraction_arc_height = panel_height * 0.14` (1.75× the standard `arc_height` of `panel_height * 0.08`).
   - Same sine formula: `arc_offset = extraction_arc_height * sin(pi * t)`.
   - Left sprite (index 0) arcs upward, right sprite (index `end`) arcs downward.
+  - Duration: always **400ms** (standard T2 duration — the sift-down cadence reduction does not apply to the extraction swap itself).
   - The dramatic height signals to the learner that this is the major structural event — extracting the maximum from the heap — not a routine repair.
+  - **Implementation constant:** `EXTRACTION_ARC_MULTIPLIER = 1.75` or `EXTRACTION_ARC_HEIGHT = panel_height * 0.14`. The Controller must detect extraction swaps (T2 tick on `(0, end)` during Phase 2) and apply this arc height instead of the standard.
 - **Logical Tree Highlight (T3):** Before each sift-down level's comparisons (in both Phase 1 and Phase 2), a T3 tick highlights the **parent-child triangle** — the parent index and its existing children within the heap boundary. The accent color (orange) renders simultaneously on the triangle members for 200ms with no positional change. The non-contiguous highlight pattern (e.g., indices 1, 3, 4) implies the binary tree structure within the flat row.
 - **Heap Boundary Emphasis (T3) with Sweep:** At the start of each extraction step, a T3 tick highlights the contiguous range `0..heap_size-1` in accent color. Rather than appearing instantly on all indices, the highlight **sweeps** from index 0 to `end` over the T3 duration (200ms), creating a left-to-right "refresh" effect that visually re-establishes the heap boundary before each extraction (see Section 5.3.1).
 - **Sift-Down Cadence:** After an extraction swap completes, the subsequent sift-down repair sequence uses **reduced simulated costs** to create a rapid-fire "ripple" effect, visually conveying that sift-down is a fast internal repair rather than a major structural event (see Section 5.3.2).
@@ -179,6 +181,16 @@ After an extraction swap (T2 on `(0, end)`), the sift-down repair sequence that 
 | T1 Compare | 150ms | **100ms** |
 | T2 Swap | 400ms | **250ms** |
 | T3 Logical Tree Highlight | 200ms | **130ms** |
+
+**Implementation constants:** These durations should be defined as named constants (or configuration parameters) in the Controller, not inlined as magic numbers. Recommended constant names:
+
+```python
+SIFT_DOWN_COMPARE_DURATION = 100   # ms (reduced from standard 150ms)
+SIFT_DOWN_SWAP_DURATION    = 250   # ms (reduced from standard 400ms)
+SIFT_DOWN_TREE_HIGHLIGHT   = 130   # ms (reduced from standard 200ms)
+```
+
+The Controller selects between standard and reduced durations based on the `sift_down_cadence` flag (see below). An agentic coder may hardcode these values or expose them as tunable parameters — either approach satisfies the spec provided the durations match the table above.
 
 **Scope:** The reduced cadence applies **only** to sift-down ticks that immediately follow an extraction swap within the same extraction step. It does not apply to:
 
