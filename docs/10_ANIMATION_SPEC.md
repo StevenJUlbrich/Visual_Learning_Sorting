@@ -192,6 +192,29 @@ After an extraction swap (T2 on `(0, end)`), the sift-down repair sequence that 
 
 **Race impact:** The reduced sift-down durations decrease Heap Sort's total elapsed time, making it more competitive in the race. This is intentional — it reflects the algorithmic reality that sift-down is an O(log n) repair, and the visual pacing should convey that these repairs are efficient relative to the extraction event that triggers them.
 
+#### 5.3.3 Branching Visualization (T3 Logical Tree Highlight)
+
+The T3 tick for sift-down tree logic communicates the binary heap's parent-child relationship within the flat array row. This subsection defines the exact visual behavior.
+
+**Color:** The **accent color (orange)** is applied to all indices provided in the tick's `highlight_indices` tuple — typically `(parent, left_child, right_child)`, or `(parent, left_child)` when only one child exists within the heap boundary.
+
+**Rendering:** All provided indices highlight **simultaneously** — there is no stagger or sweep. The orange accent snaps on at tick start across all members of the parent-child triangle at the same instant. This simultaneous appearance is the visual mechanism that implies a tree relationship: the learner perceives that these non-contiguous indices (e.g., 1, 3, 4) are grouped because they light up together, even though they are separated by unrelated elements in the flat row.
+
+**Duration:**
+- **Phase 1 (Build Max-Heap):** 200ms (standard T3 duration). The learner needs time to absorb the tree relationships during initial heap construction.
+- **Phase 2 (Post-Extraction Sift-Down):** 130ms (reduced sift-down cadence, per Section 5.3.2). The faster timing creates the cascading ripple rhythm appropriate for internal repairs.
+
+**No positional change:** No sprite displacement occurs on this tick. The highlight is purely chromatic — sprites remain at their current `(exact_x, exact_y)` positions.
+
+**Distinction from Boundary T3 ticks:** Both tick types use the T3 tick type and the orange accent color, but they are visually distinguishable:
+
+| Property | Boundary T3 | Branching T3 |
+| --- | --- | --- |
+| Highlight pattern | Contiguous range `0..heap_size-1` | Non-contiguous parent-child group (e.g., `1, 3, 4`) |
+| Rendering | Staggered left-to-right sweep (Section 5.3.1) | Simultaneous snap-on |
+| Timing context | Once per extraction step, before extraction swap | Before each sift-down level's comparisons |
+| Pedagogical signal | "This is the active heap region" | "This parent owns these children" |
+
 #### Heap Sort Extraction Visual Sequence (per extraction step)
 
 1. **Boundary T3** tick fires: indices `0..end` highlight via left-to-right sweep over 200ms (no movement).
