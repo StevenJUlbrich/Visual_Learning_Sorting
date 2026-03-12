@@ -154,7 +154,21 @@ Each algorithm panel contains the following UI regions and elements, laid out ve
 - Each panel draws directly to the main display surface. Panels do not use independent `pygame.Surface` objects or `subsurface`.
 - Rounded corners are achieved via `pygame.draw.rect` with `border_radius`. Child elements are positioned within insets and do not require clipping.
 
-### 4.5 State Overlays
+### 4.5 Sprite Z-Ordering Rule (Locked)
+
+Within each panel, sprites are drawn in a defined order to prevent visual occlusion of the active algorithmic focus:
+
+1. **Baseline sprites** (sprites at rest, `exact_y == home_y`) are drawn in array-index order (index 0 first, index 6 last).
+2. **Lifted sprites** — any sprite whose `exact_y < home_y` — **must always render on top of all baseline sprites.** This includes:
+   - Insertion Sort keys elevated in the compare lane during a pass.
+   - Bubble Sort adjacent pairs during a compare-lift pulse.
+   - The upward-arcing sprite in a swap animation.
+3. **Among multiple lifted sprites**, the sprite with the **smallest `exact_y`** (highest on screen) draws last (topmost). If tied, array-index order breaks the tie.
+4. **Restoration:** When a lifted sprite returns to `home_y` (lift descent completes, swap arc lands, key settles into place), it immediately reverts to default index-order rendering. No z-elevation persists after the animation concludes.
+
+This rule is a **layout integrity invariant**: a lifted key must never disappear behind a shifting baseline element, regardless of panel dimensions or orientation. The full motion-level specification is in `10_ANIMATION_SPEC.md` Section 4. See also D-033.
+
+### 4.6 State Overlays
 
 - Completion state: all numbers in completion color.
 - Error state: error border + readable failure message.
@@ -226,7 +240,8 @@ The following colors were adjusted to meet AAA accessibility requirements:
   - These elements render in the settled/extracted color `(130, 150, 190)` (desaturated steel-blue) **permanently** for the remainder of the sort, even when not highlighted.
   - Settled elements are **never** rendered in the orange accent color. If a T3 boundary highlight or a Logical Tree Highlight tick fires, settled indices outside the heap boundary are excluded from the highlight set.
   - The transition is one-way: once an element enters the sorted region after an extraction swap, it does not revert to the default array color.
-  - This creates a progressive visual narrative in the Heap Sort panel: the right side of the array gradually fills with steel-blue numbers while the left side (active heap) remains in default blue or orange highlights. The learner sees the heap physically shrinking.
+  - **Progressive sorted-boundary transition:** The settled region grows from right to left as extractions proceed. After each extraction swap, the sorted boundary advances one position leftward (from index `n-1` toward index `1`), and the newly placed element immediately adopts the settled color. The View determines settled status by comparing each element's current array index against `heap_size`: any element at index `≥ heap_size` renders in settled color. This produces a progressive visual history — the learner watches the right side of the array gradually fill with steel-blue numbers, one element per extraction, while the active heap on the left (default blue / orange highlights) visibly shrinks. The growing steel-blue region directly illustrates that the sorted output is being built incrementally from the maximum downward.
+  - **Extraction sequence for `[4, 7, 2, 6, 1, 5, 3]`:** After the max-heap `[7, 6, 5, 4, 1, 2, 3]` is built, the first extraction places `7` at index 6 (settled). The next places `6` at index 5 (settled). The boundary continues leftward: indices 6, 5, 4, 3, 2, 1 transition in sequence. After the final extraction, only index 0 remains in the active heap — it is the last element and needs no swap, so it transitions on the completion tick when all elements turn green.
 - Complete tick:
   - Entire array row uses completion color.
   - Panel remains visible and static.
