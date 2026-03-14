@@ -239,6 +239,25 @@ This rule is a **layout integrity invariant**: a lifted key must never disappear
 - `Comparison Count` increments as each comparison begins.
 - `Exchange Count` increments when a swap is executed.
 
+### 4.7 Bubble Sort Specific Assets (Locked)
+
+Based on instructional reference sequences, the Bubble Sort panel requires specific persistent UI markers that reside in the background rendering layer (drawn *before* base sprites to prevent text occlusion).
+
+#### 4.7.1 The Limit Line
+- **Visual Role:** Marks the boundary between the active unsorted region and the right-side settled suffix.
+- **Asset Rendering:** A vertical dashed line spanning the height of the `Array Rendering Region`.
+- **Color:** `(190, 190, 200)` (Secondary Text color for WCAG AAA compliance).
+- **Label:** The word "limit" rendered in `Inter-Regular 16` at the top of the dashed line.
+
+#### 4.7.2 The Comparison Cursor
+- **Visual Role:** Tracks the current $j$ index of the inner loop scan.
+- **Asset Rendering:** An upward-pointing geometric arrow or caret.
+- **Color:** `(80, 220, 120)` (Complete state green) to draw the eye to the active index.
+- **Placement:** Anchored horizontally to the center of the active slot, vertically positioned directly below the array baseline (`home_y`).
+
+#### 4.7.3 HUD Updates
+- The Metrics Line (Section 4.1.1) must actively display real-time increments for `Comps: <n>` (Comparisons) and `Writes: <n>` (Exchanges/Swaps) as they occur in the animation loop.
+
 ## 5) Color Identity Decision (Locked)
 
 Decision: **Per-panel algorithm accent colors** (not a single global highlight color).
