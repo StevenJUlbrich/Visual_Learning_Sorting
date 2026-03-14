@@ -62,13 +62,13 @@ The animation visually separates the array into two regions:
 
 The portion of the array still forming the heap.
 
-This region participates in heap comparisons and heapify operations.
+This region participates in heap comparisons and heapify operations. These slots turn into **dark blue squares** (no text or hidden text) when the elements are actively being sorted in the tree structure above.
 
 ### 3.2 Sorted Region
 
 The rightmost portion of the array where extracted maximum values accumulate.
 
-Once elements move here they are no longer part of the heap.
+Once elements move here they are no longer part of the heap and revert to **light green squares with black text**.
 
 ---
 
@@ -110,9 +110,13 @@ Each element in the animation appears to transition between several visual state
 
 Element currently participating in the heap but not actively compared.
 
+**Tree appearance:** Light blue circle with black text.
+
 ### 5.2 Parent Candidate
 
-The element currently being evaluated during heapify.
+The element currently being evaluated during heapify or extraction.
+
+**Tree appearance:** Pink circle with black text.
 
 ### 5.3 Child Candidate
 
@@ -125,6 +129,18 @@ Two nodes that will exchange positions.
 ### 5.5 Sorted Element
 
 Element that has been removed from the heap and placed in the sorted region.
+
+**Array appearance:** Light green square with black text.
+
+### 5.6 Array Placeholder (Unsorted Region)
+
+Array slots that have not yet been sorted.
+
+**Array appearance:** Dark blue square (no text or hidden text).
+
+### 5.7 Text Label
+
+A **"Heapify"** label appears in **red text** between the tree and array during heap construction and restoration phases.
 
 ---
 
