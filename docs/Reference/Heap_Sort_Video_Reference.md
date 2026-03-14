@@ -350,7 +350,26 @@ The video demonstrates behavior and establishes a strong visual theme.
 
 ---
 
-## 12. Key Technical Insight
+## 12. Visual Styling Guidelines (UX/UI)
+
+The reference animation establishes a specific visual language for the implementation.
+
+### Canvas and Typography
+
+* The background canvas is solid black, creating high contrast for the colorful data points.
+* Values and dynamic labels use a dark, bold, sans-serif font.
+
+### Color Palette
+
+* **Initial/Sorted State:** Light green is used for elements in their initial unsorted array state and their final sorted array state.
+* **Resting Tree State:** Light blue is used for resting nodes within the active heap tree structure.
+* **Active/Highlight State:** Pink/light red is used to highlight the active node, such as the root during heapify operations, and its corresponding instructional status text (e.g., "Heapify").
+* **Empty Array State:** Dark blue is used to fill blank array slots, acting as placeholders for the elements currently active in the tree visualizer.
+* **Connectors:** Pale yellow is used for the thin lines depicting parent-child relationships.
+
+---
+
+## 13. Key Technical Insight
 
 Heap Sort animation relies on a **tree-based comparison structure**, making it visually and conceptually different from the other sorting algorithms:
 
@@ -363,7 +382,7 @@ This makes Heap Sort a strong visual complement to the other algorithms.
 
 ---
 
-## 13. Developer Summary
+## 14. Developer Summary
 
 If explaining the animation to another Pygame engineer:
 
