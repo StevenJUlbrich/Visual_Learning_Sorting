@@ -33,19 +33,19 @@ This makes Heap Sort visually distinct from the other algorithms.
 
 ## 2. Layout Observed
 
-The animation likely uses **two simultaneous conceptual representations**:
+The animation uses **two simultaneous visual representations** displayed together on screen:
 
 ### 2.1 Array Row
 
-A horizontal row representing the array storage.
+A horizontal row of **square blocks** representing the array storage.
 
 Each element is positioned in a fixed slot corresponding to its index.
 
 ### 2.2 Binary Heap Structure
 
-A tree-like structure representing the heap relationships.
+A tree of **circular nodes** representing the heap relationships, positioned **above the array row**.
 
-Elements appear connected through parent-child relationships.
+Elements appear connected through parent-child relationships via edges drawn between nodes.
 
 The tree representation helps viewers understand:
 
