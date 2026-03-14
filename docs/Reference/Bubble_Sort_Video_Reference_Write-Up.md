@@ -103,11 +103,11 @@ This baseline acts like the “home row” for the array.
 
 When a comparison begins:
 
-* the active pair is separated from the baseline visually
-* they appear to lift upward into a compare lane or compare posture
-* the rest of the row remains still
+* the green arrow moves to comparison position `j`
+* the nodes at `j` and `j + 1` turn green to show the active pair
+* the rest of the row remains red and visually still
 
-In Pygame terms, this suggests a **temporary compare y-offset**.
+This establishes the comparison state before any exchange motion occurs.
 
 ## 4.3 Compare-without-swap
 
@@ -115,10 +115,10 @@ When two values are compared and do not need to swap, the viewer still needs to 
 
 The likely motion pattern is:
 
-* pair lifts
-* pair is highlighted
+* arrow moves to `j`
+* pair turns green
 * pair holds briefly
-* pair returns to baseline
+* pair remains on the baseline because no exchange is needed
 * active cursor advances
 
 This matters because otherwise non-swap compares are visually weak.
@@ -129,14 +129,12 @@ When the pair is out of order, the compare event becomes a swap event.
 
 The likely visual pattern is:
 
-* pair lifts into active compare state
-* pair exchanges horizontal positions
-* pair settles back to baseline in new order
-
-In a Pygame implementation, this could be done either:
-
-* while elevated, or
-* via slight arc motion during crossing
+* arrow moves to `j`
+* pair turns green
+* pair lifts vertically away from the baseline into an exchange state
+* while lifted, the two nodes swap `x` coordinates
+* pair settles back to the baseline in new order
+* the Exchanges counter increments as the swap occurs
 
 But the important reference behavior is not the exact easing curve.
 The important behavior is that the viewer can clearly read:
@@ -148,6 +146,8 @@ The important behavior is that the viewer can clearly read:
 After each comparison, the active position shifts one slot to the right.
 
 This movement is part of the algorithm explanation. It is not decorative.
+
+The Comparisons counter should increment in real time when each comparison is initiated so the overlay stays synchronized with the choreography.
 
 ## 4.6 End of pass
 
@@ -196,6 +196,13 @@ A separate renderable element for:
 
 The observed “limit” label should be a separate UI element, not part of the number sprites.
 
+### Counter overlays
+
+Separate UI text overlays should display:
+
+* `Comparisons`, incremented when each comparison begins
+* `Exchanges`, incremented when a swap is executed
+
 ---
 
 ## 5.2 Likely sprite state model
@@ -231,7 +238,7 @@ Likely draw order:
 4. compare arrow
 5. inactive value sprites
 6. active compare pair
-7. labels / overlays
+7. labels / overlays, including Comparisons and Exchanges text
 
 This matters because lifted compare sprites should visually dominate the passive row.
 
