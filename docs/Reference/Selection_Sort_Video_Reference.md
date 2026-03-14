@@ -32,7 +32,7 @@ The animation is therefore **state driven**, not just swap driven.
 
 The animation uses a **single horizontal row of values**.
 
-Each value appears as a circular node or visual token.
+Each value appears as a circular node with a green border on a gray fill.
 
 The layout has three visual zones:
 
@@ -40,19 +40,25 @@ The layout has three visual zones:
 
 This is the primary array representation.
 
-All values sit on a horizontal baseline except when temporarily animated.
+All values sit on a horizontal baseline except when temporarily animated during a swap.
 
-### Active Scan Indicator
+### Confirmed Pointer Assets
 
-A moving pointer or visual highlight marks the current index being examined.
+The reference frames show **three labeled arrow assets** with fixed placement relative to the baseline row:
 
-This pointer moves **left → right** during the scan phase.
+1. **`i` pointer (Sorted Boundary):** A **downward-pointing arrow** labeled `i`, positioned **above** the baseline row. It marks the current outer loop index — the next position in the sorted region to be filled. It advances one slot rightward after each completed swap.
+2. **`j` pointer (Scan Cursor):** An **upward-pointing arrow** labeled `j`, positioned **below** the baseline row. It marks the current inner loop scan index and advances left-to-right during each scan phase.
+3. **`min` pointer (Minimum Tracker):** An **upward-pointing arrow** labeled `min`, positioned **below** the baseline row. It marks the index of the smallest element found so far during the current scan. It **jumps** to a new index whenever a smaller element is discovered.
+
+**Coalescing behavior:** When the scan cursor `j` discovers a new minimum, the `min` label transfers to `j`'s current index. When `j` and `min` occupy the same index, only the `min` label is shown — the `j` label visually merges into `min` rather than overlapping (see frames `009_5.00.png` and `010_5.38.png`). When `j` advances past that index, the two labels separate again.
 
 ### Sorted Region
 
-The left side of the row gradually becomes the sorted region.
+The left side of the row progressively becomes the sorted region.
 
-Elements placed there appear visually stable and are not revisited by the algorithm.
+After each swap, the element placed at index `i` transitions to a **bright green fill**, visually distinct from the gray unsorted nodes. This green color persists for all subsequent frames, creating a left-to-right growing green region that tracks algorithm progress (see frames `019_10.50.png` onward).
+
+Elements in the sorted region are not revisited by the scan cursor.
 
 ---
 
@@ -87,29 +93,27 @@ It happens **once per outer loop**.
 
 ## 4. Visual States Observed
 
-The video appears to represent several logical states visually.
+The reference frames confirm the following distinct visual states.
 
 ### State: Resting Element
 
-Default appearance when the element is neither being scanned nor selected as minimum.
+Gray fill with green border. Default appearance when the element is neither being scanned nor selected as minimum.
 
 ### State: Scan Candidate
 
-The element currently being inspected by the scan cursor.
-
-This element is visually highlighted so the viewer can follow the scanning process.
+Indicated by the `j` arrow positioned below the element. The element itself retains the same gray fill — the distinction from resting elements is provided **entirely by the labeled arrow**, not by a node color change.
 
 ### State: Current Minimum
 
-The smallest element found so far during the scan.
+Indicated by the `min` arrow positioned below the element. Like the scan candidate, the node retains gray fill — the `min` label is the sole visual marker.
 
-This element remains visually marked while scanning continues.
+When `j` and `min` point to the same index (immediately after a new minimum is discovered), only the `min` label is shown.
 
 ### State: Sorted Element
 
-Once an element has been swapped into the sorted region it becomes visually stable.
+Once an element has been swapped into the sorted region, it transitions to a **bright green fill** that persists for the remainder of the animation.
 
-The algorithm does not revisit it.
+This progressive green region grows from left to right, providing a clear visual history of algorithm progress. The algorithm does not revisit sorted elements — the `j` scan cursor never enters the green region.
 
 ---
 
@@ -119,30 +123,25 @@ The animation separates **scan motion** from **swap motion**.
 
 ### 5.1 Scan Progression
 
-The scan cursor moves one element to the right at a time.
+The `j` arrow moves one element to the right at a time below the baseline row.
 
 For each step:
 
-- The current scan element is highlighted.
-- The algorithm compares it against the current minimum.
+- The `j` arrow advances to the next unsorted index.
+- The `min` arrow remains at the current minimum's index.
+- Both arrows are simultaneously visible, giving the viewer two reference points.
 
-Visually the animation suggests:
-
-- Scan candidate is emphasized.
-- The current minimum remains marked.
-- The comparison moment is visually readable.
-
-This comparison phase may include a slight pause or emphasis so the viewer understands the decision.
+The comparison moment is readable because the viewer can see the spatial relationship between `j` (the element being tested) and `min` (the current best candidate).
 
 ### 5.2 Minimum Update Behavior
 
 When the scan finds a new smaller value:
 
-- The minimum marker moves from the old minimum element to the new one.
+- The `min` arrow jumps from the old minimum's index to `j`'s current index.
+- At that moment, `j` and `min` occupy the same position — the `j` label merges into `min` (only `min` is shown).
+- When `j` advances to the next index, the two arrows separate again — `min` stays at the discovered minimum while `j` continues rightward.
 
-This is visually important because it demonstrates the algorithm's logic.
-
-The previous minimum returns to normal appearance.
+This jump-and-coalesce pattern is visually important because it demonstrates the algorithm's decision logic: the viewer sees `min` relocate to a new position, immediately understanding that a better candidate was found.
 
 ### 5.3 End of Scan
 
@@ -162,13 +161,18 @@ The viewer sees clearly:
 
 The swap happens between:
 
-- The first element in the unsorted region.
-- The discovered minimum.
+- The element at index `i` (the first unsorted position).
+- The element at `min_idx` (the discovered minimum).
 
-The animation likely shows:
+The reference frames confirm **arc motion**, not a direct slide:
 
-- The two elements exchanging horizontal positions.
-- Possibly via arc motion or direct slide.
+- The **left element** (at index `i`) arcs **upward** above the baseline (see frame `017_9.75.png`: value `3` rises above the row).
+- The **right element** (at `min_idx`) arcs **downward** below the baseline (see frame `017_9.75.png`: value `1` drops below the row).
+- The two elements cross paths at the midpoint and land in each other's former positions.
+
+This upward/downward crossing arc is the same motion pattern used in the application's standard swap animation, preventing visual collision at the midpoint.
+
+**Pointer behavior during swap:** The `i` pointer above the row is not visible during the swap motion (see frame `017_9.75.png`). It reappears after the swap lands and the elements settle at the baseline. The `min` pointer remains visible below the swapping element during the arc.
 
 This swap is visually emphasized as the conclusion of the scan phase.
 
@@ -176,95 +180,91 @@ This swap is visually emphasized as the conclusion of the scan phase.
 
 After the swap:
 
-- The sorted region grows by one element.
-- The algorithm begins the next scan from the next index.
+- The newly placed element at index `i` transitions to **bright green fill**, joining the sorted region.
+- The `i` pointer advances one position to the right, marking the next unsorted boundary.
+- The `min` pointer resets to the new `i` position for the next scan.
+- The `j` pointer resets to `i + 1` and begins the next left-to-right scan.
 
-The boundary shift is visible.
-
----
-
-## 6. Motion Types Implied by the Video
-
-From a Pygame perspective, the animation implies several reusable motion types.
-
-### Highlight Motion
-
-Change visual appearance without changing position.
-
-Used for:
-
-- Scan candidate.
-- Current minimum.
+The growing green region on the left side of the array provides a clear, progressive visual record of the sort's progress.
 
 ---
 
-### Cursor Movement
+## 6. Confirmed Motion Types
 
-A separate visual marker moves horizontally along the array.
+From a Pygame perspective, the reference frames confirm the following discrete motion types.
 
-This marker represents the scan index.
+### Pointer Translation
 
----
-
-### Minimum Indicator Movement
-
-A visual marker shifts to the newly discovered minimum element.
-
-This marker persists across scan steps.
+The `j` and `min` arrows translate horizontally below the baseline row. The `i` arrow translates horizontally above the baseline row. These are the primary visual signals during the scan phase — no node color changes occur during scanning.
 
 ---
 
-### Swap Motion
+### Pointer Coalescing
 
-Two elements exchange positions horizontally.
+When `j` discovers a new minimum and both pointers occupy the same index, the `j` label is suppressed and only `min` is displayed. When `j` advances, both labels reappear separately.
+
+---
+
+### Arc Swap Motion
+
+Two elements exchange positions via **crossing arcs** (confirmed in frames `017_9.75.png`, `035_20.38.png`):
+
+- Left element (index `i`) arcs **upward**.
+- Right element (`min_idx`) arcs **downward**.
 
 This is the only large positional motion in the animation.
 
 ---
 
-### Region Boundary Movement
+### Sorted Color Transition
 
-A conceptual boundary separating sorted and unsorted regions moves one step right after each outer loop.
+After each swap lands, the element at index `i` transitions from gray fill to **bright green fill**. This is a one-way, permanent color change that creates the progressive sorted-region visual.
 
-This may be represented visually with a line or shading.
+---
+
+### Boundary Advance
+
+The `i` pointer advances one index rightward after each swap, visually separating the green sorted region from the gray unsorted region. No separate boundary line or shading is used — the `i` pointer and the green color transition together communicate the boundary.
 
 ---
 
 ## 7. Pygame Implementation Interpretation
 
-A Pygame developer implementing this would likely think in terms of these objects.
+A Pygame developer implementing this would need the following objects.
 
 ### Value Sprites
 
-Each array value should be represented as a persistent sprite-like object.
+Each array value is represented as a persistent sprite-like object.
 
-Each sprite would track:
+Each sprite tracks:
 
 - `logical_index`
 - `value`
 - `baseline_position`
 - `current_animated_position`
-- `highlight_state`
-- `minimum_state`
-- `sorted_state`
+- `is_sorted` (controls gray vs. green fill)
 
-### Cursor Indicator
+### `i` Pointer Asset
 
-A separate renderable element representing the current scan index.
+A downward-pointing arrow labeled `i`, rendered **above** the baseline row.
 
-Likely positioned relative to the baseline row.
+Anchored horizontally to the center of the active slot at outer loop index `i`. Advances one slot rightward after each completed swap. Hidden during swap arc motion.
 
-### Minimum Indicator
+### `j` Pointer Asset
 
-A persistent marker attached to the current minimum element.
+An upward-pointing arrow labeled `j`, rendered **below** the baseline row.
 
-This marker changes owner when a new minimum is found.
+Anchored horizontally to the center of the current scan index. Advances left-to-right during each scan phase. Suppressed (visually merged) when occupying the same index as `min`.
 
-### Sorted Boundary Marker
+### `min` Pointer Asset
 
-A visual marker separating sorted and unsorted sections.
+An upward-pointing arrow labeled `min`, rendered **below** the baseline row.
 
-Moves one index right after each outer loop.
+Anchored horizontally to the center of the current minimum candidate's index. Jumps to a new position when a smaller element is discovered. When `j` and `min` share an index, only `min` is displayed.
+
+### Sorted Region (Color-Based)
+
+The sorted boundary is communicated through the **progressive green fill** on sorted elements, combined with the `i` pointer position. No separate boundary line or shading is required.
 
 ---
 
@@ -325,19 +325,16 @@ Not swapping.
 
 ## 10. What This Video Does Not Define
 
-Even though the animation is useful as reference, it does not specify several implementation details.
+Even though the reference frames confirm key behaviors, the following implementation details remain unspecified by the video alone:
 
-Examples include:
+- Exact vertical arc offset values (pixel heights for upward/downward arcs).
+- Exact motion durations and easing curves.
+- Exact colors (the green sorted fill and gray unsorted fill are approximate; production colors are defined in the application's UI spec).
+- Exact pointer geometry (arrow shape, size, label font).
+- Exact sprite layering rules during arc motion.
+- Whether the `i` pointer hiding during swaps is mandatory or incidental to the reference video's rendering.
 
-- Exact vertical offset values.
-- Exact motion durations.
-- Easing curves.
-- Exact highlight colors.
-- Exact pointer geometry.
-- Exact node shapes.
-- Exact sprite layering rules.
-
-These details would need to be standardized later in the real documentation.
+These details are standardized in the application's spec documents (`04_UI_SPEC.md`, `10_ANIMATION_SPEC.md`).
 
 ---
 
@@ -362,4 +359,4 @@ This means Selection Sort requires its **own motion grammar**.
 
 ## 12. Developer Summary
 
-> Selection Sort should be animated as a scanning process where a cursor traverses the unsorted portion of the array while tracking the smallest value encountered. The current scan element and current minimum are visually distinct. Once the scan completes, the minimum element swaps with the first unsorted element, expanding the sorted region. The animation emphasizes scanning and minimum discovery rather than frequent swaps.
+> Selection Sort is animated as a scanning process driven by three labeled pointer assets: `i` (above the row, marking the sorted boundary), `j` (below the row, scan cursor), and `min` (below the row, running minimum tracker). The `j` pointer advances left-to-right during each scan; when it discovers a new minimum, `min` jumps to that index and the two labels coalesce. Once the scan completes, the minimum swaps with the element at `i` via a crossing arc (left element arcs up, right arcs down). After the swap lands, the element at `i` transitions to a bright green fill, permanently marking it as sorted. The sorted green region grows left-to-right across passes. The animation emphasizes scanning and minimum discovery — node color changes occur only for the sorted transition, while scan-phase distinctions rely entirely on the labeled arrow assets.
