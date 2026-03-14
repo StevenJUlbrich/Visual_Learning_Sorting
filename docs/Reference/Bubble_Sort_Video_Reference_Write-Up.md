@@ -28,7 +28,7 @@ From a Pygame design perspective, this means the animation is driven by **instru
 
 ## 2. Visual Composition Observed
 
-The animation appears to use a single-row teaching layout with these main elements:
+The animation uses a single-row teaching layout with these main elements:
 
 ### A. Baseline array row
 
@@ -51,6 +51,7 @@ The animation appears to use a single-row teaching layout with these main elemen
 
 * A green directional arrow appears beneath the active comparison position.
 * The arrow moves horizontally under the current active index as the scan advances.
+* The comparison begins with this green arrow appearing at index `j` before any node lift occurs.
 * This gives the viewer an index-level reading of where the scan currently is.
 
 ### E. Pass boundary / limit marker
@@ -65,6 +66,11 @@ The animation appears to use a single-row teaching layout with these main elemen
 * The green comparison arrow does not target elements in this settled suffix.
 * The visual language makes the shrinking unsorted region explicit through the leftward migration of the `limit` line.
 
+### G. Instructional counters
+
+* Real-time `comparisons` and `exchanges` counters are visible in the bottom-left corner of the screen.
+* These counters update as the choreography progresses.
+
 ---
 
 ## 3. Bubble Sort Teaching Behavior Being Shown
@@ -73,8 +79,8 @@ The animation is not just saying “bubble sort swaps adjacent elements.”
 It is teaching this sequence:
 
 1. Start at the left side of the active unsorted range.
-2. Compare adjacent values.
-3. Raise the pair so the viewer notices the comparison.
+2. Move the green arrow to index `j` to mark the next adjacent comparison.
+3. Turn the nodes at `j` and `j + 1` green, then raise them only if the exchange state is needed.
 4. If order is wrong, swap them.
 5. Advance one position to the right.
 6. Continue until the pass boundary is reached.
@@ -105,6 +111,7 @@ This baseline acts like the “home row” for the array.
 When a comparison begins:
 
 * the green arrow moves to comparison position `j`
+* the green arrow appears at `j` before any vertical node lift occurs
 * the nodes at `j` and `j + 1` turn green to show the active pair
 * the rest of the row remains red and visually still
 
@@ -206,6 +213,7 @@ Separate UI text overlays should display:
 
 * `Comparisons`, incremented when each comparison begins
 * `Exchanges`, incremented when a swap is executed
+* bottom-left placement matching the reference frames
 
 ---
 
@@ -382,9 +390,9 @@ If I were describing this to a Pygame developer in one paragraph, I would say:
 
 > The video presents bubble sort as a staged instructional animation built around an active adjacent comparison pair, a visible scan cursor, and a shrinking pass boundary. The array rests on a stable baseline row, while the currently compared pair is lifted into a temporary compare state, highlighted, optionally swapped, then returned to the baseline. The animation emphasizes pass progression and sorted-boundary contraction as much as element swapping, so the implementation should treat bubble sort as a dedicated visual choreography rather than a generic compare/swap renderer.
 
-More specifically, the observed choreography uses red resting nodes, green active nodes, a green arrow that tracks the active compare index from left to right, and a vertical dashed line labeled "limit" positioned between nodes to mark the shrinking pass boundary.
+More specifically, the observed choreography uses red resting nodes, green active nodes, a green arrow that appears at index `j` before any lift and then tracks the active compare index from left to right, and a vertical dashed line labeled "limit" positioned between nodes to mark the shrinking pass boundary.
 
-At the end of each pass, that `limit` line migrates one index left, and everything to its right becomes a settled suffix that the green arrow no longer enters.
+At the end of each pass, that `limit` line migrates one index left, and everything to its right becomes a settled suffix that the green arrow no longer enters. Real-time `comparisons` and `exchanges` counters remain visible in the bottom-left corner as the sequence unfolds.
 
 ---
 
