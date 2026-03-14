@@ -122,6 +122,12 @@ Pass boundary rules:
 - At the conclusion of every outer-loop pass, the `LimitLine` must decrement by one slot (move one slot left), shrinking the active comparison window for the next pass.
 - Elements to the right of the `LimitLine` are treated as visually settled and are excluded from the comparison scan. The `ComparisonPointer` must never enter that settled suffix.
 
+#### Outer Loop Pass Boundary (T3 Tick)
+To support the visual "Limit Line" shrinking after each pass, the generator must emit a boundary update:
+4. **End of Pass:** After the inner loop `j` completes, the effective unsorted limit decreases by 1. The generator must emit a `T3 Range Emphasis Tick` with the `highlight_indices` representing the new unsorted range (e.g., `tuple(range(0, new_limit))`).
+   - **View Response:** The Controller/View will intercept this T3 tick specifically for Bubble Sort and interpolate the vertical dashed "Limit Line" to the new boundary position over 300ms.
+   - **Note:** This T3 tick does **not** increment the step counter.
+
 Additional rules:
 
 - Early-exit optimization allowed (`swapped=False` pass).
