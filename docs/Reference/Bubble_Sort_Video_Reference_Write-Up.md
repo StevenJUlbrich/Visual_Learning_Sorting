@@ -43,19 +43,21 @@ The animation appears to use a single-row teaching layout with these main elemen
 
 ### C. Color distinction
 
-* The active compared values are highlighted in a contrasting color.
-* The inactive values remain in a base color.
-* The contrast is used to indicate the current algorithm focus, not final sortedness.
+* The active compared values are highlighted in green.
+* The inactive or resting values remain red.
+* This red-to-green contrast is used to indicate the current algorithm focus, not final sortedness.
 
 ### D. Comparison pointer / arrow
 
-* A directional marker appears beneath the active comparison position.
+* A green directional arrow appears beneath the active comparison position.
+* The arrow moves horizontally under the current active index as the scan advances.
 * This gives the viewer an index-level reading of where the scan currently is.
 
 ### E. Pass boundary / limit marker
 
-* A vertical marker indicates the effective right-side boundary of the unsorted range.
-* This boundary appears to move inward as outer passes complete.
+* A vertical dashed line labeled "limit" indicates the effective right-side boundary of the unsorted range.
+* The marker sits between value nodes rather than directly on top of a node.
+* This boundary moves inward as outer passes complete.
 
 ### F. Sorted suffix concept
 
@@ -181,17 +183,18 @@ Each number should be represented by a persistent object with:
 A separate renderable element for:
 
 * current compare index
-* arrow or caret beneath the row
+* green arrow beneath the row
 
 ### Pass boundary marker
 
 A separate renderable element for:
 
 * current right-side unsorted limit
+* vertical dashed line drawn between value nodes
 
 ### Optional label elements
 
-If the video includes labels like “limit,” that should be a separate UI element, not part of the number sprites.
+The observed “limit” label should be a separate UI element, not part of the number sprites.
 
 ---
 
@@ -287,8 +290,6 @@ There are still choices that would need to be explicitly decided later, such as:
 * exact compare-lift offset in pixels
 * exact hold duration
 * whether swap happens on the lifted row or along an arc
-* exact arrow shape and placement
-* exact boundary marker styling
 * whether sorted suffix changes color or only becomes excluded
 * easing type for movement
 * whether compare and swap are a single animation or two chained animations
@@ -312,9 +313,7 @@ From this video, the most valuable behaviors to preserve are:
 ### Do not overfit yet
 
 * exact art style
-* exact colors
 * exact font choices
-* exact arrow design
 * exact node shape details
 
 Those styling decisions can be normalized later to match the rest of your application.
@@ -326,6 +325,8 @@ Those styling decisions can be normalized later to match the rest of your applic
 If I were describing this to a Pygame developer in one paragraph, I would say:
 
 > The video presents bubble sort as a staged instructional animation built around an active adjacent comparison pair, a visible scan cursor, and a shrinking pass boundary. The array rests on a stable baseline row, while the currently compared pair is lifted into a temporary compare state, highlighted, optionally swapped, then returned to the baseline. The animation emphasizes pass progression and sorted-boundary contraction as much as element swapping, so the implementation should treat bubble sort as a dedicated visual choreography rather than a generic compare/swap renderer.
+
+More specifically, the observed choreography uses red resting nodes, green active nodes, a green arrow that tracks the active compare index from left to right, and a vertical dashed line labeled "limit" positioned between nodes to mark the shrinking pass boundary.
 
 ---
 
