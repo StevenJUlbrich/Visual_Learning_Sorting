@@ -62,18 +62,18 @@ The **compare lane** is a vertical position above the baseline row where sprites
 
 | Algorithm | Offset Token | Value | Trigger | Duration |
 | --- | --- | --- | --- | --- |
-| Bubble Sort | `compare_lift_offset` | `50px` | T1 compare tick on `(j, j+1)` and Bubble swap-lift state | Transient in T1; held during lifted horizontal exchange in T2 |
+| Bubble Sort | `compare_lift_offset` | `panel_height * 0.05` | T1 compare tick on `(j, j+1)` and Bubble swap-lift state | Transient in T1; held during lifted horizontal exchange in T2 |
 | Insertion Sort | `lift_offset` | `panel_height * 0.06` | T1 key-selection tick on `(i,)` | Sustained — sprite remains at `home_y - lift_offset` across all subsequent ticks until the T2 placement drop |
 | Selection Sort | — | — | — | No compare-lane motion (highlight-only) |
 | Heap Sort | — | — | — | No compare-lane motion (highlight-only; tree structure communicated via T3 pulsed highlights) |
 
 **Coordinate formula:** When a sprite is in the compare lane, its `exact_y` target is `home_y - offset` where `offset` is the algorithm-specific token above. The sprite eases to and from this position using the standard ease-in-out curve.
 
-For Bubble Sort, the compare lane is locked to `compare_lane_y = home_y - 50` pixels. This exact pixel offset is the reference choreography value and is used for both the non-swap hold state and the pre-exchange swap-lift state.
+For Bubble Sort, the compare lane is locked to `compare_lane_y = home_y - (panel_height * 0.05)`. This proportional offset is the reference choreography value and is used for both the non-swap hold state and the pre-exchange swap-lift state.
 
 **Design rationale:** The compare lane provides **visual isolation** — lifting sprites above the resting baseline makes the current algorithmic focus unmistakable, even at a glance. The two algorithms that use it (Bubble Sort, Insertion Sort) have different offset magnitudes and durations, creating distinct visual signatures:
 
-- Bubble Sort's compare lane is **fixed and instructional** (50px above baseline, both sprites) — the pair is lifted into a dedicated teaching lane before either holding or exchanging.
+- Bubble Sort's compare lane is **proportional and instructional** (`panel_height * 0.05` above baseline, both sprites) — the pair is lifted into a dedicated teaching lane before either holding or exchanging.
 - Insertion Sort's compare lane is **taller and sustained** (key hovers for the entire insertion cycle) — the key is prominently separated while multiple shifts occur beneath it.
 
 Selection Sort and Heap Sort do not use compare-lane motion because their pedagogical emphasis is elsewhere (scan/minimum tracking and tree-relationship highlighting, respectively).
@@ -116,25 +116,37 @@ When a sprite returns to `home_y` (compare-lift descent completes, Bubble swap-l
 
 - **Action:** The `ComparisonPointer` moves to `j`, the adjacent pair activates, and the pair either holds visibly without swapping or exchanges positions while lifted in the compare lane.
 
-#### 5.1.1 Bubble Sort Frame-Level Sequence
+#### 5.1.1 Bubble Sort Compare-Pulse (T1 Motion)
 
-The Bubble Sort choreography is defined against the 60 FPS render contract.
+Bubble Sort T1 compare ticks trigger a **vertical compare-pulse** on the adjacent pair `(j, j+1)`. This isolates the pair from the baseline row so the learner can clearly identify the active comparison, even when no swap follows.
 
-- **Arrow move to `j`:** `2` frames (`~33ms`). The green `ComparisonPointer` translates horizontally to index `j`.
-- **Pair lift + color change:** `4` frames (`~67ms`). The nodes at `j` and `j+1` turn green immediately on arrow arrival and rise from `home_y` to `compare_lane_y = home_y - 50`.
-- **Non-swap hold:** `2` frames (`~33ms`). If no swap follows, the green pair remains stationary in the compare lane so the comparison is visible.
-- **Return to baseline without swap:** `3` frames (`~50ms`). The pair descends back to `home_y` before the next comparison begins.
-- **Optional position swap:** `18` frames (`300ms`) inside the 400ms T2 duration. While both sprites remain at `compare_lane_y`, they exchange `x` positions using a linear horizontal slide with standard ease-in-out interpolation applied to `x` only.
-- **Return to baseline after swap:** `6` frames (`100ms`). After the horizontal exchange completes, both sprites descend together from `compare_lane_y` back to `home_y` in their new slots.
+- **Lift offset:** `compare_lift_offset = panel_height * 0.05`.
+- **Timing within the 150ms T1 duration:**
+  - **Ascent (0–60ms, 40%):** Both sprites at `j` and `j+1` ease upward from `home_y` to `home_y - compare_lift_offset` using the standard ease-in-out curve.
+  - **Hold (60–100ms, 27%):** Both sprites hold at the lifted position. **Crucial:** The View must also ensure the Green Comparison Cursor is horizontally centered under index $j$ during this hold.
+  - **Descent (100–150ms, 33%):** Both sprites ease back down to `home_y` using the standard ease-in-out curve.
+- **Z-ordering:** During the lift, both lifted sprites draw on top of all non-lifted sprites, but **above** the Limit Line and Cursor.
 
-#### 5.1.2 Bubble Sort Pathing
+#### 5.1.2 Bubble Sort UI Tracking (Limit Line & Cursor)
+
+Bubble Sort requires two unique UI tracking elements governed by the View's interpolation engine:
+
+1.  **The Comparison Cursor (Green Arrow):**
+    * **Trigger:** Updates on every T1 tick.
+    * **Motion:** Interpolates horizontally (eases) to the `home_x` of the current active index $j$.
+2.  **The Limit Line (Pass Boundary):**
+    * **Trigger:** Updates on T3 Range Emphasis ticks (emitted at the end of each outer loop pass).
+    * **Target Position:** The horizontal midpoint between slot $limit$ and $limit+1$. `line_x = slot[limit].home_x + (slot_width / 2)`
+    * **Motion:** Eases from its current X-coordinate to the new X-coordinate over 300ms.
+
+#### 5.1.3 Bubble Sort Pathing
 
 - **ComparisonPointer path:** horizontal translation only; no vertical travel.
 - **Compare-lift path:** vertical translation only from `home_y` to `compare_lane_y`.
 - **Swap path:** **linear horizontal slide while lifted**, not an arc. During the exchange phase, both sprites keep a constant `y` value of `compare_lane_y` and interpolate only their `x` coordinates.
 - **Settle path:** vertical translation only from `compare_lane_y` back to `home_y`.
 
-#### 5.1.3 Bubble Sort Timing Contract
+#### 5.1.4 Bubble Sort Timing Contract
 
 - **T1 Compare tick (150ms total):**
   - Frames `1–2` (`0–33ms`): arrow move to `j` completes.
@@ -145,9 +157,9 @@ The Bubble Sort choreography is defined against the 60 FPS render contract.
   - Frames `1–18` (`0–300ms`): pair exchanges `x` positions while staying fixed at `compare_lane_y`.
   - Frames `19–24` (`300–400ms`): pair settles vertically from `compare_lane_y` back to `home_y` in the new slot order.
 
-#### 5.1.4 Bubble Sort Compare-Lift and Swap-Lift Details
+#### 5.1.5 Bubble Sort Compare-Lift and Swap-Lift Details
 
-- **Lift offset:** `compare_lift_offset = 50px`.
+- **Lift offset:** `compare_lift_offset = panel_height * 0.05`.
 - **Activation event:** the nodes at `j` and `j+1` change to green on the same frame that the arrow arrives at `j`.
 - **Both sprites lift as a unit** — they share the same vertical offset at all times. This emphasizes that Bubble Sort evaluates *pairs*, unlike Insertion Sort which isolates a single key.
 - **Z-ordering:** During the lift or lifted exchange, both lifted sprites draw on top of all non-lifted sprites. Between the two lifted sprites, default index order is maintained.
@@ -175,7 +187,7 @@ Selection Sort retains the standard arc swap because its teaching focus is scan/
 
 - **Lift height:** `lift_offset = panel_height * 0.06` — a **proportional** value, not a fixed pixel count.
 - **Rationale:** Tying the offset to `panel_height` guarantees visual consistency across both landscape and portrait orientations. In landscape mode (panel height ≈ 490px), the lift is ≈ 29px; in portrait mode (panel height ≈ 350px), it is ≈ 21px. Both produce a clearly visible separation from the baseline without colliding with the header region (capped at 35% of panel height per D-062). A fixed pixel value would either be too subtle in landscape or too aggressive in portrait.
-- **Relationship to other offsets:** Insertion Sort keeps a proportional sustained lift because the key remains elevated for the duration of the entire pass, whereas Bubble Sort uses a fixed 50px pair-lift for a short compare-and-exchange choreography. The sustained Insertion lift remains visually distinct because it isolates a single key across multiple ticks rather than a brief adjacent pair event.
+- **Relationship to other offsets:** Insertion Sort keeps a proportional sustained lift because the key remains elevated for the duration of the entire pass, whereas Bubble Sort uses a proportional `panel_height * 0.05` pair-lift for a short compare-and-exchange choreography. The sustained Insertion lift remains visually distinct because it isolates a single key across multiple ticks rather than a brief adjacent pair event.
 
 #### 5.3.2 Motion Sequence
 
