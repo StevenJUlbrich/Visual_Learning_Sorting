@@ -133,6 +133,12 @@ Run all algorithms to completion with `[4, 7, 2, 6, 1, 5, 3]` and verify:
 - Verify the counters remain visible in the bottom-left HUD throughout the swap-lift choreography.
 - **Regression guard:** If the counters update late, update in the wrong order, or disappear during the lifted swap, the test fails.
 
+### Bubble Sort Specific Visual Tests
+
+- **Test BUB-VIS-01 (Compare Pulse):** Verify that during a `T1 Compare Tick`, the two sprites at indices `j` and `j+1` exhibit a vertical displacement (`exact_y < home_y`) while maintaining default Z-order priority over baseline sprites.
+- **Test BUB-VIS-02 (Cursor Tracking):** Verify that the green Comparison Cursor asset updates its X-coordinate to align with index `j` at the start of every T1 tick.
+- **Test BUB-VIS-03 (Limit Line Migration):** Verify that the vertical "limit" line asset exists on the Bubble Sort panel and that its X-coordinate successfully interpolates one slot to the left upon receiving a `T3 Range Emphasis Tick`.
+
 ### AT-15 T3 Step Counter Exclusion
 
 - Run Heap Sort to completion.
