@@ -330,19 +330,23 @@ Unlike other algorithms, the emphasis is not on adjacent swaps but on **tree rel
 
 ---
 
-## 11. What the Video Does Not Define
+## 11. What the Video Defines and Does Not Define
 
-The video demonstrates behavior but does not lock down several implementation details:
+The video demonstrates behavior and establishes a strong visual theme.
 
-* Exact tree layout geometry
+**Visual Details Now Defined (UX/UI):**
+
+* **Highlight colors:** Active nodes are pink/light red, resting tree nodes are light blue, and initial/sorted array blocks are light green. Empty array slots are dark blue.
+* **Node shapes:** Tree nodes are circular; array elements are square blocks.
+* **Edge rendering:** Nodes are connected by thin, pale yellow straight lines.
+* **Canvas & Typography:** Solid black background with dark, bold sans-serif text.
+
+**Details Still Needing Standardization:**
+
+* Exact tree layout geometry (padding, spacing)
 * Exact swap animation paths
 * Animation timing
-* Highlight colors
-* Node shapes
-* Edge rendering between nodes
 * Easing curves
-
-These details would need to be standardized later.
 
 ---
 
