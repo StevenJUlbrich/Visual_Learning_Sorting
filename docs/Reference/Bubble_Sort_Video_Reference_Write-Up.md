@@ -61,8 +61,9 @@ The animation appears to use a single-row teaching layout with these main elemen
 
 ### F. Sorted suffix concept
 
-* The right side gradually becomes implicitly or explicitly “done.”
-* The visual language suggests that bubble sort is shrinking the unsorted region.
+* The region to the right of the vertical `limit` line is treated as settled.
+* The green comparison arrow does not target elements in this settled suffix.
+* The visual language makes the shrinking unsorted region explicit through the leftward migration of the `limit` line.
 
 ---
 
@@ -154,7 +155,9 @@ The Comparisons counter should increment in real time when each comparison is in
 At the end of a full pass:
 
 * the rightmost unsorted value has bubbled into its final place
-* the pass boundary tightens inward
+* the vertical `limit` line moves one index to the left
+* all elements to the right of that updated `limit` line are treated as settled
+* the green comparison arrow no longer targets that settled suffix
 * the next pass begins over a smaller range
 
 This pass-to-pass contraction is a major part of what the animation teaches.
@@ -191,6 +194,7 @@ A separate renderable element for:
 
 * current right-side unsorted limit
 * vertical dashed line drawn between value nodes
+* one-step leftward migration at the end of each completed pass
 
 ### Optional label elements
 
@@ -284,7 +288,8 @@ It is:
 * compare in a highlighted staging zone
 * conditionally swap
 * advance a teaching cursor
-* reduce the active domain after each pass
+* move the `limit` line one index left after each pass
+* exclude the settled suffix from future arrow targets
 
 ---
 
@@ -334,6 +339,8 @@ If I were describing this to a Pygame developer in one paragraph, I would say:
 > The video presents bubble sort as a staged instructional animation built around an active adjacent comparison pair, a visible scan cursor, and a shrinking pass boundary. The array rests on a stable baseline row, while the currently compared pair is lifted into a temporary compare state, highlighted, optionally swapped, then returned to the baseline. The animation emphasizes pass progression and sorted-boundary contraction as much as element swapping, so the implementation should treat bubble sort as a dedicated visual choreography rather than a generic compare/swap renderer.
 
 More specifically, the observed choreography uses red resting nodes, green active nodes, a green arrow that tracks the active compare index from left to right, and a vertical dashed line labeled "limit" positioned between nodes to mark the shrinking pass boundary.
+
+At the end of each pass, that `limit` line migrates one index left, and everything to its right becomes a settled suffix that the green arrow no longer enters.
 
 ---
 
