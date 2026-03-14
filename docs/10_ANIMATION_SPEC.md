@@ -58,20 +58,22 @@ The Controller must track sprites by their **unique ID** assigned at initializat
 
 ### 3.5 Compare Lane (Vertical Offset Coordinate)
 
-The **compare lane** is a conceptual vertical position above the baseline row where sprites temporarily reside during comparison or key-selection events. It is not a fixed pixel coordinate — each algorithm defines its own offset from `home_y`:
+The **compare lane** is a vertical position above the baseline row where sprites temporarily reside during comparison or key-selection events.
 
 | Algorithm | Offset Token | Value | Trigger | Duration |
 | --- | --- | --- | --- | --- |
-| Bubble Sort | `compare_lift_offset` | `panel_height * 0.05` | T1 compare tick on `(j, j+1)` | Transient — ascend, hold, descend within a single 150ms T1 tick |
+| Bubble Sort | `compare_lift_offset` | `50px` | T1 compare tick on `(j, j+1)` and Bubble swap-lift state | Transient in T1; held during lifted horizontal exchange in T2 |
 | Insertion Sort | `lift_offset` | `panel_height * 0.06` | T1 key-selection tick on `(i,)` | Sustained — sprite remains at `home_y - lift_offset` across all subsequent ticks until the T2 placement drop |
 | Selection Sort | — | — | — | No compare-lane motion (highlight-only) |
 | Heap Sort | — | — | — | No compare-lane motion (highlight-only; tree structure communicated via T3 pulsed highlights) |
 
 **Coordinate formula:** When a sprite is in the compare lane, its `exact_y` target is `home_y - offset` where `offset` is the algorithm-specific token above. The sprite eases to and from this position using the standard ease-in-out curve.
 
+For Bubble Sort, the compare lane is locked to `compare_lane_y = home_y - 50` pixels. This exact pixel offset is the reference choreography value and is used for both the non-swap hold state and the pre-exchange swap-lift state.
+
 **Design rationale:** The compare lane provides **visual isolation** — lifting sprites above the resting baseline makes the current algorithmic focus unmistakable, even at a glance. The two algorithms that use it (Bubble Sort, Insertion Sort) have different offset magnitudes and durations, creating distinct visual signatures:
 
-- Bubble Sort's compare lane is **shallow and transient** (brief pulse, both sprites) — the pair is examined and released quickly.
+- Bubble Sort's compare lane is **fixed and instructional** (50px above baseline, both sprites) — the pair is lifted into a dedicated teaching lane before either holding or exchanging.
 - Insertion Sort's compare lane is **taller and sustained** (key hovers for the entire insertion cycle) — the key is prominently separated while multiple shifts occur beneath it.
 
 Selection Sort and Heap Sort do not use compare-lane motion because their pedagogical emphasis is elsewhere (scan/minimum tracking and tree-relationship highlighting, respectively).
@@ -95,7 +97,8 @@ The following situations produce lifted sprites that must draw on top of baselin
 | Situation | Lifted Sprite(s) | Z-Order Among Lifted |
 | --- | --- | --- |
 | **Bubble Sort compare-lift** (T1) | Both sprites at `j` and `j+1` | Default index order between the two (no z-swap) |
-| **Bubble/Selection/Heap swap arc** (T2) | Left sprite (arcs upward) | Left sprite draws on top of right sprite (which arcs downward, below baseline) |
+| **Bubble Sort swap-lift exchange** (T2) | Both sprites at `j` and `j+1` in the compare lane | Default index order between the two while lifted horizontal exchange is in progress |
+| **Selection/Heap swap arc** (T2) | Left sprite (arcs upward) | Left sprite draws on top of right sprite (which arcs downward, below baseline) |
 | **Heap Sort extraction arc** (T2) | Left sprite at index 0 (arcs upward) | Same as swap arc — left on top |
 | **Insertion Sort key lift** (sustained) | Key sprite at `(i,)` | Key draws on top of all other sprites, including shifted elements |
 
@@ -105,11 +108,52 @@ If multiple lifted sprites exist simultaneously (e.g., theoretically possible du
 
 ### 4.5 Restoration
 
-When a sprite returns to `home_y` (compare-lift descent completes, swap arc lands, key drops into place), it immediately reverts to default index-order rendering. There is no lingering z-order elevation after the animation concludes.
+When a sprite returns to `home_y` (compare-lift descent completes, Bubble swap-lift settles, swap arc lands, key drops into place), it immediately reverts to default index-order rendering. There is no lingering z-order elevation after the animation concludes.
 
 ## 5) Algorithm-Specific Motion Signatures
 
-### 5.1 Bubble & Selection Sort (Swaps)
+### 5.1 Bubble Sort
+
+- **Action:** The `ComparisonPointer` moves to `j`, the adjacent pair activates, and the pair either holds visibly without swapping or exchanges positions while lifted in the compare lane.
+
+#### 5.1.1 Bubble Sort Frame-Level Sequence
+
+The Bubble Sort choreography is defined against the 60 FPS render contract.
+
+- **Arrow move to `j`:** `2` frames (`~33ms`). The green `ComparisonPointer` translates horizontally to index `j`.
+- **Pair lift + color change:** `4` frames (`~67ms`). The nodes at `j` and `j+1` turn green immediately on arrow arrival and rise from `home_y` to `compare_lane_y = home_y - 50`.
+- **Non-swap hold:** `2` frames (`~33ms`). If no swap follows, the green pair remains stationary in the compare lane so the comparison is visible.
+- **Return to baseline without swap:** `3` frames (`~50ms`). The pair descends back to `home_y` before the next comparison begins.
+- **Optional position swap:** `18` frames (`300ms`) inside the 400ms T2 duration. While both sprites remain at `compare_lane_y`, they exchange `x` positions using a linear horizontal slide with standard ease-in-out interpolation applied to `x` only.
+- **Return to baseline after swap:** `6` frames (`100ms`). After the horizontal exchange completes, both sprites descend together from `compare_lane_y` back to `home_y` in their new slots.
+
+#### 5.1.2 Bubble Sort Pathing
+
+- **ComparisonPointer path:** horizontal translation only; no vertical travel.
+- **Compare-lift path:** vertical translation only from `home_y` to `compare_lane_y`.
+- **Swap path:** **linear horizontal slide while lifted**, not an arc. During the exchange phase, both sprites keep a constant `y` value of `compare_lane_y` and interpolate only their `x` coordinates.
+- **Settle path:** vertical translation only from `compare_lane_y` back to `home_y`.
+
+#### 5.1.3 Bubble Sort Timing Contract
+
+- **T1 Compare tick (150ms total):**
+  - Frames `1–2` (`0–33ms`): arrow move to `j` completes.
+  - Frames `1–4` (`0–67ms`): pair turns green and lifts to the compare lane.
+  - Frames `5–6` (`67–100ms`): non-swap hold in the compare lane.
+  - Frames `7–9` (`100–150ms`): if no swap follows, pair returns to baseline and releases green active state at tick end.
+- **T2 Swap tick (400ms total):**
+  - Frames `1–18` (`0–300ms`): pair exchanges `x` positions while staying fixed at `compare_lane_y`.
+  - Frames `19–24` (`300–400ms`): pair settles vertically from `compare_lane_y` back to `home_y` in the new slot order.
+
+#### 5.1.4 Bubble Sort Compare-Lift and Swap-Lift Details
+
+- **Lift offset:** `compare_lift_offset = 50px`.
+- **Activation event:** the nodes at `j` and `j+1` change to green on the same frame that the arrow arrives at `j`.
+- **Both sprites lift as a unit** — they share the same vertical offset at all times. This emphasizes that Bubble Sort evaluates *pairs*, unlike Insertion Sort which isolates a single key.
+- **Z-ordering:** During the lift or lifted exchange, both lifted sprites draw on top of all non-lifted sprites. Between the two lifted sprites, default index order is maintained.
+- **Scope:** This motion grammar applies **only to Bubble Sort**. Selection Sort remains highlight-only during T1 and uses arc motion only for T2 swaps.
+
+### 5.2 Selection Sort (Swaps)
 
 - **Action:** Two elements exchange indices.
 - **Motion:** Both sprites ease their `x` coordinates to the other's home position using the standard easing curve. To prevent visual collision, a vertical arc offset is applied using a sine curve mapped to the same time parameter `t`:
@@ -119,37 +163,21 @@ When a sprite returns to `home_y` (compare-lift descent completes, swap arc land
   - Right sprite (higher index): `exact_y = home_y + arc_offset` (arcs downward).
 - The arc peaks at `t=0.5` and returns to `home_y` at `t=1.0`.
 
-**Confirmed: identical arc motion for both algorithms.** The same arc swap applies to Bubble Sort and Selection Sort without exception. The only difference between the two is the T1 behavior (Bubble Sort adds a compare-lift; Selection Sort is highlight-only) — the T2 swap arc is shared:
+Selection Sort retains the standard arc swap because its teaching focus is scan/minimum tracking rather than a lifted exchange state.
 
-- **Bubble Sort:** T2 swap on `(j, j+1)`. The sprite at index `j` (left) arcs upward; the sprite at index `j+1` (right) arcs downward.
 - **Selection Sort:** T2 swap on `(i, min_idx)`. The sprite at index `i` (left, the sorted-region destination) arcs upward; the sprite at index `min_idx` (right, the discovered minimum) arcs downward. Because `i < min_idx` is always true during Selection Sort swaps (the sorted region grows from the left), the left/right arc assignment is deterministic. The upward arc on `i` and downward arc on `min_idx` produce the clean crossing exchange seen in the reference video, with no visual collision at the midpoint.
 
-#### 5.1.1 Bubble Sort Compare-Lift (T1 Motion)
-
-Bubble Sort T1 compare ticks trigger a **temporary vertical offset** on the adjacent pair `(j, j+1)`, isolating them from the baseline row so the learner can clearly identify which two elements are being compared — even when no swap follows.
-
-- **Lift offset:** `compare_lift_offset = panel_height * 0.05`.
-- **Timing within the 150ms T1 duration:**
-  - **Ascent (0–60ms, 40%):** Both sprites at `j` and `j+1` ease upward from `home_y` to `home_y - compare_lift_offset` using the standard ease-in-out curve.
-  - **Hold (60–100ms, 27%):** Both sprites hold at the lifted position. The comparison is visually prominent.
-  - **Descent (100–150ms, 33%):** Both sprites ease back down to `home_y` using the standard ease-in-out curve.
-- **Both sprites lift as a unit** — they share the same vertical offset at all times. This emphasizes that Bubble Sort evaluates *pairs*, unlike Insertion Sort which isolates a single key.
-- **No horizontal movement** occurs during the compare-lift. Horizontal displacement happens only on the subsequent T2 swap arc (if a swap is needed).
-- **Z-ordering:** During the lift, both lifted sprites draw on top of all non-lifted sprites. Between the two lifted sprites, default index order is maintained.
-- **Scope:** This compare-lift applies **only to Bubble Sort** T1 ticks. Selection Sort T1 ticks remain highlight-only with no vertical offset — Selection Sort's visual emphasis is on the scan cursor and minimum tracking, not pair isolation.
-- **Transition to swap:** If a T2 swap tick immediately follows, the swap arc motion begins from `home_y` (baseline). The compare-lift descent completes before the T2 tick starts, so there is no overlap between the lift return and the swap arc.
-
-### 5.2 Insertion Sort (Lift, Shift, and Drop)
+### 5.3 Insertion Sort (Lift, Shift, and Drop)
 
 - **Action:** A key is selected, elements shift right, and the key is placed at its sorted position.
 
-#### 5.2.1 Lift Offset Geometry
+#### 5.3.1 Lift Offset Geometry
 
 - **Lift height:** `lift_offset = panel_height * 0.06` — a **proportional** value, not a fixed pixel count.
 - **Rationale:** Tying the offset to `panel_height` guarantees visual consistency across both landscape and portrait orientations. In landscape mode (panel height ≈ 490px), the lift is ≈ 29px; in portrait mode (panel height ≈ 350px), it is ≈ 21px. Both produce a clearly visible separation from the baseline without colliding with the header region (capped at 35% of panel height per D-062). A fixed pixel value would either be too subtle in landscape or too aggressive in portrait.
-- **Relationship to other offsets:** The Insertion Sort lift (`0.06`) is intentionally taller than Bubble Sort's compare-lift (`0.05`) because the key remains elevated for the duration of the entire pass (potentially many ticks), whereas Bubble Sort's lift is a transient pulse within a single 150ms T1 tick. The greater height ensures the sustained key is unmistakably separated from shifted elements below it.
+- **Relationship to other offsets:** Insertion Sort keeps a proportional sustained lift because the key remains elevated for the duration of the entire pass, whereas Bubble Sort uses a fixed 50px pair-lift for a short compare-and-exchange choreography. The sustained Insertion lift remains visually distinct because it isolates a single key across multiple ticks rather than a brief adjacent pair event.
 
-#### 5.2.2 Motion Sequence
+#### 5.3.2 Motion Sequence
 
 - **Motion sequence within the Insertion Sort tick group:**
   1. **Lift (key-selection T1 tick):** The selected key sprite eases from `home_y` to `home_y - lift_offset` over the T1 duration (150ms). This is the **first visual event** of the pass. The sprite remains elevated across all subsequent compare and shift ticks until the placement drop.
@@ -161,10 +189,10 @@ Bubble Sort T1 compare ticks trigger a **temporary vertical offset** on the adja
      - **Visual effect:** The combined motion produces a smooth diagonal arc from the compare lane to the target slot — the key visibly "settles" into position rather than dropping straight down and then sliding sideways (or vice versa). This diagonal trajectory matches professional sorting animations where the key glides into its final home in a single fluid gesture.
 - Easing for all three sub-motions uses the same ease-in-out curve as swaps.
 
-### 5.3 Heap Sort (In-Place Swaps with Tree Highlight and Extraction Arc)
+### 5.4 Heap Sort (In-Place Swaps with Tree Highlight and Extraction Arc)
 
 - **Action:** Two elements exchange indices during sift-down or root extraction.
-- **Sift-down swap motion:** Identical arc swap motion to Bubble and Selection Sort — both sprites interpolate their `x` coordinates to each other's home position. Left sprite arcs upward, right sprite arcs downward. Standard `arc_height = panel_height * 0.08` and sine formula.
+- **Sift-down swap motion:** Identical arc swap motion to Selection Sort — both sprites interpolate their `x` coordinates to each other's home position. Left sprite arcs upward, right sprite arcs downward. Standard `arc_height = panel_height * 0.08` and sine formula.
 - **Extraction swap motion:** When the root (index 0) swaps with the end of the heap region, a **higher arc** is used to visually distinguish this **phase-transition move** from internal sift-down repairs. This elevated arc is mandatory for root-to-end swaps and must not be used for any other swap type:
   - `extraction_arc_height = panel_height * 0.14` (1.75× the standard `arc_height` of `panel_height * 0.08`).
   - Same sine formula: `arc_offset = extraction_arc_height * sin(pi * t)`.
@@ -173,11 +201,11 @@ Bubble Sort T1 compare ticks trigger a **temporary vertical offset** on the adja
   - The dramatic height signals to the learner that this is the major structural event — extracting the maximum from the heap — not a routine repair.
   - **Implementation constant:** `EXTRACTION_ARC_MULTIPLIER = 1.75` or `EXTRACTION_ARC_HEIGHT = panel_height * 0.14`. The Controller must detect extraction swaps (T2 tick on `(0, end)` during Phase 2) and apply this arc height instead of the standard.
 - **Logical Tree Highlight (T3):** Before each sift-down level's comparisons (in both Phase 1 and Phase 2), a T3 tick highlights the **parent-child triangle** — the parent index and its existing children within the heap boundary. The accent color (orange) renders simultaneously on the triangle members for 200ms with no positional change. The non-contiguous highlight pattern (e.g., indices 1, 3, 4) implies the binary tree structure within the flat row.
-- **Heap Boundary Emphasis (T3) with Sweep:** At the start of each extraction step, a T3 tick highlights the contiguous range `0..heap_size-1` in accent color. Rather than appearing instantly on all indices, the highlight **sweeps** from index 0 to `end` over the T3 duration (200ms), creating a left-to-right "refresh" effect that visually re-establishes the heap boundary before each extraction (see Section 5.3.1).
-- **Sift-Down Cadence:** After an extraction swap completes, the subsequent sift-down repair sequence uses **reduced simulated costs** to create a rapid-fire "ripple" effect, visually conveying that sift-down is a fast internal repair rather than a major structural event (see Section 5.3.2).
+- **Heap Boundary Emphasis (T3) with Sweep:** At the start of each extraction step, a T3 tick highlights the contiguous range `0..heap_size-1` in accent color. Rather than appearing instantly on all indices, the highlight **sweeps** from index 0 to `end` over the T3 duration (200ms), creating a left-to-right "refresh" effect that visually re-establishes the heap boundary before each extraction (see Section 5.4.1).
+- **Sift-Down Cadence:** After an extraction swap completes, the subsequent sift-down repair sequence uses **reduced simulated costs** to create a rapid-fire "ripple" effect, visually conveying that sift-down is a fast internal repair rather than a major structural event (see Section 5.4.2).
 - **No auxiliary row:** All Heap Sort motion occurs on the main array `y` row. There is no secondary animation row for Heap Sort.
 
-#### 5.3.1 Heap Boundary Sweep
+#### 5.4.1 Heap Boundary Sweep
 
 When a Boundary Emphasis T3 tick fires for Heap Sort extraction, the View renders the highlight as a **staggered sweep** rather than an instant flash:
 
@@ -189,7 +217,7 @@ When a Boundary Emphasis T3 tick fires for Heap Sort extraction, the View render
 
 **Implementation note:** The sweep can be achieved by tracking per-index elapsed time in the View. Each index transitions from default color to accent color when `elapsed >= highlight_delay(i)`. No easing is applied to individual index transitions — each index snaps to accent color at its delay threshold.
 
-#### 5.3.2 Sift-Down Cadence (Post-Extraction)
+#### 5.4.2 Sift-Down Cadence (Post-Extraction)
 
 After an extraction swap (T2 on `(0, end)`), the sift-down repair sequence that follows uses **reduced operation durations** to create a rapid, cascading visual rhythm:
 
@@ -221,7 +249,7 @@ The Controller selects between standard and reduced durations based on the `sift
 
 **Race impact:** The reduced sift-down durations decrease Heap Sort's total elapsed time, making it more competitive in the race. This is intentional — it reflects the algorithmic reality that sift-down is an O(log n) repair, and the visual pacing should convey that these repairs are efficient relative to the extraction event that triggers them.
 
-#### 5.3.3 Branching Visualization (T3 Logical Tree Highlight)
+#### 5.4.3 Branching Visualization (T3 Logical Tree Highlight)
 
 The T3 tick for sift-down tree logic communicates the binary heap's parent-child relationship within the flat array row. This subsection defines the exact visual behavior.
 
@@ -231,7 +259,7 @@ The T3 tick for sift-down tree logic communicates the binary heap's parent-child
 
 **Duration:**
 - **Phase 1 (Build Max-Heap):** 200ms (standard T3 duration). The learner needs time to absorb the tree relationships during initial heap construction.
-- **Phase 2 (Post-Extraction Sift-Down):** 130ms (reduced sift-down cadence, per Section 5.3.2). The faster timing creates the cascading ripple rhythm appropriate for internal repairs.
+- **Phase 2 (Post-Extraction Sift-Down):** 130ms (reduced sift-down cadence, per Section 5.4.2). The faster timing creates the cascading ripple rhythm appropriate for internal repairs.
 
 **No positional change:** No sprite displacement occurs on this tick. The highlight is purely chromatic — sprites remain at their current `(exact_x, exact_y)` positions.
 
@@ -240,7 +268,7 @@ The T3 tick for sift-down tree logic communicates the binary heap's parent-child
 | Property | Boundary T3 | Branching T3 |
 | --- | --- | --- |
 | Highlight pattern | Contiguous range `0..heap_size-1` | Non-contiguous parent-child group (e.g., `1, 3, 4`) |
-| Rendering | Staggered left-to-right sweep (Section 5.3.1) | Simultaneous snap-on |
+| Rendering | Staggered left-to-right sweep (Section 5.4.1) | Simultaneous snap-on |
 | Timing context | Once per extraction step, before extraction swap | Before each sift-down level's comparisons |
 | Pedagogical signal | "This is the active heap region" | "This parent owns these children" |
 
@@ -256,7 +284,7 @@ The T3 tick for sift-down tree logic communicates the binary heap's parent-child
 
 ## 6) Highlight Behavior
 
-- Highlights apply **instantly** at tick start. There is no fade-in or fade-out transition. **Exception:** Heap Sort boundary T3 ticks use a staggered left-to-right sweep (see Section 5.3.1); per-index highlights still snap on (no fade), but their start times are offset across the sweep window.
+- Highlights apply **instantly** at tick start. There is no fade-in or fade-out transition. **Exception:** Heap Sort boundary T3 ticks use a staggered left-to-right sweep (see Section 5.4.1); per-index highlights still snap on (no fade), but their start times are offset across the sweep window.
 - When the next tick begins, the previous tick's highlights are **replaced** by the new tick's `highlight_indices`. Indices not in the new set revert to their default color immediately.
 - During pause, the current tick's highlights remain visible and frozen.
 - During step mode, the stepped tick's highlights are visible for the duration of the step animation and persist until the next step or play action.

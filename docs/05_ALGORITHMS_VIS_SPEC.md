@@ -111,19 +111,27 @@ Each algorithm exposes a `complexity` string representing its **worst-case** tim
 
 Required sequence per inner iteration `j`:
 
-1. `T1 Compare Tick` on `(j, j+1)` before any swap decision. The View applies a **compare-lift** to the adjacent pair: both sprites at indices `j` and `j+1` ease upward from `home_y` to `home_y - compare_lift_offset` over the first half of the T1 duration, hold briefly, then ease back to `home_y` by tick end (see Animation Spec Section 5.1.1). This temporary vertical isolation makes every comparison visually readable — even comparisons that do not result in a swap.
-2. If swap needed, perform swap then emit `T2 Write/Mutation Tick` on `(j, j+1)`. The swap arc motion begins from the baseline (`home_y`), not from the lifted position — the compare-lift has already returned to baseline before the T2 tick starts.
-3. If no swap needed, the algorithm advances to the next `j`. The compare-lift's return to baseline serves as the visual "release" signal that the pair was inspected but left in place.
+1. The `ComparisonPointer` moves to index `j` while remaining to the left of the `LimitLine`, which marks the current right-side boundary of the unsorted region.
+2. `T1 Compare Tick` on `(j, j+1)` before any swap decision. The View applies a **compare-lift** to the adjacent pair: both sprites at indices `j` and `j+1` ease upward from `home_y` to `home_y - compare_lift_offset` over the first half of the T1 duration, hold briefly, then ease back to `home_y` by tick end (see Animation Spec Section 5.1.1). This temporary vertical isolation makes every comparison visually readable — even comparisons that do not result in a swap.
+3. If swap needed, perform swap then emit `T2 Write/Mutation Tick` on `(j, j+1)`. The swap arc motion begins from the baseline (`home_y`), not from the lifted position — the compare-lift has already returned to baseline before the T2 tick starts.
+4. If no swap needed, the algorithm advances to the next `j`. The compare-lift's return to baseline serves as the visual "release" signal that the pair was inspected but left in place.
+
+Pass boundary rules:
+
+- A Bubble Sort pass ends when the `ComparisonPointer` reaches the active `LimitLine` boundary. No further compare tick may target an index pair that crosses or lies to the right of that boundary within the same outer-loop pass.
+- At the conclusion of every outer-loop pass, the `LimitLine` must decrement by one slot (move one slot left), shrinking the active comparison window for the next pass.
+- Elements to the right of the `LimitLine` are treated as visually settled and are excluded from the comparison scan. The `ComparisonPointer` must never enter that settled suffix.
 
 Additional rules:
 
 - Early-exit optimization allowed (`swapped=False` pass).
 - Must still emit one final `T4 Completion Tick`.
 - The compare-lift is a **View-layer animation only**. The algorithm model does not track lift state — it emits standard T1 ticks. The View recognizes Bubble Sort T1 ticks by the panel's algorithm identity and applies the lift choreography automatically.
+- The shrinking window is a required teaching signal, not an optional decoration. Even when early-exit occurs, the last completed pass still defines the current `LimitLine` position and the visually excluded suffix.
 
 #### Compare-Lift Motion Contract
 
-- **Lift offset:** `compare_lift_offset = panel_height * 0.05` (proportional). This is intentionally smaller than Insertion Sort's `lift_offset` (`0.06`) to maintain visual hierarchy — the Insertion Sort lift is a sustained, prominent displacement across multiple ticks, while the Bubble Sort compare-lift is a brief pulse within a single T1 tick.
+- **Lift offset:** `compare_lift_offset = 50px` (fixed). This locks Bubble Sort to the observed reference choreography, where the pair rises into a dedicated compare lane before either holding or exchanging.
 - **Timing within the 150ms T1 duration:**
   - `0–60ms` (40%): both sprites ease upward from `home_y` to `home_y - compare_lift_offset`.
   - `60–100ms` (27%): hold at lifted position (comparison is visually prominent).
@@ -355,9 +363,9 @@ Key structural points:
 #### Phase 2 — Extraction
 
 - Iterate `end` from `n - 1` down to `1`:
-  1. Emit `T3 Range Emphasis Tick` on `tuple(range(0, end + 1))` to highlight the active heap boundary before the extraction swap. The View renders this as a left-to-right sweep (see Animation Spec Section 5.3.1).
-  2. **Extraction Swap:** Swap root (`index 0`) with `end`, then emit `T2 Write/Mutation Tick` on `(0, end)`. Increment `self.writes += 2`. This swap uses the **elevated extraction arc** (`panel_height * 0.14`) rather than the standard arc height, visually distinguishing it as a phase-transition move (see Section 6.2 and Animation Spec Section 5.3).
-  3. Call sift-down from `index 0` with `heap_size = end`. Sift-down emits Logical Tree Highlight T3 ticks before each level's comparisons, plus T1/T2 ticks per comparison and swap as described in Phase 1. The Controller applies **reduced sift-down cadence** durations (T1: 100ms, T2: 250ms, T3: 130ms) to create a rapid cascading rhythm (see Animation Spec Section 5.3.2).
+  1. Emit `T3 Range Emphasis Tick` on `tuple(range(0, end + 1))` to highlight the active heap boundary before the extraction swap. The View renders this as a left-to-right sweep (see Animation Spec Section 5.4.1).
+  2. **Extraction Swap:** Swap root (`index 0`) with `end`, then emit `T2 Write/Mutation Tick` on `(0, end)`. Increment `self.writes += 2`. This swap uses the **elevated extraction arc** (`panel_height * 0.14`) rather than the standard arc height, visually distinguishing it as a phase-transition move (see Section 6.2 and Animation Spec Section 5.4).
+  3. Call sift-down from `index 0` with `heap_size = end`. Sift-down emits Logical Tree Highlight T3 ticks before each level's comparisons, plus T1/T2 ticks per comparison and swap as described in Phase 1. The Controller applies **reduced sift-down cadence** durations (T1: 100ms, T2: 250ms, T3: 130ms) to create a rapid cascading rhythm (see Animation Spec Section 5.4.2).
 
 Additional rules:
 
@@ -470,7 +478,7 @@ Rationale:
 - The Logical Tree Highlight communicates parent-child relationships without requiring a tree layout, drawing on the reference video's emphasis on tree structure (see `docs/Reference/Heap_Sort_Video_Reference.md`).
 - The elevated extraction arc visually separates the "extract max" event from routine sift-down swaps, reinforcing the two-phase teaching model.
 - Range highlighting preserves clarity without introducing additional drawing complexity.
-- In-place motion is visually consistent with Bubble and Selection Sort panels.
+- In-place motion remains visually consistent with the shared sprite system while preserving Heap Sort's own arc-based extraction and sift-down identity.
 
 ## 7) Consistency and QA Hooks
 

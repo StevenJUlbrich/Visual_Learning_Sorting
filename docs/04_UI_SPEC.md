@@ -196,6 +196,14 @@ The header must never exceed **35% of panel height**. If a future font or resolu
 - Numbers are centered in their slot. (`slot_width = (panel_width - ARRAY_X_PADDING*2) / array_size`)
 - Vertical anchor defaults to panel center (`rect.y + rect.height // 2`).
 
+#### 4.3.1 Bubble Sort Instructional Assets
+
+- The Bubble Sort panel must render a `ComparisonPointer` asset as a **green upward-pointing arrow**.
+- The `ComparisonPointer` is anchored **below the baseline row**, centered under the active comparison slot, and moves horizontally as the active index changes.
+- The Bubble Sort panel must render a `LimitLine` asset as a **vertical dashed line**.
+- The `LimitLine` resides **between array slots**, not on top of a number sprite, and marks the current right-side unsorted boundary.
+- At the end of each Bubble Sort pass, the `LimitLine` shifts one slot to the left.
+
 ### 4.4 Panel Surface Strategy
 
 - Each panel draws directly to the main display surface. Panels do not use independent `pygame.Surface` objects or `subsurface`.
@@ -222,6 +230,14 @@ This rule is a **layout integrity invariant**: a lifted key must never disappear
   - Error border color: `(235, 80, 80)`.
   - Error border thickness = 3px.
   - Error message text color: `(255, 120, 120)` (lighter red for contrast compliance at body font size).
+
+#### 4.6.1 Bubble Sort HUD Overlay
+
+- The Bubble Sort panel must include a **persistent instructional HUD** anchored to the **bottom-left corner** of the panel content area.
+- The HUD displays two live text counters: `Comparison Count` and `Exchange Count`.
+- Both counters remain visible throughout idle, running, paused, and completed states.
+- `Comparison Count` increments as each comparison begins.
+- `Exchange Count` increments when a swap is executed.
 
 ## 5) Color Identity Decision (Locked)
 
@@ -281,7 +297,7 @@ In v1, the settled/extracted color applies **exclusively to Heap Sort** extracte
 
 Other algorithms in v1 do not use the settled color because:
 
-- **Bubble Sort:** The right-side "settled" elements (positions that have received their final value via bubbling) are not explicitly tracked by the algorithm's tick sequence — the spec uses early-exit optimization but does not emit boundary ticks.
+- **Bubble Sort:** The right-side settled suffix is tracked by the `LimitLine` boundary and cursor exclusion rules rather than by a separate settled-color treatment.
 - **Selection Sort:** Elements swapped into the sorted left region could semantically qualify, but Selection Sort's visual emphasis is on the scan/minimum pattern, and adding a third color state would clutter a panel that already has accent + default + highlight transitions.
 - **Insertion Sort:** The growing sorted region on the left is conceptually similar, but the key-lift/shift/drop choreography already provides strong visual separation between "sorted" and "unsorted" without needing a color distinction.
 
@@ -306,6 +322,8 @@ The following colors were adjusted to meet AAA accessibility requirements:
   - Non-highlighted indices → default array color.
   - `highlight_indices` → panel accent color.
   - Step counter increments only on successful non-terminal ticks (defined in data contracts).
+  - Bubble Sort additionally renders the `ComparisonPointer` as a green upward-pointing arrow below the baseline row and the `LimitLine` as a dashed boundary between slots.
+  - Bubble Sort keeps the bottom-left HUD visible with live `Comparison Count` and `Exchange Count` values.
 - Settled/extracted state (Heap Sort only):
   - Applies to elements in the **sorted region** of the Heap Sort panel — indices beyond the current heap boundary (`index >= heap_size`) that have been extracted via root-to-end swaps.
   - These elements render in the settled/extracted color `(130, 150, 190)` (desaturated steel-blue) **permanently** for the remainder of the sort, even when not highlighted.

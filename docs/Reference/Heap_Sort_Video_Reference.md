@@ -1,10 +1,10 @@
 # Heap Sort Video Reference
 
-## Pygame Developer Observation Write-Up
+## Pygame Developer & UX/UI Observation Write-Up
 
-Purpose: capture how the animation demonstrates Heap Sort so that the behavior can later be translated into the visualizer’s animation system.
+Purpose: capture how the animation demonstrates Heap Sort so that the behavior can later be translated into the visualizer’s animation system, including newly derived UX/UI visual styling cues.
 
-This write-up focuses on **motion and teaching behavior**, not style or visual theme.
+This write-up focuses on **motion, visual styling, and teaching behavior**.
 
 ---
 
@@ -33,19 +33,19 @@ This makes Heap Sort visually distinct from the other algorithms.
 
 ## 2. Layout Observed
 
-The animation likely uses **two simultaneous conceptual representations**:
+The animation uses **two simultaneous visual representations** displayed together on screen:
 
 ### 2.1 Array Row
 
-A horizontal row representing the array storage.
+A horizontal row of **square blocks** representing the array storage.
 
 Each element is positioned in a fixed slot corresponding to its index.
 
 ### 2.2 Binary Heap Structure
 
-A tree-like structure representing the heap relationships.
+A tree of **circular nodes** representing the heap relationships, positioned **above the array row**.
 
-Elements appear connected through parent-child relationships.
+Elements appear connected through parent-child relationships via edges drawn between nodes.
 
 The tree representation helps viewers understand:
 
@@ -62,13 +62,13 @@ The animation visually separates the array into two regions:
 
 The portion of the array still forming the heap.
 
-This region participates in heap comparisons and heapify operations.
+This region participates in heap comparisons and heapify operations. These slots turn into **dark blue squares** (no text or hidden text) when the elements are actively being sorted in the tree structure above.
 
 ### 3.2 Sorted Region
 
 The rightmost portion of the array where extracted maximum values accumulate.
 
-Once elements move here they are no longer part of the heap.
+Once elements move here they are no longer part of the heap and revert to **light green squares with black text**.
 
 ---
 
@@ -110,9 +110,13 @@ Each element in the animation appears to transition between several visual state
 
 Element currently participating in the heap but not actively compared.
 
+**Tree appearance:** Light blue circle with black text.
+
 ### 5.2 Parent Candidate
 
-The element currently being evaluated during heapify.
+The element currently being evaluated during heapify or extraction.
+
+**Tree appearance:** Pink circle with black text.
 
 ### 5.3 Child Candidate
 
@@ -125,6 +129,18 @@ Two nodes that will exchange positions.
 ### 5.5 Sorted Element
 
 Element that has been removed from the heap and placed in the sorted region.
+
+**Array appearance:** Light green square with black text.
+
+### 5.6 Array Placeholder (Unsorted Region)
+
+Array slots that have not yet been sorted.
+
+**Array appearance:** Dark blue square (no text or hidden text).
+
+### 5.7 Text Label
+
+A **"Heapify"** label appears in **red text** between the tree and array during heap construction and restoration phases.
 
 ---
 
@@ -314,23 +330,46 @@ Unlike other algorithms, the emphasis is not on adjacent swaps but on **tree rel
 
 ---
 
-## 11. What the Video Does Not Define
+## 11. What the Video Defines and Does Not Define
 
-The video demonstrates behavior but does not lock down several implementation details:
+The video demonstrates behavior and establishes a strong visual theme.
 
-* Exact tree layout geometry
+**Visual Details Now Defined (UX/UI):**
+
+* **Highlight colors:** Active nodes are pink/light red, resting tree nodes are light blue, and initial/sorted array blocks are light green. Empty array slots are dark blue.
+* **Node shapes:** Tree nodes are circular; array elements are square blocks.
+* **Edge rendering:** Nodes are connected by thin, pale yellow straight lines.
+* **Canvas & Typography:** Solid black background with dark, bold sans-serif text.
+
+**Details Still Needing Standardization:**
+
+* Exact tree layout geometry (padding, spacing)
 * Exact swap animation paths
 * Animation timing
-* Highlight colors
-* Node shapes
-* Edge rendering between nodes
 * Easing curves
-
-These details would need to be standardized later.
 
 ---
 
-## 12. Key Technical Insight
+## 12. Visual Styling Guidelines (UX/UI)
+
+The reference animation establishes a specific visual language for the implementation.
+
+### Canvas and Typography
+
+* The background canvas is solid black, creating high contrast for the colorful data points.
+* Values and dynamic labels use a dark, bold, sans-serif font.
+
+### Color Palette
+
+* **Initial/Sorted State:** Light green is used for elements in their initial unsorted array state and their final sorted array state.
+* **Resting Tree State:** Light blue is used for resting nodes within the active heap tree structure.
+* **Active/Highlight State:** Pink/light red is used to highlight the active node, such as the root during heapify operations, and its corresponding instructional status text (e.g., "Heapify").
+* **Empty Array State:** Dark blue is used to fill blank array slots, acting as placeholders for the elements currently active in the tree visualizer.
+* **Connectors:** Pale yellow is used for the thin lines depicting parent-child relationships.
+
+---
+
+## 13. Key Technical Insight
 
 Heap Sort animation relies on a **tree-based comparison structure**, making it visually and conceptually different from the other sorting algorithms:
 
@@ -343,7 +382,7 @@ This makes Heap Sort a strong visual complement to the other algorithms.
 
 ---
 
-## 13. Developer Summary
+## 14. Developer Summary
 
 If explaining the animation to another Pygame engineer:
 

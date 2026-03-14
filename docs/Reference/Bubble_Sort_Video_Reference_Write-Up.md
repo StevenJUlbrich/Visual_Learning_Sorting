@@ -28,7 +28,7 @@ From a Pygame design perspective, this means the animation is driven by **instru
 
 ## 2. Visual Composition Observed
 
-The animation appears to use a single-row teaching layout with these main elements:
+The animation uses a single-row teaching layout with these main elements:
 
 ### A. Baseline array row
 
@@ -43,24 +43,33 @@ The animation appears to use a single-row teaching layout with these main elemen
 
 ### C. Color distinction
 
-* The active compared values are highlighted in a contrasting color.
-* The inactive values remain in a base color.
-* The contrast is used to indicate the current algorithm focus, not final sortedness.
+* The active compared values are highlighted in green.
+* The inactive or resting values remain red.
+* This red-to-green contrast is used to indicate the current algorithm focus, not final sortedness.
 
 ### D. Comparison pointer / arrow
 
-* A directional marker appears beneath the active comparison position.
+* A green directional arrow appears beneath the active comparison position.
+* The arrow moves horizontally under the current active index as the scan advances.
+* The comparison begins with this green arrow appearing at index `j` before any node lift occurs.
 * This gives the viewer an index-level reading of where the scan currently is.
 
 ### E. Pass boundary / limit marker
 
-* A vertical marker indicates the effective right-side boundary of the unsorted range.
-* This boundary appears to move inward as outer passes complete.
+* A vertical dashed line labeled "limit" indicates the effective right-side boundary of the unsorted range.
+* The marker sits between value nodes rather than directly on top of a node.
+* This boundary moves inward as outer passes complete.
 
 ### F. Sorted suffix concept
 
-* The right side gradually becomes implicitly or explicitly “done.”
-* The visual language suggests that bubble sort is shrinking the unsorted region.
+* The region to the right of the vertical `limit` line is treated as settled.
+* The green comparison arrow does not target elements in this settled suffix.
+* The visual language makes the shrinking unsorted region explicit through the leftward migration of the `limit` line.
+
+### G. Instructional counters
+
+* Real-time `comparisons` and `exchanges` counters are visible in the bottom-left corner of the screen.
+* These counters update as the choreography progresses.
 
 ---
 
@@ -70,8 +79,8 @@ The animation is not just saying “bubble sort swaps adjacent elements.”
 It is teaching this sequence:
 
 1. Start at the left side of the active unsorted range.
-2. Compare adjacent values.
-3. Raise the pair so the viewer notices the comparison.
+2. Move the green arrow to index `j` to mark the next adjacent comparison.
+3. Turn the nodes at `j` and `j + 1` green, then raise them only if the exchange state is needed.
 4. If order is wrong, swap them.
 5. Advance one position to the right.
 6. Continue until the pass boundary is reached.
@@ -101,11 +110,12 @@ This baseline acts like the “home row” for the array.
 
 When a comparison begins:
 
-* the active pair is separated from the baseline visually
-* they appear to lift upward into a compare lane or compare posture
-* the rest of the row remains still
+* the green arrow moves to comparison position `j`
+* the green arrow appears at `j` before any vertical node lift occurs
+* the nodes at `j` and `j + 1` turn green to show the active pair
+* the rest of the row remains red and visually still
 
-In Pygame terms, this suggests a **temporary compare y-offset**.
+This establishes the comparison state before any exchange motion occurs.
 
 ## 4.3 Compare-without-swap
 
@@ -113,10 +123,10 @@ When two values are compared and do not need to swap, the viewer still needs to 
 
 The likely motion pattern is:
 
-* pair lifts
-* pair is highlighted
+* arrow moves to `j`
+* pair turns green
 * pair holds briefly
-* pair returns to baseline
+* pair remains on the baseline because no exchange is needed
 * active cursor advances
 
 This matters because otherwise non-swap compares are visually weak.
@@ -127,14 +137,12 @@ When the pair is out of order, the compare event becomes a swap event.
 
 The likely visual pattern is:
 
-* pair lifts into active compare state
-* pair exchanges horizontal positions
-* pair settles back to baseline in new order
-
-In a Pygame implementation, this could be done either:
-
-* while elevated, or
-* via slight arc motion during crossing
+* arrow moves to `j`
+* pair turns green
+* pair lifts vertically away from the baseline into an exchange state
+* while lifted, the two nodes swap `x` coordinates
+* pair settles back to the baseline in new order
+* the Exchanges counter increments as the swap occurs
 
 But the important reference behavior is not the exact easing curve.
 The important behavior is that the viewer can clearly read:
@@ -147,12 +155,16 @@ After each comparison, the active position shifts one slot to the right.
 
 This movement is part of the algorithm explanation. It is not decorative.
 
+The Comparisons counter should increment in real time when each comparison is initiated so the overlay stays synchronized with the choreography.
+
 ## 4.6 End of pass
 
 At the end of a full pass:
 
 * the rightmost unsorted value has bubbled into its final place
-* the pass boundary tightens inward
+* the vertical `limit` line moves one index to the left
+* all elements to the right of that updated `limit` line are treated as settled
+* the green comparison arrow no longer targets that settled suffix
 * the next pass begins over a smaller range
 
 This pass-to-pass contraction is a major part of what the animation teaches.
@@ -181,21 +193,75 @@ Each number should be represented by a persistent object with:
 A separate renderable element for:
 
 * current compare index
-* arrow or caret beneath the row
+* green arrow beneath the row
 
 ### Pass boundary marker
 
 A separate renderable element for:
 
 * current right-side unsorted limit
+* vertical dashed line drawn between value nodes
+* one-step leftward migration at the end of each completed pass
 
 ### Optional label elements
 
-If the video includes labels like “limit,” that should be a separate UI element, not part of the number sprites.
+The observed “limit” label should be a separate UI element, not part of the number sprites.
+
+### Counter overlays
+
+Separate UI text overlays should display:
+
+* `Comparisons`, incremented when each comparison begins
+* `Exchanges`, incremented when a swap is executed
+* bottom-left placement matching the reference frames
 
 ---
 
-## 5.2 Likely sprite state model
+## 5.2 Confirmed sprite model
+
+Based on the visual evidence, the implementation should treat the following render objects as required rather than optional:
+
+### Value node sprite
+
+Each value node should carry:
+
+* a numeric value
+* position state for baseline and animated movement
+* an `is_active` flag
+* a color attribute that resolves to `GREEN` when `is_active` is true and `RED` otherwise
+
+This color toggle is part of the observed choreography, not just a styling preference.
+
+### `Line` class
+
+The pass boundary should be represented by a dedicated `Line` class responsible for:
+
+* drawing the vertical dashed `limit` marker between value nodes
+* positioning the `limit` marker at the current unsorted boundary
+* migrating one index left at the end of each completed pass
+
+### `Arrow` class
+
+The active comparison cursor should be represented by a dedicated `Arrow` class responsible for:
+
+* drawing the green comparison arrow beneath the active index
+* moving horizontally to comparison position `j`
+* avoiding the settled suffix to the right of the `limit` line
+
+### HUD component
+
+A HUD (Heads-Up Display) component should be responsible for the bottom-left counter display shown in the reference frames.
+
+The HUD should track and render:
+
+* `comparison_count`
+* `exchange_count`
+
+These counters should update in real time as the choreography advances.
+
+---
+
+## 5.3 Likely sprite state model
 
 Each value object likely needs more than just `x` and `y`.
 
@@ -216,7 +282,7 @@ Even if not all are implemented literally, the video behavior implies this level
 
 ---
 
-## 5.3 Layering / draw order
+## 5.4 Layering / draw order
 
 This kind of animation usually needs stable render ordering.
 
@@ -228,7 +294,7 @@ Likely draw order:
 4. compare arrow
 5. inactive value sprites
 6. active compare pair
-7. labels / overlays
+7. labels / overlays, including Comparisons and Exchanges text
 
 This matters because lifted compare sprites should visually dominate the passive row.
 
@@ -274,7 +340,8 @@ It is:
 * compare in a highlighted staging zone
 * conditionally swap
 * advance a teaching cursor
-* reduce the active domain after each pass
+* move the `limit` line one index left after each pass
+* exclude the settled suffix from future arrow targets
 
 ---
 
@@ -287,8 +354,6 @@ There are still choices that would need to be explicitly decided later, such as:
 * exact compare-lift offset in pixels
 * exact hold duration
 * whether swap happens on the lifted row or along an arc
-* exact arrow shape and placement
-* exact boundary marker styling
 * whether sorted suffix changes color or only becomes excluded
 * easing type for movement
 * whether compare and swap are a single animation or two chained animations
@@ -312,9 +377,7 @@ From this video, the most valuable behaviors to preserve are:
 ### Do not overfit yet
 
 * exact art style
-* exact colors
 * exact font choices
-* exact arrow design
 * exact node shape details
 
 Those styling decisions can be normalized later to match the rest of your application.
@@ -326,6 +389,10 @@ Those styling decisions can be normalized later to match the rest of your applic
 If I were describing this to a Pygame developer in one paragraph, I would say:
 
 > The video presents bubble sort as a staged instructional animation built around an active adjacent comparison pair, a visible scan cursor, and a shrinking pass boundary. The array rests on a stable baseline row, while the currently compared pair is lifted into a temporary compare state, highlighted, optionally swapped, then returned to the baseline. The animation emphasizes pass progression and sorted-boundary contraction as much as element swapping, so the implementation should treat bubble sort as a dedicated visual choreography rather than a generic compare/swap renderer.
+
+More specifically, the observed choreography uses red resting nodes, green active nodes, a green arrow that appears at index `j` before any lift and then tracks the active compare index from left to right, and a vertical dashed line labeled "limit" positioned between nodes to mark the shrinking pass boundary.
+
+At the end of each pass, that `limit` line migrates one index left, and everything to its right becomes a settled suffix that the green arrow no longer enters. Real-time `comparisons` and `exchanges` counters remain visible in the bottom-left corner as the sequence unfolds.
 
 ---
 
