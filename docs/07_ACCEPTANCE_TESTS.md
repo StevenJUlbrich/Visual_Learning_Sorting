@@ -116,13 +116,30 @@ Run all algorithms to completion with `[4, 7, 2, 6, 1, 5, 3]` and verify:
 - **Insertion Sort:** Comparisons = 17, Writes = 19 (13 shifts + 6 placements, each 1 array write).
 - **Heap Sort:** Comparisons = 20, Writes = 30 (15 swaps x 2 array writes each).
 
-### AT-13 T3 Step Counter Exclusion
+### AT-13 Bubble Sort LimitLine Migration
+
+- Run Bubble Sort panel, stepping through operations until the largest unsorted value reaches the rightmost unsorted slot for a pass.
+- Verify that when the `ComparisonPointer` reaches the `LimitLine`, the pass ends immediately — no additional comparison enters the region to the right of the active limit.
+- Verify that after the pass-ending comparison resolves, the vertical dashed `LimitLine` moves exactly one slot left.
+- Verify that on the next pass, the region to the right of the updated `LimitLine` is visually excluded from the comparison scan.
+- **Regression guard:** If the `LimitLine` stays fixed, moves more than one slot, or allows the pointer to re-enter the settled suffix, the test fails.
+
+### AT-14 Bubble Sort Swap-Lift Counter Sync
+
+- Run Bubble Sort panel, stepping through a comparison that produces a swap.
+- Verify that the active pair turns green and lifts into the compare lane before exchanging horizontal positions.
+- During that same swap-lift sequence, verify the `Comparisons` counter has already incremented for the comparison event.
+- Verify the `Exchanges` counter increments when the lifted pair executes the horizontal exchange, not before the comparison begins and not after the entire pass ends.
+- Verify the counters remain visible in the bottom-left HUD throughout the swap-lift choreography.
+- **Regression guard:** If the counters update late, update in the wrong order, or disappear during the lifted swap, the test fails.
+
+### AT-15 T3 Step Counter Exclusion
 
 - Run Heap Sort to completion.
 - Count the visible T3 range emphasis highlights (should be 6 for n=7).
 - Verify the panel step count does **not** include these T3 ticks. Heap Sort's step count should be 35 (20 T1 + 15 T2), not 41.
 
-### AT-14 Accent Color Readability (AAA Contrast)
+### AT-16 Accent Color Readability (AAA Contrast)
 
 - Launch app and begin sorting.
 - For each panel, when a highlight activates (compare or swap tick), verify the accent-colored number is clearly legible against the panel background:
@@ -133,7 +150,7 @@ Run all algorithms to completion with `[4, 7, 2, 6, 1, 5, 3]` and verify:
 - Verify that **settled/extracted** elements in the Heap Sort panel (after leaving the active heap) are clearly readable — they should appear as a muted steel-blue, visually distinct from both the vivid default blue and the orange accent, without blending into the dark panel background.
 - Verify the **completion color** (green) is bright and legible when all elements turn green at algorithm finish.
 
-### AT-15 Portrait Mode Layout Integrity
+### AT-17 Portrait Mode Layout Integrity
 
 - Set `config.toml` to `orientation = "portrait"` (720x996) and launch app.
 - Verify all four panels are visible in the 2x2 grid without overlapping or clipping.
@@ -142,14 +159,14 @@ Run all algorithms to completion with `[4, 7, 2, 6, 1, 5, 3]` and verify:
 - Verify number sprites fit within their slots without overlapping adjacent numbers.
 - Verify arc motion during swaps does not cause sprites to overlap with header text or escape the panel boundary.
 
-### AT-16 Landscape Mode Layout Integrity
+### AT-18 Landscape Mode Layout Integrity
 
 - Set `config.toml` to `orientation = "landscape"` (1280x720) and launch app.
 - Verify all four panels are visible in the 2x2 grid with proportional spacing.
 - Verify header, metrics, message, and array regions are vertically stacked without overlap.
 - Verify all text is anti-aliased (smooth edges, no jagged stairstepping on curves of letters like "S", "O", "C").
 
-### AT-17 Selection Sort Min Tracking
+### AT-19 Selection Sort Min Tracking
 
 - Run Selection Sort panel, stepping through operations one tick at a time.
 - For each outer pass `i`, observe the scan phase (`j = i+1` through `n-1`):
@@ -159,7 +176,7 @@ Run all algorithms to completion with `[4, 7, 2, 6, 1, 5, 3]` and verify:
 - Verify the message line references the current minimum on every scan tick (e.g., `"Comparing index 3 (value 6) with current min 2 at index 2"`).
 - **Regression guard:** If the minimum highlight disappears or jumps to an index that is not the actual running minimum, the test fails.
 
-### AT-18 Selection Sort Sorted Region Stability
+### AT-20 Selection Sort Sorted Region Stability
 
 - Run Selection Sort panel to completion, stepping through operations.
 - After each swap (T2 tick placing the minimum at index `i`), verify:
@@ -227,3 +244,12 @@ Run all algorithms to completion with `[4, 7, 2, 6, 1, 5, 3]` and verify:
 - Consume the Heap Sort generator for `[4, 7, 2, 6, 1, 5, 3]`.
 - Count all ticks where `success=True`, `is_complete=False`, and `operation_type != RANGE`.
 - Assert this count equals 35 (the panel step count, with T3 ticks excluded).
+
+### H) Bubble Sort LimitLine and Counter Choreography
+
+- Drive the Bubble Sort view/controller pair on `[4, 7, 2, 6, 1, 5, 3]` through at least one full outer pass.
+- Assert that when the active comparison reaches the rightmost unsorted pair, the pass ends and the `LimitLine` advances exactly one slot left before the next pass begins.
+- Assert that no subsequent `ComparisonPointer` target enters the suffix to the right of the updated `LimitLine`.
+- During a Bubble Sort swap, assert `comparisons` increments on the compare event before the lifted exchange begins.
+- Assert `writes`/exchange-facing HUD output increments when the lifted horizontal exchange executes, not after the entire pass completes.
+- Assert the Bubble HUD keeps both counter values visible throughout the swap-lift animation.
