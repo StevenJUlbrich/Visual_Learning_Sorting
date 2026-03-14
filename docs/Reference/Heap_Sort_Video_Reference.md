@@ -1,10 +1,10 @@
 # Heap Sort Video Reference
 
-## Pygame Developer Observation Write-Up
+## Pygame Developer & UX/UI Observation Write-Up
 
-Purpose: capture how the animation demonstrates Heap Sort so that the behavior can later be translated into the visualizer’s animation system.
+Purpose: capture how the animation demonstrates Heap Sort so that the behavior can later be translated into the visualizer’s animation system, including newly derived UX/UI visual styling cues.
 
-This write-up focuses on **motion and teaching behavior**, not style or visual theme.
+This write-up focuses on **motion, visual styling, and teaching behavior**.
 
 ---
 
