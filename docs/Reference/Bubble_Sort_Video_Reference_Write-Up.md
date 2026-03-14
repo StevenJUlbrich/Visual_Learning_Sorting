@@ -209,7 +209,51 @@ Separate UI text overlays should display:
 
 ---
 
-## 5.2 Likely sprite state model
+## 5.2 Confirmed sprite model
+
+Based on the visual evidence, the implementation should treat the following render objects as required rather than optional:
+
+### Value node sprite
+
+Each value node should carry:
+
+* a numeric value
+* position state for baseline and animated movement
+* an `is_active` flag
+* a color attribute that resolves to `GREEN` when `is_active` is true and `RED` otherwise
+
+This color toggle is part of the observed choreography, not just a styling preference.
+
+### `Line` class
+
+The pass boundary should be represented by a dedicated `Line` class responsible for:
+
+* drawing the vertical dashed `limit` marker between value nodes
+* positioning the `limit` marker at the current unsorted boundary
+* migrating one index left at the end of each completed pass
+
+### `Arrow` class
+
+The active comparison cursor should be represented by a dedicated `Arrow` class responsible for:
+
+* drawing the green comparison arrow beneath the active index
+* moving horizontally to comparison position `j`
+* avoiding the settled suffix to the right of the `limit` line
+
+### HUD component
+
+A HUD (Heads-Up Display) component should be responsible for the bottom-left counter display shown in the reference frames.
+
+The HUD should track and render:
+
+* `comparison_count`
+* `exchange_count`
+
+These counters should update in real time as the choreography advances.
+
+---
+
+## 5.3 Likely sprite state model
 
 Each value object likely needs more than just `x` and `y`.
 
@@ -230,7 +274,7 @@ Even if not all are implemented literally, the video behavior implies this level
 
 ---
 
-## 5.3 Layering / draw order
+## 5.4 Layering / draw order
 
 This kind of animation usually needs stable render ordering.
 
