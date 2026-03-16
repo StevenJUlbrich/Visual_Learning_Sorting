@@ -6,6 +6,8 @@ Purpose: Capture what the video demonstrates so the animation behavior can later
 
 This document intentionally focuses on **behavior and motion**, not styling.
 
+> **Adoption Note (2026-03-16):** The `i`/`j`/`min` pointer arrow system described in this reference has been adopted for the application (D-068). Selection Sort now uses all three labeled pointer assets alongside the universal orange active highlight color (D-067). The coalescing behavior (j merges into min at same index) is also adopted. Node shapes are circular outlined rings (D-069), not the squares shown in the reference video. See `04_UI_SPEC.md` and `05_ALGORITHMS_VIS_SPEC.md` for locked spec details.
+
 ---
 
 ## 1. High-Level Behavior

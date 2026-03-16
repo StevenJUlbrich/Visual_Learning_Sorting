@@ -171,6 +171,22 @@ After the scan completes:
 - If `min_idx != i`: the minimum is not already in its sorted position. Perform `arr[i], arr[min_idx] = arr[min_idx], arr[i]` and emit `T2 Write/Mutation Tick` on `(i, min_idx)`. The View triggers a standard swap arc animation — both sprites exchange horizontal positions with the left sprite arcing upward and the right sprite arcing downward (see Animation Spec Section 5.1). This single swap places the minimum into its final sorted position.
 - If `min_idx == i`: the minimum is already in position. No T2 tick is emitted — the algorithm advances to the next outer index silently. The learner observes many comparisons followed by no swap, which reinforces that Selection Sort only writes when necessary.
 
+#### Pointer Assets (Required)
+
+Selection Sort requires three labeled pointer arrow assets that track algorithm state in real time, providing structural position information alongside the color highlights:
+
+1. **`i` pointer (Sorted Boundary):** A downward-pointing arrow positioned **above** the baseline row, centered over the current outer loop index `i`. It marks the next position in the sorted region to be filled. Advances one slot rightward after each completed swap. Color: primary text `(240, 240, 245)`.
+
+2. **`j` pointer (Scan Cursor):** An upward-pointing arrow positioned **below** the baseline row, centered under the current inner loop scan index `j`. It advances left-to-right during each scan phase. Color: active highlight `(255, 140, 0)` orange.
+
+3. **`min` pointer (Minimum Tracker):** An upward-pointing arrow positioned **below** the baseline row, centered under the current minimum candidate index `min_idx`. It jumps to a new index whenever a smaller element is discovered. Color: active highlight `(255, 140, 0)` orange.
+
+**Coalescing behavior:** When `j` and `min` occupy the same index (immediately after a new minimum is discovered), only the `min` label is shown — `j` visually merges into `min`. When `j` advances past that index, both labels separate again.
+
+**Pointer behavior during swap:** The `i` pointer is hidden during the swap arc motion and reappears after the elements settle at the baseline. The `min` pointer remains visible below the swapping element during the arc.
+
+These pointer assets work in conjunction with the orange ring highlights on the active comparison pair (`min_idx` and `j`), providing both structural (position) and state (color) cues simultaneously.
+
 Additional rules:
 
 - The scan phase is comparison-heavy; the swap phase is sparse and explicit. For `[4, 7, 2, 6, 1, 5, 3]`, there are 21 comparisons but only 5 swaps.
@@ -404,12 +420,14 @@ The same guard pattern applies to single-element input (`len(data) == 1`), which
 
 ### Compare Highlights
 
+All compare highlights use the universal active highlight color `(255, 140, 0)` orange, regardless of algorithm.
+
 - Compare operations highlight exactly the indices being compared.
-- Bubble: `(j, j+1)`. Additionally, the View applies a temporary **compare-lift** (vertical offset) to both sprites during the T1 duration, isolating the pair from the baseline row (see Section 4.1).
-- Selection: `(min_idx, j)`.
-- Insertion compare-during-shift: `(j, j+1)` — the element at `j` is compared against the lifted key (visually above the array).
+- Bubble: `(j, j+1)` — highlighted in active highlight color `(255, 140, 0)` orange. Additionally, the View applies a temporary **compare-lift** (vertical offset) to both sprites during the T1 duration, isolating the pair from the baseline row (see Section 4.1).
+- Selection: `(min_idx, j)` — highlighted in active highlight color `(255, 140, 0)` orange.
+- Insertion compare-during-shift: `(j, j+1)` — highlighted in active highlight color `(255, 140, 0)` orange. The element at `j` is compared against the lifted key (visually above the array).
 - Insertion key-selection: `(i,)` — single-index highlight on the key being extracted.
-- Heap sift-down compare: `(largest, child_idx)` — this reflects the running `largest` value, so when comparing the right child, the highlight may show `(left_child, right_child)` if the left child was already found to be larger than the parent.
+- Heap sift-down compare: `(largest, child_idx)` — highlighted in active highlight color `(255, 140, 0)` orange. This reflects the running `largest` value, so when comparing the right child, the highlight may show `(left_child, right_child)` if the left child was already found to be larger than the parent.
 
 ### Swap/Write Highlights
 
@@ -496,7 +514,7 @@ Rationale:
 ## 8) Operation → Animation Mapping
 
 - COMPARE
-  - Highlight compared indices.
+  - Highlight compared indices. All algorithms use the universal active highlight color `(255, 140, 0)` orange.
   - No logical position change. Algorithm-specific temporary visual offsets may apply:
     - **Bubble Sort:** Compare-lift — both sprites in the adjacent pair temporarily ease upward and return to baseline within the T1 duration (see Section 4.1, Animation Spec Section 5.1.1).
     - **Insertion Sort key-selection:** Key sprite begins sustained lift (see Section 4.3, Animation Spec Section 5.2).

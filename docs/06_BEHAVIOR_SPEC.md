@@ -45,17 +45,17 @@ Bubble Sort uses a stricter sub-state machine inside the standard `T1`/`T2` timi
 
 #### Comparison State (`T1`, 150ms total)
 
-- At the moment the `ComparisonPointer` arrives at index `j`, the value nodes at `j` and `j+1` must toggle to **green simultaneously**.
-- The arrow arrival and the color activation are a single visual event. The pair must not turn green before the pointer reaches `j`, and the pointer must not appear without the active pair turning green.
+- At the moment the `ComparisonPointer` arrives at index `j`, the value nodes at `j` and `j+1` must toggle to **orange `(255, 140, 0)` simultaneously**.
+- The arrow arrival and the color activation are a single visual event. The pair must not turn orange before the pointer reaches `j`, and the pointer must not appear without the active pair turning orange.
 - During the first segment of the compare tick, the active pair moves vertically from the baseline to the compare lane using `compare_lift_offset = 50px`.
 
 #### Non-Swap Hold (`T1`, middle segment)
 
-- When the compared values do **not** swap, the two green nodes must pause briefly at the compare lane before returning to baseline.
+- When the compared values do **not** swap, the two orange nodes must pause briefly at the compare lane before returning to baseline.
 - This hold exists specifically to make a non-swap comparison visually legible; the comparison must not read as an instantaneous flash.
 - Timing within the 150ms compare tick is locked as:
-  - `0–60ms`: arrow arrives at `j`, both active nodes turn green, and the pair lifts to the compare lane.
-  - `60–100ms`: the pair holds in green at the compare lane.
+  - `0–60ms`: arrow arrives at `j`, both active nodes turn orange, and the pair lifts to the compare lane.
+  - `60–100ms`: the pair holds in orange at the compare lane.
   - `100–150ms`: the pair returns to the baseline while remaining readable as the active comparison.
 
 #### Swap State (`T2`, 400ms total)
@@ -67,7 +67,7 @@ Bubble Sort uses a stricter sub-state machine inside the standard `T1`/`T2` timi
 
 #### Pause/Resume Interaction
 
-- If Pause occurs during Bubble Sort comparison, non-swap hold, or swap-lift motion, the arrow position, green active-node state, and current lifted `y` positions must all freeze exactly in place.
+- If Pause occurs during Bubble Sort comparison, non-swap hold, or swap-lift motion, the arrow position, orange active-node state, and current lifted `y` positions must all freeze exactly in place.
 - Resume continues from the exact sub-state timing offset rather than restarting the compare or swap sequence.
 
 ## Tick and Counting Behavior

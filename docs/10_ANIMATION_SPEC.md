@@ -58,7 +58,7 @@ The Controller must track sprites by their **unique ID** assigned at initializat
 
 ### 3.5 Compare Lane (Vertical Offset Coordinate)
 
-The **compare lane** is a vertical position above the baseline row where sprites temporarily reside during comparison or key-selection events.
+The **compare lane** is a vertical position above the baseline row where sprites temporarily reside during comparison or key-selection events. All algorithms use the universal active highlight color `(255, 140, 0)` orange when sprites are in the compare lane or highlighted during operations — there are no per-algorithm accent colors for active node highlighting.
 
 | Algorithm | Offset Token | Value | Trigger | Duration |
 | --- | --- | --- | --- | --- |
@@ -121,8 +121,8 @@ When a sprite returns to `home_y` (compare-lift descent completes, Bubble swap-l
 The Bubble Sort choreography is defined against the 60 FPS render contract.
 
 - **Arrow move to `j`:** `2` frames (`~33ms`). The green `ComparisonPointer` translates horizontally to index `j`.
-- **Pair lift + color change:** `4` frames (`~67ms`). The nodes at `j` and `j+1` turn green immediately on arrow arrival and rise from `home_y` to `compare_lane_y = home_y - 50`.
-- **Non-swap hold:** `2` frames (`~33ms`). If no swap follows, the green pair remains stationary in the compare lane so the comparison is visible.
+- **Pair lift + color change:** `4` frames (`~67ms`). The nodes at `j` and `j+1` turn orange `(255, 140, 0)` immediately on arrow arrival and rise from `home_y` to `compare_lane_y = home_y - 50`.
+- **Non-swap hold:** `2` frames (`~33ms`). If no swap follows, the orange pair remains stationary in the compare lane so the comparison is visible.
 - **Return to baseline without swap:** `3` frames (`~50ms`). The pair descends back to `home_y` before the next comparison begins.
 - **Optional position swap:** `18` frames (`300ms`) inside the 400ms T2 duration. While both sprites remain at `compare_lane_y`, they exchange `x` positions using a linear horizontal slide with standard ease-in-out interpolation applied to `x` only.
 - **Return to baseline after swap:** `6` frames (`100ms`). After the horizontal exchange completes, both sprites descend together from `compare_lane_y` back to `home_y` in their new slots.
@@ -138,9 +138,9 @@ The Bubble Sort choreography is defined against the 60 FPS render contract.
 
 - **T1 Compare tick (150ms total):**
   - Frames `1–2` (`0–33ms`): arrow move to `j` completes.
-  - Frames `1–4` (`0–67ms`): pair turns green and lifts to the compare lane.
+  - Frames `1–4` (`0–67ms`): pair turns orange `(255, 140, 0)` and lifts to the compare lane.
   - Frames `5–6` (`67–100ms`): non-swap hold in the compare lane.
-  - Frames `7–9` (`100–150ms`): if no swap follows, pair returns to baseline and releases green active state at tick end.
+  - Frames `7–9` (`100–150ms`): if no swap follows, pair returns to baseline and releases orange active state at tick end.
 - **T2 Swap tick (400ms total):**
   - Frames `1–18` (`0–300ms`): pair exchanges `x` positions while staying fixed at `compare_lane_y`.
   - Frames `19–24` (`300–400ms`): pair settles vertically from `compare_lane_y` back to `home_y` in the new slot order.
@@ -148,7 +148,7 @@ The Bubble Sort choreography is defined against the 60 FPS render contract.
 #### 5.1.4 Bubble Sort Compare-Lift and Swap-Lift Details
 
 - **Lift offset:** `compare_lift_offset = 50px`.
-- **Activation event:** the nodes at `j` and `j+1` change to green on the same frame that the arrow arrives at `j`.
+- **Activation event:** the nodes at `j` and `j+1` change to orange `(255, 140, 0)` on the same frame that the arrow arrives at `j`.
 - **Both sprites lift as a unit** — they share the same vertical offset at all times. This emphasizes that Bubble Sort evaluates *pairs*, unlike Insertion Sort which isolates a single key.
 - **Z-ordering:** During the lift or lifted exchange, both lifted sprites draw on top of all non-lifted sprites. Between the two lifted sprites, default index order is maintained.
 - **Scope:** This motion grammar applies **only to Bubble Sort**. Selection Sort remains highlight-only during T1 and uses arc motion only for T2 swaps.
@@ -253,7 +253,7 @@ The Controller selects between standard and reduced durations based on the `sift
 
 The T3 tick for sift-down tree logic communicates the binary heap's parent-child relationship within the flat array row. This subsection defines the exact visual behavior.
 
-**Color:** The **accent color (orange)** is applied to all indices provided in the tick's `highlight_indices` tuple — typically `(parent, left_child, right_child)`, or `(parent, left_child)` when only one child exists within the heap boundary.
+**Color:** The **accent color (orange)** is applied to all indices provided in the tick's `highlight_indices` tuple — typically `(parent, left_child, right_child)`, or `(parent, left_child)` when only one child exists within the heap boundary. This orange matches the universal active highlight color `(255, 140, 0)` used by all algorithms for active-node highlighting.
 
 **Rendering:** All provided indices highlight **simultaneously** — there is no stagger or sweep. The orange accent snaps on at tick start across all members of the parent-child triangle at the same instant. This simultaneous appearance is the visual mechanism that implies a tree relationship: the learner perceives that these non-contiguous indices (e.g., 1, 3, 4) are grouped because they light up together, even though they are separated by unrelated elements in the flat row.
 

@@ -6,6 +6,8 @@ Purpose: Document the animation behavior from the reference video so motion patt
 
 The focus is **how the algorithm is visually communicated**, not styling.
 
+> **Adoption Note (2026-03-16):** The key-lift, sequential shift, and diagonal drop choreography described in this reference have been adopted. The active key color is now universal orange `(255, 140, 0)` (D-067) — matching the orange/tan shown in the reference video. The sorted-region green and unsorted blue color states are adopted. Node shapes are circular outlined rings (D-069), not the solid-filled circles shown in the reference. See `05_ALGORITHMS_VIS_SPEC.md` and `10_ANIMATION_SPEC.md` for locked spec details.
+
 ---
 
 ## 1. High-Level Behavior

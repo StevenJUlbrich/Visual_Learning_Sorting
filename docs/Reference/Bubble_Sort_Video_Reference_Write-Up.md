@@ -6,6 +6,8 @@ This write-up describes the uploaded video as a **reference animation behavior**
 
 The purpose is to capture what the animation is doing in a way that is useful for later document updates.
 
+> **Adoption Note (2026-03-16):** The compare-lift choreography, ComparisonPointer arrow, LimitLine boundary, and HUD counters described in this reference have been adopted. The active pair color is now universal orange `(255, 140, 0)` (D-067) instead of the green shown in the reference video. The ComparisonPointer arrow remains green `(80, 220, 120)`. Node shapes are circular outlined rings (D-069), not the circles/rounded nodes shown in the reference. See `04_UI_SPEC.md`, `06_BEHAVIOR_SPEC.md`, and `10_ANIMATION_SPEC.md` for locked spec details.
+
 ---
 
 ## 1. High-Level Read

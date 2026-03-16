@@ -6,6 +6,8 @@ Purpose: capture how the animation demonstrates Heap Sort so that the behavior c
 
 This write-up focuses on **motion, visual styling, and teaching behavior**.
 
+> **Adoption Note (2026-03-16):** The two-phase visual distinction, parent-child tree highlighting, extraction arc elevation, and sift-down cadence described in this reference have been adopted. The active highlight color is now universal orange `(255, 140, 0)` (D-067) — same as this reference’s orange accent. The settled/extracted steel-blue `(130, 150, 190)` is adopted. The tree layout shown in the reference is out of scope for v1 — tree structure is implied through non-contiguous T3 highlights in the flat array row. Node shapes are circular outlined rings (D-069). See `05_ALGORITHMS_VIS_SPEC.md` and `10_ANIMATION_SPEC.md` for locked spec details.
+
 ---
 
 ## 1. High-Level Behavior

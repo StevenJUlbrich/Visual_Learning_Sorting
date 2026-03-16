@@ -6,7 +6,7 @@ Scope: This spec locks the visual and compositional behavior for v1 UI, grounded
 
 - Maximize readability of algorithm mechanics (numbers + highlights).
 - Keep visuals modern and consistent (dark palette, anti-aliased text, rounded geometry).
-- Preserve algorithm identity at a glance using stable per-panel accents.
+- Preserve algorithm identity at a glance using panel title and grid position.
 - Meet WCAG 2.1 AAA contrast for large text (≥ 4.5:1) on all number sprites and AAA for normal text (≥ 7:1) on all informational text rendered at body size.
 
 ## 2) Window, Grid, and Spacing Rules
@@ -166,7 +166,7 @@ The header must never exceed **35% of panel height**. If a future font or resolu
 
 #### Title Line
 
-- Algorithm name in title font, left-aligned.
+- Plain algorithm name text in title font, left-aligned (e.g., "Bubble Sort"). No colored dot prefix or decorative symbol — algorithm identity comes from the panel title text and grid position.
 - Anchor: `x = rect.x + HEADER_INSET_X`, `y = rect.y + HEADER_INSET_Y`.
 - Color: primary text `(240, 240, 245)`.
 
@@ -191,6 +191,11 @@ The header must never exceed **35% of panel height**. If a future font or resolu
 ### 4.3 Array Rendering Region
 
 - Numbers only (no bars).
+- Each number is rendered inside a **circular outlined ring** (never a square or bare text).
+  - Circle diameter is proportional to slot width (~65% of `slot_width`).
+  - Ring stroke width: 3px.
+  - Circle interior fill matches the panel background `(45, 45, 53)` — the ring outline is the primary color signal.
+  - The ring outline color and the number text color always match, changing together based on state.
 - Horizontal spacing uses internal array padding proportional token: `ARRAY_X_PADDING = panel_width * 0.05`.
 - Number slots are evenly distributed across available width.
 - Numbers are centered in their slot. (`slot_width = (panel_width - ARRAY_X_PADDING*2) / array_size`)
@@ -241,12 +246,9 @@ This rule is a **layout integrity invariant**: a lifted key must never disappear
 
 ## 5) Color Identity Decision (Locked)
 
-Decision: **Per-panel algorithm accent colors** (not a single global highlight color).
+Decision: **Universal active highlight color** — all algorithms share a single accent color for compare, swap, and range emphasis ticks.
 
-Rationale from planning + Brick 4:
-
-- Planning explicitly calls out algorithm color coding as a teaching aid.
-- Brick 4 theme defines dedicated accent constants per algorithm.
+Rationale: Algorithm identity is communicated through panel title text and grid position, not highlight color. A universal accent simplifies the palette, reduces cognitive load, and avoids per-algorithm color memorization.
 
 ### 5.1 Core Palette
 
@@ -264,22 +266,17 @@ All colors are verified against panel background `(45, 45, 53)` for WCAG 2.1 con
 | Error text | `(255, 120, 120)` | 5.5:1 | AA normal, AAA large |
 | Settled/extracted | `(130, 150, 190)` | 4.6:1 | AAA large |
 
-### 5.2 Algorithm Accent Mapping
+### 5.2 Universal Active Highlight
 
-All accent colors are applied to number sprites rendered at FiraCode 28px (large text, AAA threshold = 4.5:1).
+**Universal active highlight: `(255, 140, 0)` orange** — applied to all algorithms during compare, swap, and range emphasis ticks.
 
-| Algorithm | Color (RGB) | Contrast vs Panel BG | WCAG Rating |
-| --- | --- | --- | --- |
-| Bubble | `(0, 255, 255)` cyan | 10.9:1 | AAA large |
-| Insertion | `(255, 50, 255)` magenta | 4.7:1 | AAA large |
-| Heap | `(255, 140, 0)` orange | 5.9:1 | AAA large |
-| Selection | `(255, 95, 95)` red | 4.6:1 | AAA large |
+This color is applied to number sprites rendered at FiraCode 28px (large text, AAA threshold = 4.5:1). Orange `(255, 140, 0)` achieves **5.9:1** contrast against panel background `(45, 45, 53)`, exceeding AAA for large text.
 
-Mapping is fixed by algorithm name and does not rotate at runtime.
+Algorithm identity is communicated through panel title and grid position, not highlight color.
 
-#### Heap Sort Accent Scope
+#### Heap Sort Active Highlight Scope
 
-The Heap accent color (orange) is **reserved exclusively for active heap members** — elements at indices `0..heap_size-1` that are still participating in the heap data structure. Once an element is extracted from the heap (swapped to the sorted region beyond the heap boundary), it permanently loses its orange accent eligibility and transitions to the settled/extracted color (see Section 5.3). This ensures a clear visual contract: **orange = still in the heap; steel-blue = sorted and done**.
+Orange is the universal active color shared by all algorithms. For Heap Sort specifically, during boundary emphasis T3 ticks, orange highlights the active heap region — elements at indices `0..heap_size-1` that are still participating in the heap data structure. Once an element is extracted from the heap (swapped to the sorted region beyond the heap boundary), it permanently loses its orange highlight eligibility and transitions to the settled/extracted color (see Section 5.3). The settled/extracted color `(130, 150, 190)` still applies to elements that have left the heap. This ensures a clear visual contract: **orange = active; steel-blue = sorted and done**.
 
 ### 5.3 Settled/Extracted State Color (Formalized)
 
@@ -310,8 +307,8 @@ The settled color is designed to be algorithm-agnostic. If future versions add s
 The following colors were adjusted to meet AAA accessibility requirements:
 
 - **Secondary text:** `(170, 170, 180)` → `(190, 190, 200)`. The original had 5.93:1 contrast, failing AAA for normal text (7:1 required). The new value achieves 7.4:1.
-- **Insertion accent (magenta):** `(255, 0, 255)` → `(255, 50, 255)`. The original had 4.35:1, failing AAA even for large text (4.5:1 required). Adding a small green channel raises luminance to 4.7:1 while preserving the magenta identity.
-- **Selection accent (red):** `(255, 80, 80)` → `(255, 95, 95)`. The original had 4.24:1, failing AAA for large text. The brighter variant reaches 4.6:1 while remaining clearly red.
+- **~~Insertion accent (magenta)~~:** Superseded — per-algorithm accents replaced by universal orange `(255, 140, 0)` highlight (see Section 5.2).
+- **~~Selection accent (red)~~:** Superseded — per-algorithm accents replaced by universal orange `(255, 140, 0)` highlight (see Section 5.2).
 - **Settled/extracted:** `(60, 90, 155)` → `(130, 150, 190)`. The original had 2.03:1, failing even AA for any text size. The new value is a desaturated steel-blue that achieves 4.6:1 (AAA large text) while remaining visually distinct from the vivid default array blue `(100, 150, 255)`. The distinction is now achieved through **desaturation** rather than dimming, because a dimmed variant cannot simultaneously be darker than the default (4.8:1) and meet the 4.5:1 AAA floor.
 - **Error text:** `(235, 80, 80)` → `(255, 120, 120)` (for message text only; error border remains `(235, 80, 80)`). The original had 3.77:1 at body font size (normal text, needs 7:1 for AAA). The new value achieves 5.5:1, meeting AA for normal text and AAA for large text. True AAA normal-text red on this dark background is not achievable without shifting to pink, so AA is accepted for error message text as a practical compromise.
 
@@ -320,7 +317,7 @@ The following colors were adjusted to meet AAA accessibility requirements:
 - Idle/pre-first-tick: panel shell + header + zero steps visible.
 - Running tick:
   - Non-highlighted indices → default array color.
-  - `highlight_indices` → panel accent color.
+  - `highlight_indices` → universal active highlight color (orange).
   - Step counter increments only on successful non-terminal ticks (defined in data contracts).
   - Bubble Sort additionally renders the `ComparisonPointer` as a green upward-pointing arrow below the baseline row and the `LimitLine` as a dashed boundary between slots.
   - Bubble Sort keeps the bottom-left HUD visible with live `Comparison Count` and `Exchange Count` values.

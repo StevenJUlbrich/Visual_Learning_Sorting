@@ -2,7 +2,21 @@
   "permissions": {
     "allow": [
       "Bash(python:*)",
-      "Bash(which uv && uv pip install Pillow 2>&1)"
+      "Bash(which uv && uv pip install Pillow 2>&1)",
+      "Bash(pip install:*)",
+      "Bash(python3:*)",
+      "Bash(python3.13 -c \"import sys; print\\(sys.path\\)\" && pip3.13 show Pillow 2>/dev/null || pip show Pillow 2>/dev/null)",
+      "Bash(/home/sju/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/bin/python3 -c \"from PIL import Image, ImageDraw, ImageFont; print\\('All imports OK'\\)\")",
+      "Bash(/home/sju/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/bin/python3 -c \"from PIL import Image; print\\('Pillow OK'\\)\")",
+      "Bash(/home/sju/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/bin/python3 -c \"from PIL import Image, ImageDraw, ImageFont; print\\('Pillow OK'\\)\")",
+      "Bash(/home/sju/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/bin/python3 /home/sju/projects/Visual_Learning_Sorting/docs/screen_Ideas/generate_04_completion_state.py)",
+      "Bash(/home/sju/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/bin/python3 /home/sju/projects/Visual_Learning_Sorting/docs/screen_Ideas/gen_03_bubble_sort_detail.py)",
+      "Bash(/home/sju/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/bin/python3 /home/sju/projects/Visual_Learning_Sorting/docs/screen_Ideas/generate_02_mid_race.py)",
+      "Bash(/home/sju/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/bin/python3 /home/sju/projects/Visual_Learning_Sorting/docs/screen_Ideas/_gen_mock.py)",
+      "Bash(/home/sju/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/bin/python3 /home/sju/projects/Visual_Learning_Sorting/docs/screen_Ideas/_gen_bubble_detail.py)",
+      "Bash(/home/sju/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/bin/python3 /home/sju/projects/Visual_Learning_Sorting/docs/screen_Ideas/_gen_completion.py)",
+      "Bash(/home/sju/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/bin/python3 -c \"from PIL import ImageFont; print\\('Pillow OK'\\)\")",
+      "Bash(/home/sju/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/bin/python3 /home/sju/projects/Visual_Learning_Sorting/docs/screen_Ideas/gen_05.py)"
     ]
   }
 }
