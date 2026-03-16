@@ -184,6 +184,42 @@ Key behaviors observed (ignoring square shapes):
 - "Gap migrates ←" annotation, Compare Lane / Baseline reference lines
 - HUD: Comparisons: 12, Shifts: 10
 
+## Heap Sort Detail Mock
+
+### Reference Image Analysis (docs/Reference/heap_images/)
+Key behaviors observed:
+
+1. **Dual representation:** Binary tree (blue circles with edges) above, array row (dark placeholders + green sorted) below
+2. **"Heapify" phase label:** Rendered in red text inside the visualization area, between tree nodes
+3. **Pink/red active node:** Root or parent being sifted down highlighted in distinct color
+4. **Tree shrinks progressively:** As elements are extracted, nodes disappear from tree and appear as green in array row
+5. **Parent-child edges:** Straight lines connecting nodes, clearly showing tree structure
+6. **Sorted region grows right-to-left** in the array row below
+
+### Decisions Made
+- **Tree view adopted for v1** — overrides original D-019 "no tree layout" constraint (now D-074)
+- **Phase label inside panel** — "BUILD MAX-HEAP" / "EXTRACTION" in orange, inside visualization area (D-075)
+- **Heap boundary marker** — dashed vertical line between active heap and sorted region in row below tree (D-076)
+
+### Spec Documents Updated
+- `docs/Reference/Heap_Sort_Video_Reference.md` — adoption note updated for tree layout
+- `docs/DECISIONS.md` — D-019 revised, D-074/D-075/D-076 added
+- `docs/05_ALGORITHMS_VIS_SPEC.md` — Tree Visualization subsection added to Section 4.4, Section 6 updated
+- `docs/04_UI_SPEC.md` — Heap Sort exception noted in Section 4.3
+- `docs/10_ANIMATION_SPEC.md` — Section 5.4 updated for tree layout
+
+### Mock Generated
+
+`docs/screen_Ideas/07_heap_sort_detail.png` (800x550) — Heap Sort detail close-up showing:
+- Binary tree layout with 4 active heap nodes: root (4), children (2, 3), grandchild (1)
+- Orange rings + orange edges on the parent-child triangle being evaluated (4 → 2, 3)
+- Blue ring on node 1 (not part of current sift-down comparison)
+- "EXTRACTION" phase label in orange inside the tree area
+- Sorted row below with 5 dim placeholder slots + 2 steel-blue extracted values (6, 7)
+- Dashed heap boundary line between active and sorted regions
+- Annotations: "Active heap (tree view)", "Parent-child triangle", "Sorted region (grows ←)"
+- HUD: Comparisons: 16, Swaps: 9
+
 ## Files Created / Modified
 
 - `docs/AI_Conversations/` — new folder for tracking AI conversation requests and outcomes

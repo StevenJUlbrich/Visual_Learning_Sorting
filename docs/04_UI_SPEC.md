@@ -201,6 +201,8 @@ The header must never exceed **35% of panel height**. If a future font or resolu
 - Numbers are centered in their slot. (`slot_width = (panel_width - ARRAY_X_PADDING*2) / array_size`)
 - Vertical anchor defaults to panel center (`rect.y + rect.height // 2`).
 
+**Heap Sort Exception:** The Heap Sort panel uses a different layout than the other three algorithms. Instead of a single horizontal row, it renders a **binary tree visualization** of the active heap in the upper portion of the array region, with a compact sorted-element row below. See `05_ALGORITHMS_VIS_SPEC.md` Section 4.4 for tree layout rules. The other three algorithm panels (Bubble, Selection, Insertion) retain the standard single horizontal row layout.
+
 #### 4.3.1 Bubble Sort Instructional Assets
 
 - The Bubble Sort panel must render a `ComparisonPointer` asset as a **green upward-pointing arrow**.
