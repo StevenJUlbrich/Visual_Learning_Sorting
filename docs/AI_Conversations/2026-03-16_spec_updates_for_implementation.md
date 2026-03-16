@@ -3,7 +3,7 @@
 **Date:** 2026-03-16
 **Tool:** Claude Code (Opus 4.6)
 **Branch:** `updates-to-the-visuals`
-**Status:** In Progress
+**Status:** Complete
 
 ## Purpose
 
@@ -47,4 +47,24 @@ Update all spec documents to reflect design decisions from the UI mock review se
 
 ## Changes Log
 
-_Updated after each stage completion._
+### Stage 1 Complete
+- `02_ARCHITECTURE.md` fully rewritten: new directory tree (tree_layout.py, pointer.py, limitline.py, hud.py), universal orange, Per-Panel View Components table, Heap Sort tree↔array mapping, circular ring sprites
+
+### Stage 2 Complete
+- `07_ACCEPTANCE_TESTS.md` updated: 6 stale references fixed (Option B → universal orange, green → orange, per-algorithm colors → universal, no auxiliary row → tree layout), 7 new acceptance tests added (AT-21 through AT-27) covering tree visualization, phase label, heap boundary, Selection pointers, Insertion KEY/gap, circular rings, no title dots
+
+### Stage 3 Complete
+- `04_UI_SPEC.md` Section 4.3.2 added: Heap Sort Tree Layout Geometry — exact formulas for tree area, node sizing, level positioning (vertical), node positioning (horizontal with binary subdivision), parent-child edges (default + active colors), sorted row layout, dim placeholders, heap boundary marker, phase label positioning
+
+### Stage 4 Complete
+- `AGENT_PROMPTS/IMPLEMENTER.md` rewritten: correct file references (10_ANIMATION_SPEC.md not 10_CI.md), added screen_Ideas mocks and Reference write-ups as inputs, removed Merge Sort reference, added Key Visual Decisions quick reference, added Algorithm-Specific View Requirements table, references AT-01 through AT-27
+
+### Stage 5 Complete
+- `08_TEST_PLAN.md` updated: 2 new P1 risks (tree layout geometry, pointer desync), manual test pass updated for universal orange + circular rings + 4 new observations (Selection pointers, Insertion KEY, Heap tree, ring sprites), 5 new test cases (TC-A20 through TC-A24) covering tree positioning, edge connectivity, tree shrinking, Selection pointer tracking, Insertion KEY lifecycle
+
+### Stage 6 Complete
+- `03_DATA_CONTRACTS.md` reviewed — no changes needed, accent color references are already generic or orange
+
+### Stage 7 Complete
+- `config.toml` created with default landscape orientation
+- `assets/fonts/` directory created with README.md documenting font sources (Inter, FiraCode), download URLs, and fallback behavior

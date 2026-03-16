@@ -23,6 +23,8 @@ Primary objective: Prevent correctness drift, ensure operation-weighted timers a
 - Heap Sort T3 range emphasis ticks emitted during wrong phase (build instead of extraction).
 - T3 range emphasis ticks incorrectly incrementing the step counter.
 - Insertion Sort key-selection tick incorrectly incrementing the comparisons counter.
+- **Tree layout geometry error:** Heap Sort tree nodes positioned incorrectly, overlapping, or edges pointing to wrong children.
+- **Pointer asset desync:** Selection Sort `i`/`j`/`min` arrows not tracking the correct indices during scan or after swap.
 - Panel state machine enters an invalid or unreachable state during pause/resume/restart transitions.
 
 ## 2) Test Levels
@@ -391,14 +393,63 @@ def assert_sift_down_level_contract(level_ticks):
 
 - Marker: `@pytest.mark.unit`
 
+### TC-A20 Tree Layout Node Positioning
+
+- Instantiate the tree layout geometry calculator with landscape panel dimensions (611×297).
+- For heap_size = 7, assert all 7 node positions are within panel bounds.
+- Assert root (index 0) is horizontally centered.
+- Assert level 1 nodes are horizontally symmetric around center.
+- Assert level 2 nodes are horizontally symmetric and do not overlap with level 1 nodes.
+- Assert no two nodes at the same level overlap (minimum gap = node diameter).
+- Marker: `@pytest.mark.unit`
+
+### TC-A21 Tree Layout Edge Connectivity
+
+- For heap_size = 7, compute all parent-child edges.
+- Assert edge from index 0 connects to index 1 and index 2.
+- Assert edge from index 1 connects to index 3 and index 4.
+- Assert edge from index 2 connects to index 5 and index 6.
+- Assert no edge exists for leaf nodes (3, 4, 5, 6 as children).
+- Marker: `@pytest.mark.unit`
+
+### TC-A22 Tree Layout Shrinking
+
+- For decreasing heap_size values (7, 6, 5, 4, 3, 2, 1), compute tree positions.
+- Assert the number of rendered tree nodes equals heap_size.
+- Assert edges only connect to nodes within the current heap_size.
+- Assert nodes at indices >= heap_size are not positioned in the tree.
+- Marker: `@pytest.mark.unit`
+
+### TC-A23 Selection Sort Pointer Tracking
+
+- Consume the Selection Sort generator for `default_7` fixture.
+- For each T1 tick, assert:
+  - The `j` pointer index matches the scan cursor position in `highlight_indices`.
+  - The `min` pointer index matches the running minimum.
+  - When `min_idx` updates, the `min` pointer moves to the new index on the next tick.
+- Marker: `@pytest.mark.unit`
+
+### TC-A24 Insertion Sort KEY Label Lifecycle
+
+- Consume the Insertion Sort generator for `default_7` fixture.
+- For each outer pass, assert:
+  - The KEY label activates on the key-selection T1 tick (single-index highlight).
+  - The KEY label remains active during all subsequent T1 compare and T2 shift ticks.
+  - The KEY label deactivates on the T2 placement tick.
+- Marker: `@pytest.mark.unit`
+
 ## 6) Manual Test Pass (Release Gate)
 
 - Verify startup paused state and identical initial arrays `[4, 7, 2, 6, 1, 5, 3]`.
 - Verify play/pause/step/restart controls.
 - **Observe the Race:** Ensure faster algorithms visually finish earlier, freeze their panels, and halt their UI timers.
-- **Observe the Physics:** Verify elements slide smoothly, use vertical arcs when swapping, and respect the Option B accent color tinting.
+- **Observe the Physics:** Verify elements slide smoothly, use vertical arcs when swapping, and respect the universal orange active highlight (D-067) and circular ring sprite shapes (D-069).
 - **Observe Heap Sort Phases:** Verify Phase 1 shows actual swaps (heap being built). Verify the orange heap boundary highlight pulses during extraction and visibly shrinks one slot each step.
 - **Observe Insertion Sort Lift/Drop:** Verify the key element lifts above the array, stays elevated during comparisons and shifts, and drops smoothly into position.
+- **Observe Selection Sort Pointers:** Verify `i` arrow stays above the sorted boundary, `j` scans left-to-right below the row, and `min` jumps when a new minimum is found. Verify coalescing when `j == min`.
+- **Observe Insertion Sort KEY Label:** Verify "KEY" label appears on lift, stays visible during all shifts, and disappears on placement drop. Verify the gap is visible at the extracted slot.
+- **Observe Heap Sort Tree:** Verify binary tree renders with correct parent-child edges. Verify tree shrinks during extraction. Verify phase label changes from "BUILD MAX-HEAP" to "EXTRACTION". Verify sorted row grows below the tree.
+- **Observe Circular Ring Sprites:** Verify all number sprites are circular outlined rings, not squares or bare text. Verify ring color matches number text color.
 - **Verify Counters:** After completion, cross-check displayed comparisons and writes values against expected values for `[4, 7, 2, 6, 1, 5, 3]`.
 
 ## 7) Tooling and Execution

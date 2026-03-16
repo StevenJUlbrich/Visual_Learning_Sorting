@@ -11,7 +11,7 @@ All items below must pass:
 - No shared mutable array behavior exists between algorithm instances.
 - Selection Sort cannot terminate in a near-sorted state.
 - Global controls map strictly to Path 2 UI expectations.
-- Panels support Option B theme accents and Option C resolution flags without rendering artifacts.
+- Panels use universal orange active highlight (D-067), circular ring sprites (D-069), and Option C resolution flags without rendering artifacts.
 - Sprites animate smoothly via `dt` without teleporting, and independent elapsed timers halt precisely upon algorithm completion.
 - Comparisons and writes counters accurately reflect the algorithmic operations performed.
 
@@ -79,7 +79,7 @@ Verify:
 - Verify that during Phase 1 (Build Max-Heap), actual swaps occur — the heap is being actively constructed with visible element movements (3 heap violations are repaired for the default array).
 - Verify that T3 Range Emphasis ticks are visible at the start of each extraction step, showing the shrinking active heap boundary highlighted in the panel accent color (orange).
 - Verify that after the final extraction, all sprites are in ascending order and the completion color is applied to the full array.
-- Verify that all Heap Sort motion remains in-place on the main array row (no auxiliary row animation).
+- Verify that the Heap Sort panel renders a binary tree layout of the active heap elements with parent-child edges, and a compact sorted row below the tree (D-074).
 
 ### AT-10 Heap Sort Phase Correctness
 
@@ -127,7 +127,7 @@ Run all algorithms to completion with `[4, 7, 2, 6, 1, 5, 3]` and verify:
 ### AT-14 Bubble Sort Swap-Lift Counter Sync
 
 - Run Bubble Sort panel, stepping through a comparison that produces a swap.
-- Verify that the active pair turns green and lifts into the compare lane before exchanging horizontal positions.
+- Verify that the active pair turns orange `(255, 140, 0)` and lifts into the compare lane before exchanging horizontal positions.
 - During that same swap-lift sequence, verify the `Comparisons` counter has already incremented for the comparison event.
 - Verify the `Exchanges` counter increments when the lifted pair executes the horizontal exchange, not before the comparison begins and not after the entire pass ends.
 - Verify the counters remain visible in the bottom-left HUD throughout the swap-lift choreography.
@@ -142,11 +142,7 @@ Run all algorithms to completion with `[4, 7, 2, 6, 1, 5, 3]` and verify:
 ### AT-16 Accent Color Readability (AAA Contrast)
 
 - Launch app and begin sorting.
-- For each panel, when a highlight activates (compare or swap tick), verify the accent-colored number is clearly legible against the panel background:
-  - **Bubble (cyan):** bright and vivid, highest contrast.
-  - **Selection (red):** warm red, clearly distinguishable from the dark panel.
-  - **Insertion (magenta):** vibrant magenta, not muddy or dim.
-  - **Heap (orange):** warm orange, easily readable.
+- For ALL panels: when a highlight activates, verify the **orange `(255, 140, 0)`** number ring is clearly legible against the panel background. All algorithms use the same universal active highlight color (D-067).
 - Verify that **settled/extracted** elements in the Heap Sort panel (after leaving the active heap) are clearly readable — they should appear as a muted steel-blue, visually distinct from both the vivid default blue and the orange accent, without blending into the dark panel background.
 - Verify the **completion color** (green) is bright and legible when all elements turn green at algorithm finish.
 
@@ -170,7 +166,7 @@ Run all algorithms to completion with `[4, 7, 2, 6, 1, 5, 3]` and verify:
 
 - Run Selection Sort panel, stepping through operations one tick at a time.
 - For each outer pass `i`, observe the scan phase (`j = i+1` through `n-1`):
-  1. On each T1 compare tick, verify that **two** indices are highlighted in the panel accent color (red): the current scan cursor `j` and the running minimum `min_idx`.
+  1. On each T1 compare tick, verify that **two** indices are highlighted in orange `(255, 140, 0)`: the current scan cursor `j` and the running minimum `min_idx`.
   2. When a new, smaller element is found at index `j`, verify the minimum highlight **moves** to `j` on the next tick — the previous `min_idx` loses its accent and `j` becomes the new `min_idx`.
   3. When the element at `j` is not smaller than the current minimum, verify the minimum highlight **stays** on `min_idx` — it does not flicker or disappear between ticks.
 - Verify the message line references the current minimum on every scan tick (e.g., `"Comparing index 3 (value 6) with current min 2 at index 2"`).
@@ -180,11 +176,72 @@ Run all algorithms to completion with `[4, 7, 2, 6, 1, 5, 3]` and verify:
 
 - Run Selection Sort panel to completion, stepping through operations.
 - After each swap (T2 tick placing the minimum at index `i`), verify:
-  1. The element now at index `i` transitions to the **settled/extracted color** `(130, 150, 190)` (desaturated steel-blue) — it is visually distinct from both the default array blue and the active accent red.
+  1. The element now at index `i` transitions to the **settled/extracted color** `(130, 150, 190)` (desaturated steel-blue) — it is visually distinct from both the default array blue and the active orange highlight.
   2. On all subsequent passes, the settled elements at indices `0..i` are **never** highlighted by the scan cursor. The scan only operates on the unsorted region (`i+1..n-1`); settled elements remain steel-blue and visually inert.
   3. The sorted region grows from left to right — after pass `i`, exactly `i+1` elements on the left side of the array display the settled color.
 - On the completion tick, all settled elements transition from steel-blue to the global completion color (green), matching the behavior defined for Heap Sort extracted elements.
 - **Note:** This extends the settled/extracted color to Selection Sort (previously v1 scope was Heap Sort only per D-063). The visual contract is identical: settled = "this element is in its final position, but the algorithm is still working."
+
+### AT-21 Heap Sort Tree Visualization
+
+- Run Heap Sort panel to completion.
+- Verify that during Phase 1 (Build Max-Heap), all 7 elements are rendered as circular ring nodes in a binary tree layout with visible parent-child edge lines.
+- Verify the tree root is centered at the top of the tree area, with children spread horizontally below.
+- During Phase 2 (Extraction), verify that each extraction removes the root from the tree and places it in the sorted row below. The tree visibly shrinks by one node per extraction.
+- Verify parent-child edges connect to the correct nodes and update as swaps occur during sift-down.
+- Verify the sorted row below the tree grows from right to left with steel-blue `(130, 150, 190)` rings.
+- On completion, verify all elements transition to green `(80, 220, 120)`.
+- **Regression guard:** If nodes overlap, edges point to wrong children, or the tree does not shrink during extraction, the test fails.
+
+### AT-22 Heap Sort Phase Label
+
+- Run Heap Sort panel, stepping through operations.
+- During Phase 1, verify "BUILD MAX-HEAP" is displayed in orange text inside the tree visualization area.
+- When Phase 2 begins (first extraction), verify the label changes to "EXTRACTION".
+- The label must remain visible throughout the phase, not just on individual ticks.
+- **Regression guard:** If the phase label is missing, shows the wrong phase, or appears in the message line instead of inside the visualization area, the test fails.
+
+### AT-23 Heap Sort Heap Boundary Marker
+
+- Run Heap Sort to completion.
+- Verify a vertical dashed line is visible in the sorted row below the tree, separating active heap slots from sorted slots.
+- Verify the boundary moves one position leftward after each extraction.
+- **Regression guard:** If the boundary is missing, doesn't move, or overlaps with sorted elements, the test fails.
+
+### AT-24 Selection Sort Pointer Assets
+
+- Run Selection Sort panel, stepping through operations one tick at a time.
+- Verify three labeled pointer arrows are visible:
+  1. `i` pointer: downward arrow **above** the baseline row, centered over the current outer loop index.
+  2. `j` pointer: upward arrow **below** the baseline row, advancing left-to-right during each scan.
+  3. `min` pointer: upward arrow **below** the baseline row, marking the current minimum candidate.
+- When `j` discovers a new minimum (smaller element), verify `min` jumps to `j`'s index. When both occupy the same index, only `min` is shown (coalescing).
+- After a swap, verify `i` advances one position right, `min` resets, and `j` starts from `i+1`.
+- **Regression guard:** If any pointer is missing, points to the wrong index, or `j` and `min` overlap without coalescing, the test fails.
+
+### AT-25 Insertion Sort KEY Label and Gap
+
+- Run Insertion Sort panel, stepping through operations one tick at a time.
+- On the key-selection T1 tick, verify a "KEY" label appears adjacent to the lifted orange circle.
+- Verify the "KEY" label remains visible throughout all compare and shift ticks in the pass.
+- On the T2 placement tick, verify the "KEY" label disappears as the circle settles to baseline.
+- Verify that while the key is lifted, its original baseline slot is rendered as empty space (no circle).
+- **Regression guard:** If the "KEY" label is missing during the lift, appears when the key is at baseline, or the gap shows a circle instead of empty space, the test fails.
+
+### AT-26 Circular Ring Sprite Shape
+
+- Launch app in paused state.
+- Verify all 28 number sprites (7 per panel x 4 panels) are rendered as circular outlined rings with numbers centered inside.
+- Verify ring outline color matches number text color (both blue `(100, 150, 255)` in default state).
+- Verify circle interior fill matches panel background `(45, 45, 53)` — the ring is outlined, not solid-filled.
+- **Regression guard:** If any sprite appears as a square, solid-filled circle, or bare text without a ring, the test fails.
+
+### AT-27 No Algorithm Title Dots
+
+- Launch app.
+- Verify all four panel titles display plain text only: "Bubble Sort", "Selection Sort", "Insertion Sort", "Heap Sort".
+- No colored dot, circle, or decorative symbol precedes the algorithm name.
+- **Regression guard:** If any colored dot or symbol appears next to a title, the test fails.
 
 ## Automated Acceptance Intent (for `tests/`)
 
