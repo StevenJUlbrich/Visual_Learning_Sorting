@@ -152,6 +152,38 @@ Key behaviors observed from reference frames (ignoring square shapes and code se
 - Annotation: "min tracks smallest found so far"
 - HUD: Comparisons: 9, Swaps: 2
 
+## Insertion Sort Detail Mock
+
+### Reference Image Analysis (docs/Reference/insertion_sort_images/)
+Key behaviors observed (ignoring square shapes):
+
+1. **Three color zones:** Green (sorted), Blue (unsorted), Orange (active key) — no pointer arrows used
+2. **Key lift:** Active key lifts vertically above baseline into compare lane, leaving visible empty gap
+3. **Gap migration:** As sorted elements shift right, the gap migrates leftward — the gap IS the insertion point
+4. **Diagonal drop:** Key settles into gap via simultaneous horizontal + vertical motion
+5. **Recently placed state:** Key retains orange briefly at baseline before transitioning to green on next pass
+6. **Sequential shifts:** Elements shift right one at a time (never batched)
+
+### Decisions Made
+- **"KEY" label** on the lifted circle — matches Selection Sort's "min" label pattern (D-068 style)
+- **Color transition only** for sorted/unsorted boundary — no dotted line needed; green-to-blue is self-evident
+- **Empty space for gap** — the raised circle + empty slot tells the story; no dashed outline needed
+- **Orange highlight on shifting element** is sufficient during compare-and-shift — no additional pointer needed alongside KEY label + message line
+- No issues identified with these decisions — they are consistent with the established visual patterns
+
+### Mock Generated
+
+`docs/screen_Ideas/06_insertion_sort_detail.png` (800x500) — Insertion Sort detail close-up showing:
+- 7 circular ring sprites mid-pass i=3, key=6
+- Orange KEY circle lifted in compare lane with "KEY" label
+- Green rings (indices 0-1): sorted region — color transition serves as boundary
+- Orange ring (index 2, value 7): element being compared, with rightward shift arrow
+- Empty gap at index 3 — visible empty space where key was extracted
+- Blue rings (indices 4-6): unsorted region
+- Curved dotted arrow from key toward gap showing diagonal drop trajectory
+- "Gap migrates ←" annotation, Compare Lane / Baseline reference lines
+- HUD: Comparisons: 12, Shifts: 10
+
 ## Files Created / Modified
 
 - `docs/AI_Conversations/` — new folder for tracking AI conversation requests and outcomes

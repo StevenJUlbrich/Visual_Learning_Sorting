@@ -204,12 +204,24 @@ Insertion Sort requires a precise tick sequence to correctly visualize the key-s
 
 Required sequence per outer index `i` (from `1` to `n-1`):
 
+#### Key Label Asset (Required)
+
+When the key sprite is lifted into the compare lane, the View must render a **"KEY" label** in the active highlight color `(255, 140, 0)` orange, positioned adjacent to the lifted circle (to its right or above). The label remains visible for the entire duration the key is elevated — from the key-selection T1 tick through all compare and shift ticks until the T2 placement drop. The label disappears when the key settles back to the baseline. This label serves the same identification purpose as Selection Sort's "min" pointer label: the learner immediately knows which element is the active insertion target.
+
+#### Gap Visualization
+
+When the key lifts from its baseline slot, that slot renders as **empty space** (no circle, no outline — just the panel background). As elements shift right during the compare-and-shift loop, the gap migrates leftward through the sorted region. The gap is not a rendered object — it is the absence of a sprite at a baseline slot. The empty space is a critical visual cue: it shows the learner where the key was extracted from and where space is being created for its insertion.
+
+#### Sorted/Unsorted Boundary
+
+Insertion Sort communicates the sorted/unsorted boundary **entirely through color transition** — green rings (sorted) transition to blue rings (unsorted) with no separate boundary marker, pointer, or line. The color distinction is self-evident and does not require additional visual assets.
+
 #### Step 1 — Key Selection (First Visual Event)
 
 - Emit `T1 Compare Tick` on `(i,)` highlighting the selected key.
 - This tick is the **first visual event** of every outer loop pass — no other tick (compare, shift, or placement) may precede it within the pass. The lift establishes the key's identity before any comparisons or shifts occur, giving the learner a clear "this is the element being inserted" moment.
 - This tick does **not** increment `self.comparisons` — it is a key-selection signal, not a data comparison.
-- The key sprite begins its visual lift to the compare lane (`home_y - lift_offset`) on this tick and **remains elevated** across all subsequent ticks in the pass until the T2 Placement tick drops it (see Step 4). See Animation Spec Section 5.2.
+- The key sprite begins its visual lift to the compare lane (`home_y - lift_offset`) on this tick and **remains elevated** across all subsequent ticks in the pass until the T2 Placement tick drops it (see Step 4). The "KEY" label appears immediately on lift. See Animation Spec Section 5.2.
 
 #### Step 2 — Compare-and-Shift Loop (Sequential Shift Guarantee)
 
