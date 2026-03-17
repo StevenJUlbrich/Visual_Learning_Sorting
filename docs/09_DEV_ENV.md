@@ -134,7 +134,7 @@ The app reads `config.toml` from the repo root at startup. If the file is missin
 
 ```toml
 [window]
-# Option C: "landscape" (1280x720) or "portrait" (720x996)
+# "landscape" (1280x720) or "portrait" (720x996)
 orientation = "landscape"
 ```
 

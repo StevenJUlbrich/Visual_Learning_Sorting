@@ -152,6 +152,74 @@ Key behaviors observed from reference frames (ignoring square shapes and code se
 - Annotation: "min tracks smallest found so far"
 - HUD: Comparisons: 9, Swaps: 2
 
+## Insertion Sort Detail Mock
+
+### Reference Image Analysis (docs/Reference/insertion_sort_images/)
+Key behaviors observed (ignoring square shapes):
+
+1. **Three color zones:** Green (sorted), Blue (unsorted), Orange (active key) — no pointer arrows used
+2. **Key lift:** Active key lifts vertically above baseline into compare lane, leaving visible empty gap
+3. **Gap migration:** As sorted elements shift right, the gap migrates leftward — the gap IS the insertion point
+4. **Diagonal drop:** Key settles into gap via simultaneous horizontal + vertical motion
+5. **Recently placed state:** Key retains orange briefly at baseline before transitioning to green on next pass
+6. **Sequential shifts:** Elements shift right one at a time (never batched)
+
+### Decisions Made
+- **"KEY" label** on the lifted circle — matches Selection Sort's "min" label pattern (D-068 style)
+- **Color transition only** for sorted/unsorted boundary — no dotted line needed; green-to-blue is self-evident
+- **Empty space for gap** — the raised circle + empty slot tells the story; no dashed outline needed
+- **Orange highlight on shifting element** is sufficient during compare-and-shift — no additional pointer needed alongside KEY label + message line
+- No issues identified with these decisions — they are consistent with the established visual patterns
+
+### Mock Generated
+
+`docs/screen_Ideas/06_insertion_sort_detail.png` (800x500) — Insertion Sort detail close-up showing:
+- 7 circular ring sprites mid-pass i=3, key=6
+- Orange KEY circle lifted in compare lane with "KEY" label
+- Green rings (indices 0-1): sorted region — color transition serves as boundary
+- Orange ring (index 2, value 7): element being compared, with rightward shift arrow
+- Empty gap at index 3 — visible empty space where key was extracted
+- Blue rings (indices 4-6): unsorted region
+- Curved dotted arrow from key toward gap showing diagonal drop trajectory
+- "Gap migrates ←" annotation, Compare Lane / Baseline reference lines
+- HUD: Comparisons: 12, Shifts: 10
+
+## Heap Sort Detail Mock
+
+### Reference Image Analysis (docs/Reference/heap_images/)
+Key behaviors observed:
+
+1. **Dual representation:** Binary tree (blue circles with edges) above, array row (dark placeholders + green sorted) below
+2. **"Heapify" phase label:** Rendered in red text inside the visualization area, between tree nodes
+3. **Pink/red active node:** Root or parent being sifted down highlighted in distinct color
+4. **Tree shrinks progressively:** As elements are extracted, nodes disappear from tree and appear as green in array row
+5. **Parent-child edges:** Straight lines connecting nodes, clearly showing tree structure
+6. **Sorted region grows right-to-left** in the array row below
+
+### Decisions Made
+- **Tree view adopted for v1** — overrides original D-019 "no tree layout" constraint (now D-074)
+- **Phase label inside panel** — "BUILD MAX-HEAP" / "EXTRACTION" in orange, inside visualization area (D-075)
+- **Heap boundary marker** — dashed vertical line between active heap and sorted region in row below tree (D-076)
+
+### Spec Documents Updated
+- `docs/Reference/Heap_Sort_Video_Reference.md` — adoption note updated for tree layout
+- `docs/DECISIONS.md` — D-019 revised, D-074/D-075/D-076 added
+- `docs/05_ALGORITHMS_VIS_SPEC.md` — Tree Visualization subsection added to Section 4.4, Section 6 updated
+- `docs/04_UI_SPEC.md` — Heap Sort exception noted in Section 4.3
+- `docs/10_ANIMATION_SPEC.md` — Section 5.4 updated for tree layout
+
+### Mock Generated
+
+`docs/screen_Ideas/07_heap_sort_detail.png` (800x550) — Heap Sort detail close-up showing:
+- Binary tree layout with 4 active heap nodes: root (4), children (2, 3), grandchild (1)
+- Orange rings + orange edges on the parent-child triangle being evaluated (4 → 2, 3)
+- Blue ring on node 1 (not part of current sift-down comparison)
+- "EXTRACTION" phase label in orange inside the tree area
+- Sorted row below with 5 dim placeholder slots + 2 steel-blue extracted values (6, 7)
+- Dashed heap boundary line between active and sorted regions
+- Annotations: "Active heap (tree view)", "Parent-child triangle", "Sorted region (grows ←)"
+- HUD: Comparisons: 16, Swaps: 9
+
 ## Files Created / Modified
 
 - `docs/AI_Conversations/` — new folder for tracking AI conversation requests and outcomes

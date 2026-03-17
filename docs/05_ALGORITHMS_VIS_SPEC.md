@@ -204,12 +204,24 @@ Insertion Sort requires a precise tick sequence to correctly visualize the key-s
 
 Required sequence per outer index `i` (from `1` to `n-1`):
 
+#### Key Label Asset (Required)
+
+When the key sprite is lifted into the compare lane, the View must render a **"KEY" label** in the active highlight color `(255, 140, 0)` orange, positioned adjacent to the lifted circle (to its right or above). The label remains visible for the entire duration the key is elevated — from the key-selection T1 tick through all compare and shift ticks until the T2 placement drop. The label disappears when the key settles back to the baseline. This label serves the same identification purpose as Selection Sort's "min" pointer label: the learner immediately knows which element is the active insertion target.
+
+#### Gap Visualization
+
+When the key lifts from its baseline slot, that slot renders as **empty space** (no circle, no outline — just the panel background). As elements shift right during the compare-and-shift loop, the gap migrates leftward through the sorted region. The gap is not a rendered object — it is the absence of a sprite at a baseline slot. The empty space is a critical visual cue: it shows the learner where the key was extracted from and where space is being created for its insertion.
+
+#### Sorted/Unsorted Boundary
+
+Insertion Sort communicates the sorted/unsorted boundary **entirely through color transition** — green rings (sorted) transition to blue rings (unsorted) with no separate boundary marker, pointer, or line. The color distinction is self-evident and does not require additional visual assets.
+
 #### Step 1 — Key Selection (First Visual Event)
 
 - Emit `T1 Compare Tick` on `(i,)` highlighting the selected key.
 - This tick is the **first visual event** of every outer loop pass — no other tick (compare, shift, or placement) may precede it within the pass. The lift establishes the key's identity before any comparisons or shifts occur, giving the learner a clear "this is the element being inserted" moment.
 - This tick does **not** increment `self.comparisons` — it is a key-selection signal, not a data comparison.
-- The key sprite begins its visual lift to the compare lane (`home_y - lift_offset`) on this tick and **remains elevated** across all subsequent ticks in the pass until the T2 Placement tick drops it (see Step 4). See Animation Spec Section 5.2.
+- The key sprite begins its visual lift to the compare lane (`home_y - lift_offset`) on this tick and **remains elevated** across all subsequent ticks in the pass until the T2 Placement tick drops it (see Step 4). The "KEY" label appears immediately on lift. See Animation Spec Section 5.2.
 
 #### Step 2 — Compare-and-Shift Loop (Sequential Shift Guarantee)
 
@@ -274,6 +286,32 @@ Additional rules:
 Heap Sort operates in two phases: **Build Max-Heap** and **Extraction**.
 
 Phase 1 is not merely a sequence of array swaps — it is a **structural transformation** that converts an arbitrary array into a valid max-heap. The sift-down procedure must visually communicate the **parent-child triangle** relationship (indices `i`, `2i+1`, `2i+2`) at each level of repair, so the learner understands the tree structure being enforced even though elements are displayed in a flat row.
+
+#### Tree Visualization (Required)
+
+The Heap Sort panel renders a **binary tree layout** of the active heap elements, positioned in the upper portion of the panel's array rendering region. This tree visualization is unique to Heap Sort — the other three algorithms use a flat single-row layout.
+
+**Tree layout rules:**
+- Tree nodes are circular outlined rings (D-069) connected by parent-child edge lines drawn in `(120, 120, 130)`.
+- The root node is centered horizontally at the top of the tree area.
+- Each level of the tree is positioned progressively lower, with children spread horizontally beneath their parent.
+- Parent-child edges are straight lines connecting the center of the parent circle to the center of each child circle.
+- The tree dynamically shrinks as elements are extracted — nodes removed from the heap disappear from the tree and appear in the sorted row below.
+- Node highlight colors follow the universal active highlight (D-067): orange `(255, 140, 0)` during T1 compare and T3 tree highlights, default blue when at rest within the heap.
+
+**Sorted region row:**
+- Below the tree, a compact horizontal row displays elements that have been extracted from the heap.
+- Sorted elements use the settled/extracted color `(130, 150, 190)` steel-blue rings.
+- The sorted row grows from right to left as extractions proceed.
+- On the completion tick, all elements (tree collapses, sorted row becomes full) transition to green `(80, 220, 120)`.
+
+**Heap boundary marker:**
+- A subtle vertical dashed line separates the active heap slots from the sorted slots in the row below the tree, labeled "heap boundary".
+
+**Phase label:**
+- During Phase 1, the text "BUILD MAX-HEAP" is rendered in orange `(255, 140, 0)` within the tree visualization area.
+- During Phase 2, the text changes to "EXTRACTION".
+- The label is positioned inside the panel content area (between tree nodes or below the tree root), matching the reference video's "Heapify" text placement.
 
 #### Phase 1 — Build Max-Heap
 
@@ -448,7 +486,7 @@ All compare highlights use the universal active highlight color `(255, 140, 0)` 
 
 #### Branching Visualization (Branching Contract)
 
-The Logical Tree Highlight serves as the primary mechanism for **visually "drawing" the binary tree branches** within the flat array display. Because v1 does not render a tree layout, the T3 tick's non-contiguous highlight pattern is the learner's only cue that a parent-child relationship exists between specific array positions.
+The Logical Tree Highlight serves as a **dynamic focus mechanism** that works in conjunction with the rendered binary tree layout (see Section 4.4, Tree Visualization). The T3 tick's highlight pattern identifies the specific parent-child branch being evaluated at each sift-down level, adding operational emphasis on top of the persistent tree edges.
 
 **Branching contract for `highlight_indices`:** The T3 tick's `highlight_indices` field must satisfy all of the following:
 - **Must include** the parent index `i` — always present.
@@ -459,7 +497,7 @@ The Logical Tree Highlight serves as the primary mechanism for **visually "drawi
 
 This contract is the model's explicit declaration of which tree branch is being evaluated. The View consumes `highlight_indices` directly to render the branching visual — there is no secondary branch-detection logic. If the model emits incorrect indices, the View will draw incorrect branches.
 
-**Pedagogical invariant:** The learner must be able to perceive the binary tree structure solely from these highlights. When indices `(1, 3, 4)` flash orange simultaneously while surrounding indices remain unhighlighted, the non-contiguous grouping visually "draws" the branch from parent 1 to its children 3 and 4 — the learner intuitively perceives the ownership relationship even without drawn edges. This pattern repeats at every sift-down level (as the mandatory first tick — see Section 4.4 step 1), reinforcing the tree mental model throughout both phases of the algorithm.
+**Pedagogical invariant:** The learner must be able to perceive which tree branch is under evaluation at each sift-down step. When indices `(1, 3, 4)` flash orange simultaneously — with the corresponding tree nodes and connecting edges highlighted — the learner sees both the structural relationship (drawn edges) and the operational focus (orange highlight) reinforcing each other. This pattern repeats at every sift-down level (as the mandatory first tick — see Section 4.4 step 1), reinforcing the tree mental model throughout both phases of the algorithm.
 
 ## 6) Heap Sort Visual Phasing Decision
 
@@ -469,15 +507,15 @@ Required behavior in v1:
 
 - Heap Sort must emit T3 range emphasis ticks at the start of every extraction step to make the shrinking heap boundary visible.
 - T1/T2 ticks during sift-down communicate individual comparisons and swaps within the heap.
-- No separate auxiliary row animation is used; all Heap Sort motion is in-place on the main array row.
+- Heap Sort renders a binary tree layout for active heap elements in the upper portion of the panel, with a sorted row below the tree that grows as elements are extracted (see Section 4.4, Tree Visualization). This tree layout is unique to Heap Sort — the other three algorithms use a flat single-row layout.
 
 ### 6.1 Logical Tree Highlight (v1 Required)
 
-While v1 does not render a tree layout, it must **imply** tree structure through targeted highlighting during sift-down operations. This bridges the gap between the flat array display and the binary heap relationships the algorithm operates on.
+v1 renders a binary tree layout for Heap Sort (see Section 4.4, Tree Visualization), and the Logical Tree Highlight T3 ticks work in conjunction with the visible tree edges to **reinforce** parent-child relationships during sift-down operations. The T3 highlights complement the drawn tree structure by adding dynamic color emphasis to the specific branch being evaluated.
 
-**Mechanism:** Before each sift-down level's comparisons (in both Phase 1 and Phase 2), the algorithm emits a T3 tick that highlights the **parent-child triangle** — the parent index and its existing children. The accent color (orange) renders simultaneously on all members of the triangle for 200ms.
+**Mechanism:** Before each sift-down level's comparisons (in both Phase 1 and Phase 2), the algorithm emits a T3 tick that highlights the **parent-child triangle** — the parent index and its existing children. The accent color (orange) renders simultaneously on all members of the triangle for 200ms. Because the tree layout already draws parent-child edges, the T3 highlight serves as a **focus cue** — it tells the learner "this is the branch being evaluated right now" within the full tree structure.
 
-**Visual effect:** The learner sees 2–3 numbers flash orange together in a pattern that is *not* contiguous (e.g., indices 1, 3, 4). This non-contiguous grouping is the visual cue that a tree relationship exists — the learner intuitively perceives that index 1 "owns" indices 3 and 4, even without drawn edges.
+**Visual effect:** The learner sees 2–3 tree nodes and their connecting edges flash orange together, drawing attention to the specific parent-child relationship being evaluated. The combination of persistent tree edges (structural context) and transient T3 highlights (operational focus) gives the learner both the global tree shape and the local sift-down action simultaneously.
 
 **Distinction from boundary T3 ticks:** Boundary T3 ticks highlight a contiguous range (`0..heap_size-1`) and appear once per extraction step. Logical Tree Highlight T3 ticks highlight a non-contiguous parent-child group and appear before each sift-down level's comparisons. Both use the same T3 tick type and accent color; the viewer distinguishes them by the highlight pattern (contiguous = boundary, scattered = tree relationship).
 

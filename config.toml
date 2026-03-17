@@ -1,0 +1,3 @@
+[window]
+# "landscape" (1280x720) or "portrait" (720x996)
+orientation = "landscape"

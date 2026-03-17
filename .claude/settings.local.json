@@ -16,7 +16,11 @@
       "Bash(/home/sju/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/bin/python3 /home/sju/projects/Visual_Learning_Sorting/docs/screen_Ideas/_gen_bubble_detail.py)",
       "Bash(/home/sju/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/bin/python3 /home/sju/projects/Visual_Learning_Sorting/docs/screen_Ideas/_gen_completion.py)",
       "Bash(/home/sju/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/bin/python3 -c \"from PIL import ImageFont; print\\('Pillow OK'\\)\")",
-      "Bash(/home/sju/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/bin/python3 /home/sju/projects/Visual_Learning_Sorting/docs/screen_Ideas/gen_05.py)"
+      "Bash(/home/sju/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/bin/python3 /home/sju/projects/Visual_Learning_Sorting/docs/screen_Ideas/gen_05.py)",
+      "Bash(/home/sju/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/bin/python3 /home/sju/projects/Visual_Learning_Sorting/docs/screen_Ideas/gen_06.py)",
+      "Bash(/home/sju/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/bin/python3 -c \"from PIL import Image; print\\('Pillow available'\\)\")",
+      "Bash(/home/sju/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/bin/python3 /home/sju/projects/Visual_Learning_Sorting/docs/screen_Ideas/_gen_07.py)",
+      "Bash(git status:*)"
     ]
   }
 }

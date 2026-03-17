@@ -201,6 +201,85 @@ The header must never exceed **35% of panel height**. If a future font or resolu
 - Numbers are centered in their slot. (`slot_width = (panel_width - ARRAY_X_PADDING*2) / array_size`)
 - Vertical anchor defaults to panel center (`rect.y + rect.height // 2`).
 
+**Heap Sort Exception:** The Heap Sort panel uses a different layout than the other three algorithms. Instead of a single horizontal row, it renders a **binary tree visualization** of the active heap in the upper portion of the array region, with a compact sorted-element row below. The other three algorithm panels (Bubble, Selection, Insertion) retain the standard single horizontal row layout.
+
+#### 4.3.2 Heap Sort Tree Layout Geometry
+
+The tree occupies the vertical space between the header bottom and the sorted row. The sorted row is anchored near the panel bottom.
+
+**Available area:**
+
+- `tree_top = header_total + 10` (below header with small gap)
+- `sorted_row_y = rect.y + panel_height - SORTED_ROW_MARGIN` where `SORTED_ROW_MARGIN = panel_height * 0.18`
+- `tree_area_height = sorted_row_y - tree_top - 20` (gap between tree and sorted row)
+
+**Tree node sizing:**
+
+- `tree_node_diameter = min(slot_width * 0.55, tree_area_height / 4)` — scales with panel but never exceeds 1/4 of tree area height (ensures 3 levels fit)
+- Ring stroke: 3px (same as flat-row sprites)
+
+**Level positioning (vertical):**
+
+For a 7-element array (3 tree levels: 0, 1, 2):
+
+- `level_y(d) = tree_top + (d * level_spacing)` where `level_spacing = tree_area_height / max_depth` and `max_depth = floor(log2(heap_size))`
+- Level 0 (root): 1 node at `level_y(0)`
+- Level 1: 2 nodes at `level_y(1)`
+- Level 2: up to 4 nodes at `level_y(2)`
+
+**Node positioning (horizontal):**
+
+Each node's horizontal position is computed from the panel center using binary subdivision:
+
+- `node_x(index) = panel_center_x + horizontal_offset(index)`
+- The horizontal spread at each level uses: `spread = panel_width * 0.35 / (2 ** depth)` — tighter at deeper levels
+- Root (index 0): `x = panel_center_x`
+- Left child (index 1): `x = panel_center_x - spread_level_1`
+- Right child (index 2): `x = panel_center_x + spread_level_1`
+- Index 3: `x = panel_center_x - spread_level_1 - spread_level_2`
+- Index 4: `x = panel_center_x - spread_level_1 + spread_level_2`
+- Index 5: `x = panel_center_x + spread_level_1 - spread_level_2`
+- Index 6: `x = panel_center_x + spread_level_1 + spread_level_2`
+
+General formula for any index `i`:
+
+```
+depth = floor(log2(i + 1))
+position_in_level = i - (2**depth - 1)
+total_at_level = 2**depth
+x = panel_rect.x + ARRAY_X_PADDING + (position_in_level + 0.5) * (panel_width - 2*ARRAY_X_PADDING) / total_at_level
+y = level_y(depth)
+```
+
+**Parent-child edges:**
+
+- Straight lines from parent node center `(px, py)` to child node center `(cx, cy)`
+- Default edge color: `(120, 120, 130)` — subtle, does not compete with node highlights
+- Active edge color (during T3 Logical Tree Highlight): `(255, 140, 0)` orange — matches the highlighted nodes
+- Line width: 2px
+
+**Sorted row below tree:**
+
+- Positioned at `sorted_row_y`, full panel width with `ARRAY_X_PADDING`
+- Uses the same `slot_width` as the flat-row panels: `slot_width = (panel_width - ARRAY_X_PADDING*2) / array_size`
+- Sorted elements render as steel-blue `(130, 150, 190)` rings at their final array index positions
+- Active heap slots in the sorted row render as dim placeholder outlines `(60, 60, 68)` with no number — they represent "this element is in the tree above"
+- Circle diameter matches the flat-row sprite size (~65% of `slot_width`), not the tree node size
+
+**Heap boundary marker:**
+
+- Vertical dashed line between the last active heap slot and the first sorted slot in the sorted row
+- Dash pattern: 6px dash, 4px gap
+- Color: `(150, 150, 160)`
+- Label "heap boundary" in `(150, 150, 160)` at ~12px below the sorted row
+
+**Phase label:**
+
+- Text "BUILD MAX-HEAP" (Phase 1) or "EXTRACTION" (Phase 2) rendered in orange `(255, 140, 0)`
+- Font: body font (Inter-Regular 16)
+- Positioned to the right of the root node or centered below the root, within the tree area
+- The label updates when the algorithm transitions from Phase 1 to Phase 2
+
 #### 4.3.1 Bubble Sort Instructional Assets
 
 - The Bubble Sort panel must render a `ComparisonPointer` asset as a **green upward-pointing arrow**.
