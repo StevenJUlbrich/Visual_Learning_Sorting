@@ -8,7 +8,7 @@ Mode: Build-only execution from canonical specs. No speculative redesign.
 ### Spec Documents (read in this order)
 1. `docs/DECISIONS.md` (highest authority — D-001 through D-076)
 2. `docs/01_PRD.md`
-3. `docs/02_ARCHITECTURE.md`
+3. 12. `docs/11_CI.md``docs/02_ARCHITECTURE.md`
 4. `docs/03_DATA_CONTRACTS.md`
 5. `docs/04_UI_SPEC.md`
 6. `docs/05_ALGORITHMS_VIS_SPEC.md`
@@ -17,7 +17,7 @@ Mode: Build-only execution from canonical specs. No speculative redesign.
 9. `docs/08_TEST_PLAN.md`
 10. `docs/09_DEV_ENV.md`
 11. `docs/10_ANIMATION_SPEC.md`
-12. `docs/11_CI.md`
+
 
 ### Visual Reference Targets
 - `docs/screen_Ideas/*.png` — Mock UI PNGs showing the expected visual output for startup, mid-race, completion, and per-algorithm detail states. These are the visual targets for the View layer.
