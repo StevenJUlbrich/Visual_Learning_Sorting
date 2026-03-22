@@ -82,6 +82,8 @@ Every contract must resolve its mapped traps. This table is the accountability l
 
 **Output:** `docs/12_ANIMATION_FOUNDATION.md` + contract format template
 
+**Status:** DELIVERED
+
 ---
 
 ### Brick 7 — Bubble Sort Animation Contract
@@ -222,6 +224,75 @@ Skills will be assessed fully in Brick 11 once the contracts exist and the actua
 
 ---
 
-## Next Step
+## Session Progress Log
 
-**Brick 6 — Animation Foundation.** User reviews this document first, then we begin.
+### Brick 6 — Animation Foundation (DELIVERED)
+
+- **Output:** `docs/12_ANIMATION_FOUNDATION.md`
+- **Traps resolved:** A (Sprite Identity), B (Independent Timing)
+- **10 sections:** Sprite identity, timing, z-ordering, highlights, compare lane, cross-tick state, pause/resume/step, swap arcs, contract format template, compliance checklist
+- **Key addition not in prior specs:** Section 6 (Cross-Tick View State Model) — explicitly documents when View state persists across tick boundaries. This was the root of Traps G and I.
+
+### Clarification: Foundation Is Not a Framework
+
+User raised concern that a shared foundation could be heavy for coding and maintenance. Resolution: the foundation document is a **shared specification** (rules glossary), not a shared runtime framework. In code, the shared parts are lightweight:
+
+- Sprite identity = one class with an ID field (already in architecture)
+- dt clamping = one line in the render loop
+- Easing = one pure-math module (already planned)
+- Z-ordering = a sort key in the render loop
+
+Each algorithm's View renderer implements its own motion logic independently. They share a Pygame window and agree on the same sprite system and timing rules — which is inherent to the architecture, not additional coupling.
+
+---
+
+## Trap Traceability — Updated Status
+
+| Trap | Name | Target Contract | Status |
+|------|------|-----------------|--------|
+| A | Sprite Identity | Animation Foundation | **Resolved** — Section 1 |
+| B | Independent Timing | Animation Foundation | **Resolved** — Section 2 |
+| C | Heap Tree Geometry | Heap Sort Contract | Open |
+| D | T3→T1→T2 Tick Sequence | Heap Sort Contract | Open |
+| E | Bubble Sort 3-Phase Lift | Bubble Sort Contract | Open |
+| F | Selection Sort Triple Pointer | Selection Sort Contract | Open |
+| G | Sift-Down Cadence Flag | Heap Sort Contract | Open |
+| H | T3 Variant Rendering | Heap Sort Contract | Open |
+| I | Insertion Sort Cross-Tick Key Elevation | Insertion Sort Contract | Open |
+
+---
+
+## Where to Pick Up
+
+**Next brick:** Brick 7 — Bubble Sort Animation Contract
+
+**What's ready:**
+- Animation Foundation delivered and reviewed (`docs/12_ANIMATION_FOUNDATION.md`)
+- Contract format template defined (Foundation Section 9)
+- Foundation compliance checklist ready (Foundation Section 10)
+- `docs/contracts/` directory created
+
+**What the next session needs to do:**
+1. Review Foundation Section 9 (contract template) for the structure
+2. Build `docs/contracts/BUBBLE_SORT_ANIMATION.md` following the template
+3. Resolve Trap E (3-phase compare-lift) as explicit timing table and state machine
+4. Include worked example with canonical array `[4, 7, 2, 6, 1, 5, 3]`
+5. Validate against Foundation compliance checklist
+
+**Source material for Brick 7:**
+- `05_ALGORITHMS_VIS_SPEC.md` Section 4.1 — Bubble Sort tick sequence, compare-lift contract, counter behavior
+- `10_ANIMATION_SPEC.md` Section 5.1 — frame-level sequence, pathing, timing contract
+- `06_BEHAVIOR_SPEC.md` lines 42–71 — Bubble Sort sub-state timing
+- `02_ARCHITECTURE.md` Per-Panel View Components — ComparisonPointer, LimitLine, HUD counters
+
+**After Brick 7:** Bricks 8–10 (Selection, Insertion, Heap contracts), then Brick 11 (cross-references, agent definitions, skills), then Brick 12 (GitHub checkpoint).
+
+---
+
+## Files Produced This Session
+
+| File | Purpose |
+|------|---------|
+| `docs/AI_Conversations/2026-03-22-animation-agent-strategy.md` | **This document** — strategy, decisions, brick plan, session log |
+| `docs/12_ANIMATION_FOUNDATION.md` | Brick 6 deliverable — shared rendering contracts |
+| `docs/contracts/` (directory) | Created — will hold per-algorithm contracts in Bricks 7–10 |
