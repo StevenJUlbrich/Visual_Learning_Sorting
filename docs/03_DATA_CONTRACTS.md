@@ -27,9 +27,9 @@ class SortResult:
     highlight_indices: tuple[int, ...] | None = None
 ```
 
-COMPARE → highlight only, no sprite position change
-SWAP → exchange two sprite home slots with arc path, duration = T2
-SHIFT → source/destination horizontal slide, duration = T2
+COMPARE → Signals an evaluation step on the highlighted indices. Visual emphasis is required. Any sprite displacement is defined by the active algorithm's animation contract.
+SWAP → Signals a two-index mutation reflected in the new `array_state` snapshot. The exact motion path, vertical behavior, and exchange choreography are defined by the active algorithm's animation contract.
+SHIFT → Signals a write/placement mutation reflected in the new `array_state` snapshot. The exact motion path and placement choreography are defined by the active algorithm's animation contract.
 RANGE → **non-mutating visual aid**; refreshes accent color on highlighted indices only.
         Invariants:
         - No sprite displacement (no `exact_x`/`exact_y` target changes).
@@ -122,8 +122,8 @@ Invalid combinations are contract violations.
   - **Insertion Sort (key-selection):** T1 on `(i,)` — single-index highlight, no data comparison. Message: `"Selecting key: {arr[i]} at index {i}"`.
   - **Insertion Sort (compare-during-shift):** T1 on `(j, j+1)` — compares element against lifted key. Message: `"Comparing index {j} (value {arr[j]}) with key {key}"`.
   - **Heap Sort (sift-down):** T1 on `(largest, child_idx)` — compares parent/largest with child. Message: `"Comparing index {largest} (value {arr[largest]}) and index {child_idx} (value {arr[child_idx]})"`.
-- Swap tick: highlights swapped indices and new snapshot.
-- Shift/placement tick: highlights moved/placed indices and new snapshot.
+- Swap tick: highlights swapped indices and supplies the post-mutation snapshot. The visual exchange path is defined by the active algorithm's animation contract.
+- Shift/placement tick: highlights moved/placed indices and supplies the post-mutation snapshot. The visual movement path is defined by the active algorithm's animation contract.
 - Range emphasis tick: **non-mutating visual aid** — no sprite movement, no array mutation, no counter increments. Used by Heap Sort for two highlight variants:
   - Boundary emphasis: contiguous range `0..heap_size-1` — refreshes orange accent on the active heap region via left-to-right sweep.
   - Logical Tree Highlight: non-contiguous parent-child triangle `(parent, left, right)` — refreshes orange accent on the tree relationship under evaluation. The sift-down parent is always included.
