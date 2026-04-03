@@ -2,13 +2,17 @@
 
 **File:** `docs/contracts/BUBBLE_SORT_ANIMATION.md`
 
-## 1. Overview
+## Overview
 
 This contract defines the strict visual choreography for the Bubble Sort panel. The defining visual signature of Bubble Sort is the **3-Phase Compare-Lift**—where adjacent pairs are physically elevated into a dedicated compare lane to isolate the comparison from the rest of the array.
 
-### Dependencies
+## 1. Dependencies & Cross-References
 
-This document defines choreography only. It MUST be implemented in conjunction with 12_ANIMATION_FOUNDATION.md (governing sprite identity, home_x/home_y math, and easing), 04_UI_SPEC.md (governing exact RGB colors and layout dimensions), and 03_DATA_CONTRACTS.md (governing the SortResult payload shape)
+> **CRITICAL ARCHITECTURE NOTE:** This document defines choreography only. To prevent Agent Traps, it MUST be implemented in conjunction with:
+>
+> * `12_ANIMATION_FOUNDATION.md`: Governs sprite identity, global frame timing, `dt` clamping, and standard easing functions.
+> * `04_UI_SPEC.md`: Governs layout math, font sizing, and panel container geometry.
+> * `03_DATA_CONTRACTS.md`: Governs the exact `SortResult` payload shape yielded by the Model.
 
 ## 2. Dedicated UI Assets
 
