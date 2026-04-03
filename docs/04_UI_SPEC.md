@@ -128,26 +128,26 @@ The header is a **strictly vertical stack**: Title → Metrics → Message, rend
 
 The three header elements flow downward from the panel's top-left inset corner, separated by fixed pixel gaps:
 
-```
-┌─ Panel ─────────────────────────────────────────┐
-│  ↕ HEADER_INSET_Y                               │
-│  ← HEADER_INSET_X →                             │
+```plaintext
+┌─ Panel ──────────────────────────────────────────┐
+│  ↕ HEADER_INSET_Y                                │
+│  ← HEADER_INSET_X →                              │
 │  ┌─ Title ────────────────────────────────────┐  │
 │  │ "Heap Sort"  (Inter-Bold 24, primary text) │  │
 │  └────────────────────────────────────────────┘  │
 │  ↕ METRICS_GAP (4px)                             │
 │  ┌─ Metrics ──────────────────────────────────┐  │
-│  │ "O(n log n) | 03.45s | Steps: 35 | ..."   │  │
+│  │ "O(n log n) | 03.45s | Steps: 35 | ..."    │  │
 │  └────────────────────────────────────────────┘  │
 │  ↕ MESSAGE_GAP (6px)                             │
 │  ┌─ Message ──────────────────────────────────┐  │
 │  │ "Swapping index 0 (value 7) with index 6…" │  │
 │  └────────────────────────────────────────────┘  │
-│                                                   │
-│  ═══════ Array Rendering Region ═══════           │
-│         4   7   2   6   1   5   3                 │
-│                                                   │
-└───────────────────────────────────────────────────┘
+│                                                  │
+│  ═══════ Array Rendering Region ═══════          │
+│         4   7   2   6   1   5   3                │
+│                                                  │
+└──────────────────────────────────────────────────┘
 ```
 
 **Spacing tokens:**
@@ -247,7 +247,7 @@ Each node's horizontal position is computed from the panel center using binary s
 
 General formula for any index `i`:
 
-```
+```python
 depth = floor(log2(i + 1))
 position_in_level = i - (2**depth - 1)
 total_at_level = 2**depth
