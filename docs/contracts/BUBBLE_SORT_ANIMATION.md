@@ -6,6 +6,10 @@
 
 This contract defines the strict visual choreography for the Bubble Sort panel. The defining visual signature of Bubble Sort is the **3-Phase Compare-Lift**—where adjacent pairs are physically elevated into a dedicated compare lane to isolate the comparison from the rest of the array.
 
+### Dependencies
+
+This document defines choreography only. It MUST be implemented in conjunction with 12_ANIMATION_FOUNDATION.md (governing sprite identity, home_x/home_y math, and easing), 04_UI_SPEC.md (governing exact RGB colors and layout dimensions), and 03_DATA_CONTRACTS.md (governing the SortResult payload shape)
+
 ## 2. Dedicated UI Assets
 
 The Bubble Sort panel requires the following specific View assets:
@@ -58,4 +62,3 @@ During any lift or lifted exchange, the sprites at `j` and `j+1` must be drawn o
 3. **No Swap:** `4` is not greater than `7`. The pair descends to `home_y` and returns to the default blue.
 4. **T1 Compare `(1, 2)`:** The arrow moves to index 1. `7` and `2` turn orange and lift 50px. They hold.
 5. **T2 Swap `(1, 2)`:** `7` and `2` slide past each other horizontally while suspended in the compare lane. Once the horizontal exchange is complete, they descend to the baseline in the order `[..., 2, 7, ...]`. HUD Exchange Count increments.
-
