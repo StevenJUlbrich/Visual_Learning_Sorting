@@ -69,4 +69,3 @@ The lifted Key sprite MUST be drawn on top of all other baseline sprites at all 
 4. **Phase 2 (Compare):** T1 on `(0, 1)`. Sprite `4` flashes orange.
 5. **Phase 2 (Shift):** T2 on `(0, 1)`. Sprite `4` slides right into the gap at index 1. The gap is now at index 0.
 6. **Phase 3 (Placement):** T2 on `(0,)`. The floating key `2` swoops diagonally down into the gap at index 0. Array is logically now `[2, 4, 7, ...]`.
-
