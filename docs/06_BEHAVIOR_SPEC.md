@@ -81,7 +81,9 @@ Bubble Sort uses a stricter sub-state machine inside the standard `T1`/`T2` timi
 
 - On `SortResult(success=True, is_complete=True)`, the algorithm queue is emptied and marked inactive.
 - The elapsed timer for that specific panel stops permanently.
-- Completed panel keeps final sorted array visible, applies completion color treatment, and ceases step incrementation.
+- The panel background transitions from `(45, 45, 53)` to muted completion green `(35, 55, 42)` (D-078).
+- Completed panel keeps final sorted array visible in completion color `(80, 220, 120)`, with HUD stats (Big-O, elapsed time, steps, comparisons, writes) frozen at their final values on the green panel.
+- The green panel background provides a definitive "finish line" — the learner can instantly see which algorithms have completed the race.
 
 ## Failure Behavior
 

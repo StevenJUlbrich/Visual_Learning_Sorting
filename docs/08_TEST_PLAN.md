@@ -23,7 +23,7 @@ Primary objective: Prevent correctness drift, ensure operation-weighted timers a
 - Heap Sort T3 range emphasis ticks emitted during wrong phase (build instead of extraction).
 - T3 range emphasis ticks incorrectly incrementing the step counter.
 - Insertion Sort key-selection tick incorrectly incrementing the comparisons counter.
-- **Tree layout geometry error:** Heap Sort tree nodes positioned incorrectly, overlapping, or edges pointing to wrong children.
+- **Tree layout geometry error:** Heap Sort tree nodes positioned incorrectly, overlapping, or edges pointing to wrong children. (Mitigated by D-079: minimum panel width is now 489px.)
 - **Pointer asset desync:** Selection Sort `i`/`j`/`min` arrows not tracking the correct indices during scan or after swap.
 - Panel state machine enters an invalid or unreachable state during pause/resume/restart transitions.
 
@@ -395,12 +395,13 @@ def assert_sift_down_level_contract(level_ticks):
 
 ### TC-A20 Tree Layout Node Positioning
 
-- Instantiate the tree layout geometry calculator with landscape panel dimensions (611×297).
+- Instantiate the tree layout geometry calculator with Desktop panel dimensions (611×296).
 - For heap_size = 7, assert all 7 node positions are within panel bounds.
 - Assert root (index 0) is horizontally centered.
 - Assert level 1 nodes are horizontally symmetric around center.
 - Assert level 2 nodes are horizontally symmetric and do not overlap with level 1 nodes.
 - Assert no two nodes at the same level overlap (minimum gap = node diameter).
+- Repeat with Tablet panel dimensions (489×327) to verify both presets.
 - Marker: `@pytest.mark.unit`
 
 ### TC-A21 Tree Layout Edge Connectivity

@@ -33,7 +33,7 @@ Animations must never "teleport" except when the application is paused or steppe
 - Pygame `Sprite` entity system for continuous `(x, y)` coordinate interpolation using easing functions.
 - Independent operation queues and visual timers.
 - On-screen controls + keyboard shortcuts.
-- Dynamic proportional resolution scaling. The UI geometry calculates dynamically at startup to support arbitrary window sizes cleanly.
+- Fixed resolution presets: Desktop (1280×720) and Tablet (1024×768). Window size is locked at startup with no mid-animation resizing (D-077). UI geometry is computed once at startup from the selected preset.
 - Animations follow the motion contracts defined in 10_ANIMATION_SPEC.md.
 
 ### Default Dataset

@@ -174,8 +174,9 @@ Selection Sort retains the standard arc swap because its teaching focus is scan/
 #### 5.3.1 Lift Offset Geometry
 
 - **Lift height:** `lift_offset = panel_height * 0.06` — a **proportional** value, not a fixed pixel count.
-- **Rationale:** Tying the offset to `panel_height` guarantees visual consistency across both landscape and portrait orientations. In landscape mode (panel height ≈ 490px), the lift is ≈ 29px; in portrait mode (panel height ≈ 350px), it is ≈ 21px. Both produce a clearly visible separation from the baseline without colliding with the header region (capped at 35% of panel height per D-062). A fixed pixel value would either be too subtle in landscape or too aggressive in portrait.
+- **Rationale:** Tying the offset to `panel_height` guarantees visual consistency across both resolution presets. In Desktop mode (panel height ≈ 296px), the lift is ≈ 18px; in Tablet mode (panel height ≈ 327px), it is ≈ 20px. Both produce a clearly visible separation from the baseline without colliding with the header region (capped at 35% of panel height per D-062).
 - **Relationship to other offsets:** Insertion Sort keeps a proportional sustained lift because the key remains elevated for the duration of the entire pass, whereas Bubble Sort uses a fixed 50px pair-lift for a short compare-and-exchange choreography. The sustained Insertion lift remains visually distinct because it isolates a single key across multiple ticks rather than a brief adjacent pair event.
+- **Simplification from D-077:** Because the window size is locked at startup (no mid-animation resizing), the lift offset is computed once and remains constant for the entire session. No dynamic recalculation is needed.
 
 #### 5.3.2 Motion Sequence
 
