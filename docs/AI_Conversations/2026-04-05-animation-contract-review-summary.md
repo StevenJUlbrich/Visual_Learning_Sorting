@@ -40,9 +40,9 @@ At the end of the review sequence, the reviewed contracts and the related design
 
 ## Review Outcomes by Contract
 
-## 1. Heap Sort Animation Contract
+### 1. Heap Sort Animation Contract
 
-### Initial findings
+#### Initial findings
 
 The Heap Sort contract was mostly strong, but two substantive issues were identified:
 
@@ -54,7 +54,7 @@ The Heap Sort contract was mostly strong, but two substantive issues were identi
 2. **T3 Logical Tree Highlight payload was overconstrained.**
    The contract implied a strict three-index payload `(parent, left_child, right_child)`, while the data contract explicitly allows `(parent, left_child)` when only one child exists.
 
-### Additional gaps found during review
+#### Additional gaps found during review
 
 The contract initially omitted or underemphasized several required UI details that were already locked in the design docs:
 
@@ -64,7 +64,7 @@ The contract initially omitted or underemphasized several required UI details th
 
 These were classified as missing details rather than deep conceptual contradictions because the contract already declared dependency on the UI and data specs.
 
-### Actions taken
+#### Actions taken for Heap Sort
 
 The following corrections were applied directly to `HEAP_SORT_ANIMATION.md` and verified against the design docs:
 
@@ -73,7 +73,7 @@ The following corrections were applied directly to `HEAP_SORT_ANIMATION.md` and 
 - **Lines 21, 25, 26:** Three missing Heap UI assets added to §3: active orange edge rendering during T3 logical-tree highlights, sorted-row placeholder outlines, and the heap boundary marker with dash pattern, color, and movement rule.
 - **Lines 21, 25, 26, 30:** Stale `§4.5` and `§8.3` cross-references replaced with correct targets (`04_UI_SPEC §4.3.2`, `08_TEST_PLAN TC-A19`).
 
-### Heap Sort final assessment
+#### Heap Sort final assessment
 
 **Status:** Aligned.
 
@@ -81,9 +81,9 @@ The Heap Sort contract now supports and clarifies the design docs without introd
 
 ---
 
-## 2. Bubble Sort Animation Contract
+### 2. Bubble Sort Animation Contract
 
-### Initial findings
+#### Bubble Sort findings
 
 The Bubble Sort contract was already close to the intended choreography and correctly emphasized Bubble Sort's defining motion grammar:
 
@@ -93,7 +93,7 @@ The Bubble Sort contract was already close to the intended choreography and corr
 
 The main contradictions uncovered were actually in the design docs around it.
 
-### Contradictions exposed by review
+#### Contradictions exposed by review
 
 1. **Swap path conflict.**
    The Bubble contract correctly defined Bubble swaps as a **linear horizontal slide while lifted**, but some design docs still described Bubble swaps as arc-based.
@@ -111,7 +111,7 @@ The main contradictions uncovered were actually in the design docs around it.
    - `60-100ms`
    - `100-150ms`
 
-### Actions taken
+#### Actions taken for Bubble Sort
 
 The Bubble Sort contract itself required no changes — it already matched the authoritative animation specs. The following corrections were applied to the surrounding design docs:
 
@@ -122,7 +122,7 @@ The Bubble Sort contract itself required no changes — it already matched the a
 - **DECISIONS.md:66 (D-059):** Same timing normalization applied.
 - **DECISIONS.md:66 (D-059) and :69 (D-061):** `compare_lift_offset = panel_height * 0.05` replaced with `compare_lift_offset = 50px` (two occurrences).
 
-### Bubble Sort final assessment
+#### Bubble Sort final assessment
 
 **Status:** Aligned.
 
@@ -130,9 +130,9 @@ The Bubble contract supported the intended design from the start. The work repai
 
 ---
 
-## 3. Insertion Sort Animation Contract
+### 3. Insertion Sort Animation Contract
 
-### Initial findings
+#### Insertion Sort findings
 
 The Insertion Sort contract strongly matched the intended motion model in several important areas:
 
@@ -145,7 +145,7 @@ The Insertion Sort contract strongly matched the intended motion model in severa
 
 Two substantive issues were identified.
 
-### Initial issues found
+#### Initial issues found
 
 1. **Missing terminating-comparison phase.**
    The contract initially described compare-and-shift followed by placement, but did not document the required final T1 compare when the loop exits by condition `arr[j] <= key`.
@@ -153,7 +153,7 @@ Two substantive issues were identified.
 2. **Unsupported post-placement color wording.**
    The contract said the placed key remained orange briefly and turned green at the next pass. That wording did not match the shared highlight replacement rules or the completion-color rules.
 
-### Broader design-doc inconsistency exposed
+#### Broader design-doc inconsistency exposed
 
 The review also exposed a design-doc ambiguity about Insertion Sort's color boundary:
 
@@ -162,7 +162,7 @@ The review also exposed a design-doc ambiguity about Insertion Sort's color boun
 
 This turned out to be a wording problem, not a design intent change.
 
-### Actions taken
+#### Actions taken for Insertion Sort
 
 The following corrections were applied directly to `INSERTION_SORT_ANIMATION.md` and verified against the design docs:
 
@@ -174,7 +174,7 @@ The following correction was applied to the design docs:
 
 - **04_UI_SPEC.md:383:** Rewritten to clarify that Insertion Sort does not use the **settled steel-blue** color, while explicitly acknowledging the **green-to-blue** ring color boundary from D-073 and 05_ALGORITHMS_VIS_SPEC §4.3.
 
-### Insertion Sort final assessment
+#### Insertion Sort final assessment
 
 **Status:** Aligned.
 
@@ -202,11 +202,11 @@ The review process led to a number of important doc-level repairs outside the co
 
 ## Recommendations
 
-## 1. Treat the animation spec as the choreography source of truth
+### 1. Treat the animation spec as the choreography source of truth
 
 The reviews repeatedly showed that the most precise motion definitions lived in `10_ANIMATION_SPEC.md`, while broader docs sometimes retained stale summaries. Future doc changes should be checked against the animation spec first.
 
-## 2. Keep contract docs synchronized with supporting design docs
+### 2. Keep contract docs synchronized with supporting design docs
 
 When a contract is updated, the following supporting docs should be checked in the same pass when relevant:
 
@@ -224,7 +224,7 @@ This is especially important for:
 - asset lifecycle behavior
 - motion path wording
 
-## 3. Prefer explicit lifecycle subsections for algorithm-specific exceptions
+### 3. Prefer explicit lifecycle subsections for algorithm-specific exceptions
 
 The clearest fixes were the ones that elevated special cases into named subsections rather than leaving them implied in prose. This pattern worked well for:
 
@@ -232,7 +232,7 @@ The clearest fixes were the ones that elevated special cases into named subsecti
 - Bubble Sort compare-lift timing and swap path
 - Insertion Sort terminating comparison and persistent key state
 
-## 4. When a rule depends on another doc, cite the exact heading
+### 4. When a rule depends on another doc, cite the exact heading
 
 Several review passes were spent correcting vague or inaccurate cross-references. Future contract updates should point to exact heading names rather than approximate section labels whenever possible.
 
