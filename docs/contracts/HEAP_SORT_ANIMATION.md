@@ -18,16 +18,16 @@ This contract defines the strict visual choreography for the Heap Sort panel.
 
 ## 3. Dedicated UI Assets & Visual Tokens
 
-* **Parent-Child Edges:** Straight lines drawn in `(120, 120, 130)` connecting the center of a parent node to its children. These lines must only be drawn for indices `< heap_size`. During a T3 Logical Tree Highlight tick, edges between the highlighted parent and its highlighted children render in active Orange `(255, 140, 0)` (see 04_UI_SPEC §4.5).
+* **Parent-Child Edges:** Straight lines drawn in `(120, 120, 130)` connecting the center of a parent node to its children. These lines must only be drawn for indices `< heap_size`. During a T3 Logical Tree Highlight tick, edges between the highlighted parent and its highlighted children render in active Orange `(255, 140, 0)` (see 04_UI_SPEC §4.3.2).
 * **Phase Label:** A text element positioned centrally. It reads `"BUILD MAX-HEAP"` (Orange) during Phase 1, and `"EXTRACTION"` (Orange) during Phase 2.
 * **Active Highlight Color:** Universal Orange `(255, 140, 0)` for all T1/T3 highlights.
 * **Extracted State Color:** Elements in the Sorted Row transition to a Steel-Blue color `(130, 150, 190)`.
-* **Sorted-Row Placeholder Outlines:** Active heap slots (indices `< heap_size`) render in the Sorted Row as dim placeholder outlines `(60, 60, 68)` with no number, indicating the element is currently in the tree above (see 04_UI_SPEC §4.5).
-* **Heap Boundary Marker:** A vertical dashed line (6px dash, 4px gap) in `(150, 150, 160)` drawn between the last active heap slot and the first sorted slot in the Sorted Row. It shifts one position leftward after each extraction (see 04_UI_SPEC §4.5, 07_ACCEPTANCE_TESTS AT-23).
+* **Sorted-Row Placeholder Outlines:** Active heap slots (indices `< heap_size`) render in the Sorted Row as dim placeholder outlines `(60, 60, 68)` with no number, indicating the element is currently in the tree above (see 04_UI_SPEC §4.3.2).
+* **Heap Boundary Marker:** A vertical dashed line (6px dash, 4px gap) in `(150, 150, 160)` drawn between the last active heap slot and the first sorted slot in the Sorted Row. It shifts one position leftward after each extraction (see 04_UI_SPEC §4.3.2, 07_ACCEPTANCE_TESTS AT-23).
 
 ## 4. Phase 1: Build Max-Heap (The Sift-Down Grammar)
 
-Each sift-down level follows the grammar defined in 05_ALGORITHMS_VIS_SPEC §4.4 and 08_TEST_PLAN §8.3:
+Each sift-down level follows the grammar defined in 05_ALGORITHMS_VIS_SPEC §4.4 and 08_TEST_PLAN TC-A19:
 
 ```text
 T3 (Logical Tree Highlight)  →  T1 (Compare) [1 or 2]  →  T2 (Swap) [0 or 1]
@@ -38,7 +38,7 @@ One T1 fires for the left child; a second T1 fires only if a right child exists 
 ### 1. The Logical Tree Highlight (T3 Tick - 200ms)
 
 * **Trigger:** Emitted before any comparison at a specific sift-down level.
-* **Payload:** `highlight_indices` is a tuple of `(parent, left_child, right_child)` when both children exist, or `(parent, left_child)` when only the left child is within the heap boundary. The parent index is always the first element (contract invariant from 03_DATA_CONTRACTS §3.2 Variant B).
+* **Payload:** `highlight_indices` is a tuple of `(parent, left_child, right_child)` when both children exist, or `(parent, left_child)` when only the left child is within the heap boundary. The parent index is always the first element (contract invariant from 03_DATA_CONTRACTS §OpType.RANGE Variant B).
 * **Visual Action (Simultaneous Snap):** All nodes in the provided tuple flash Orange instantly. No sweep, no stagger, and no positional movement. This explicitly highlights the tree triangle (or pair) being evaluated.
 
 ### 2. The Compare (T1 Tick(s) - 150ms each)
