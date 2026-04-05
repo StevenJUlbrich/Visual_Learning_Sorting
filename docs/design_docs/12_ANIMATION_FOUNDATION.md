@@ -5,6 +5,7 @@
 **Resolves:** Trap A (Sprite Identity), Trap B (Independent Timing)
 
 **Cross-references:**
+
 - `10_ANIMATION_SPEC.md` — frame timing, interpolation math, algorithm-specific motion signatures
 - `02_ARCHITECTURE.md` — MVC boundaries, panel state machine, sprite identity
 - `03_DATA_CONTRACTS.md` — SortResult, OpType, tick taxonomy
@@ -19,7 +20,7 @@
 ### 1.1 Identity Rules
 
 | # | Rule | Violation Consequence |
-|---|------|-----------------------|
+| --- | ------ | ----------------------- |
 | 1 | Each `NumberSprite` receives a **permanent unique ID** at initialization. This ID never changes. | Sprites cannot be tracked across ticks |
 | 2 | The Controller maintains a `sprite_id -> current_slot_index` mapping. | Slot assignments lost on tick transition |
 | 3 | On receiving a new `SortResult`, the Controller computes the **index delta** between previous and new `array_state`. It must **never** scan the new array for value matches. | Duplicate values (e.g., `[3, 1, 3, 2]`) cause wrong sprite selection |
@@ -48,7 +49,7 @@ def compute_delta(self, old_state, new_state):
 ### 1.3 Sprite Coordinate System
 
 | Property | Definition |
-|----------|------------|
+| ---------- | ------------ |
 | `exact_x`, `exact_y` | Float-precision position (center of rendered text surface) |
 | `home_x` | Horizontal center of assigned slot: `panel_rect.x + ARRAY_X_PADDING + (slot_index * slot_width) + (slot_width / 2)` |
 | `home_y` | Vertical baseline: `panel_rect.y + panel_rect.height // 2` |
@@ -64,7 +65,7 @@ def compute_delta(self, old_state, new_state):
 ### 2.1 Frame Clock
 
 | Parameter | Value | Rationale |
-|-----------|-------|-----------|
+| ----------- | ------- | ----------- |
 | Target FPS | 60 | `pygame.time.Clock.tick(60)` |
 | dt clamp | `dt = min(clock.tick(60), 33)` | Prevents overshoot on hitches (window drag, OS sleep) |
 | Max dt | 33ms (2 frames at 60 FPS) | Single large dt cannot skip animation phases |
@@ -72,7 +73,7 @@ def compute_delta(self, old_state, new_state):
 ### 2.2 Operation Durations (Standard)
 
 | Tick Type | OpType | Standard Duration | Usage |
-|-----------|--------|-------------------|-------|
+| --------- | ------ | ----------------- | ----- |
 | T1 Compare | `COMPARE` | **150ms** | All algorithm comparisons |
 | T2 Write | `SWAP` / `SHIFT` | **400ms** | All swaps and shifts |
 | T3 Range | `RANGE` | **200ms** | Heap Sort boundary/tree highlights |
@@ -84,12 +85,13 @@ def compute_delta(self, old_state, new_state):
 After a Heap Sort extraction swap, the subsequent sift-down uses reduced durations:
 
 | Tick Type | Standard | Cadence | Reduction |
-|-----------|----------|---------|-----------|
+| --------- | -------- | ------- | --------- |
 | T1 Compare | 150ms | **100ms** | 33% faster |
 | T2 Swap | 400ms | **250ms** | 37% faster |
 | T3 Tree Highlight | 200ms | **130ms** | 35% faster |
 
 **Controller state:** `sift_down_cadence` flag per Heap Sort panel.
+
 - **Set:** After dispatching an extraction T2 swap (`(0, end)` in Phase 2)
 - **Reset:** When the next boundary T3 tick fires, or when the algorithm completes
 - **Excluded:** Phase 1 (Build Max-Heap) sift-downs always use standard durations
@@ -101,7 +103,7 @@ After a Heap Sort extraction swap, the subsequent sift-down uses reduced duratio
 
 Each panel maintains its own timing state:
 
-```
+```text
 current_operation_remaining_ms  — countdown for active tick
 elapsed_time_ms                 — total race time for this panel
 pending_generator               — algorithm's tick generator
@@ -124,7 +126,7 @@ position = start + (end - start) * ease_in_out(t)
 ```
 
 | Rule | Detail |
-|------|--------|
+| ------ | -------- |
 | Clamp to 1.0 | Sprite never overshoots — lands exactly on target |
 | Float precision | `exact_x` and `exact_y` are floats; sync to integer `rect` only at render |
 | Easing function | Quadratic or Cubic Ease-In-Out (same curve for all motions) |
@@ -141,7 +143,7 @@ position = start + (end - start) * ease_in_out(t)
 ### 3.2 Specific Situations
 
 | Situation | Lifted Sprite(s) | Z-Order Among Lifted |
-|-----------|-------------------|----------------------|
+| --------- | ----------------- | -------------------- |
 | Bubble Sort compare-lift (T1) | Both at `j` and `j+1` | Default index order |
 | Bubble Sort swap-lift exchange (T2) | Both at `j` and `j+1` | Default index order |
 | Selection/Heap swap arc (T2) | Left sprite arcs up | Left on top of right |
@@ -167,7 +169,7 @@ When no animation is active: draw order follows array index (0 first, 6 last).
 ### 4.1 Application Rules
 
 | Rule | Detail |
-|------|--------|
+| ---- | ------ |
 | Timing | Highlights apply **instantly** at tick start (no fade-in/out) |
 | Replacement | When a new tick begins, previous highlights are replaced. Indices not in the new set revert to default color immediately |
 | Pause | Current tick's highlights remain visible and frozen |
@@ -181,7 +183,7 @@ Heap Sort boundary T3 ticks use a staggered left-to-right sweep (see Heap Sort A
 ### 4.3 Color State Machine
 
 | State | Color | When |
-|-------|-------|------|
+| ----- | ----- | ---- |
 | Default (at rest) | Blue `(100, 149, 237)` | No active highlight on this sprite |
 | Active (highlighted) | Orange `(255, 140, 0)` | Sprite's index is in current tick's `highlight_indices` |
 | Settled/Sorted | Steel-blue `(130, 150, 190)` | Heap Sort extracted elements |
@@ -197,7 +199,7 @@ Ring outline and number text share the same color, changing together based on st
 The **compare lane** is a vertical position above the baseline where sprites temporarily reside during comparison or key-selection events.
 
 | Algorithm | Offset Token | Value | Trigger | Duration |
-|-----------|-------------|-------|---------|----------|
+| --------- | ------------ | ----- | ------- | -------- |
 | Bubble Sort | `compare_lift_offset` | `50px` (fixed) | T1 compare on `(j, j+1)` | Transient — returns to baseline within T1 or held through T2 |
 | Insertion Sort | `lift_offset` | `panel_height * 0.06` (proportional) | T1 key-selection on `(i,)` | **Sustained** — key stays elevated across all ticks until T2 placement drop |
 | Selection Sort | — | — | — | No compare-lane motion (highlight-only) |
@@ -216,6 +218,7 @@ The **compare lane** is a vertical position above the baseline where sprites tem
 ### 6.1 Default Model: Stateless Per-Tick Rendering
 
 For most ticks, the rendering cycle is:
+
 1. Receive tick from Controller
 2. Apply highlights and start motion
 3. Complete motion
@@ -228,7 +231,7 @@ No View state carries over between ticks. Each tick is self-contained.
 The following algorithms require View state that persists across tick boundaries:
 
 | Algorithm | Persistent State | Set When | Cleared When | What It Contains |
-|-----------|-----------------|----------|--------------|-----------------|
+| --------- | ---------------- | -------- | ------------ | ---------------- |
 | **Insertion Sort** | Key elevation | T1 key-selection tick on `(i,)` | T2 placement tick (diagonal drop) | Active key `sprite_id`, elevated `exact_y`, KEY label visibility, gap slot index |
 | **Heap Sort** | Sift-down cadence flag | Extraction T2 swap dispatched | Next boundary T3 tick fires, or algorithm completes | Boolean flag on Controller per panel |
 | **Heap Sort** | Phase identity | Phase 1 start / Phase 2 start | Algorithm completes | Current phase for label display ("BUILD MAX-HEAP" / "EXTRACTION") |
@@ -251,6 +254,7 @@ Persistent state should be modeled as explicit named variables on the panel or V
 ### 7.1 Pause
 
 On pause, **all** state freezes:
+
 - `exact_x`, `exact_y` (mid-motion positions)
 - `elapsed_time` within current operation
 - Highlight colors
@@ -260,6 +264,7 @@ On pause, **all** state freezes:
 ### 7.2 Resume
 
 Resume continues from the exact interrupted point:
+
 - Remaining duration: `total_duration - elapsed_time`
 - No tick is re-fetched or restarted
 - Sprite continues its easing curve from the current `t` value
@@ -351,7 +356,7 @@ All per-algorithm animation contracts follow this structure:
 Every per-algorithm contract must satisfy these foundation rules. This checklist is used during contract review.
 
 | # | Check | Foundation Section |
-|---|-------|--------------------|
+| - | ----- | ------------------ |
 | 1 | Sprites tracked by ID, never by value | Section 1 |
 | 2 | All motion uses time-normalized `t = elapsed / duration` with clamp to 1.0 | Section 2.5 |
 | 3 | dt clamped to 33ms maximum | Section 2.1 |
@@ -368,7 +373,7 @@ Every per-algorithm contract must satisfy these foundation rules. This checklist
 ## Appendix A — Trap Resolution Mapping
 
 | Trap | Name | How This Document Resolves It |
-|------|------|-------------------------------|
+| ---- | ---- | ----------------------------- |
 | **A** | Sprite Identity | Section 1: Identity rules table, anti-pattern example, coordinate system |
 | **B** | Independent Timing | Section 2: Frame clock, dt clamping, panel independence, interpolation rules |
 
