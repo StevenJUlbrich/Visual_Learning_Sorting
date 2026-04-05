@@ -38,7 +38,7 @@ One T1 fires for the left child; a second T1 fires only if a right child exists 
 ### 1. The Logical Tree Highlight (T3 Tick - 200ms)
 
 * **Trigger:** Emitted before any comparison at a specific sift-down level.
-* **Payload:** `highlight_indices` is a tuple of `(parent, left_child, right_child)` when both children exist, or `(parent, left_child)` when only the left child is within the heap boundary. The parent index is always the first element (contract invariant from 03_DATA_CONTRACTS §OpType.RANGE Variant B).
+* **Payload:** `highlight_indices` is a tuple of `(parent, left_child, right_child)` when both children exist, or `(parent, left_child)` when only the left child is within the heap boundary. The parent index is always the first element (contract invariant from 03_DATA_CONTRACTS §"OpType.RANGE — Heap Sort Highlight Variants", Variant B — Logical Tree Highlight).
 * **Visual Action (Simultaneous Snap):** All nodes in the provided tuple flash Orange instantly. No sweep, no stagger, and no positional movement. This explicitly highlights the tree triangle (or pair) being evaluated.
 
 ### 2. The Compare (T1 Tick(s) - 150ms each)
