@@ -380,7 +380,7 @@ Other algorithms in v1 do not use the settled color because:
 
 - **Bubble Sort:** The right-side settled suffix is tracked by the `LimitLine` boundary and cursor exclusion rules rather than by a separate settled-color treatment.
 - **Selection Sort:** Elements swapped into the sorted left region could semantically qualify, but Selection Sort's visual emphasis is on the scan/minimum pattern, and adding a third color state would clutter a panel that already has accent + default + highlight transitions.
-- **Insertion Sort:** The growing sorted region on the left is conceptually similar, but the key-lift/shift/drop choreography already provides strong visual separation between "sorted" and "unsorted" without needing a color distinction.
+- **Insertion Sort:** The growing sorted region on the left is conceptually similar, but the key-lift/shift/drop choreography already provides strong visual separation between "sorted" and "unsorted" without needing the settled steel-blue color. (Insertion Sort does use a green-to-blue ring color transition to mark the sorted/unsorted boundary — see D-073 and 05_ALGORITHMS_VIS_SPEC §4.3 — but that is a different mechanism from the settled/extracted color described here.)
 
 #### Post-v1 Extensibility
 
