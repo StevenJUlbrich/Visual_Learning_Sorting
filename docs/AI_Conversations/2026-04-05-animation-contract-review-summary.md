@@ -64,16 +64,16 @@ The contract initially omitted or underemphasized several required UI details th
 
 These were classified as missing details rather than deep conceptual contradictions because the contract already declared dependency on the UI and data specs.
 
-### Fixes confirmed
+### Actions taken
 
-The following corrections were later confirmed:
+The following corrections were applied directly to `HEAP_SORT_ANIMATION.md` and verified against the design docs:
 
-- sift-down grammar updated to the correct `T3 -> T1 [1 or 2] -> T2 [0 or 1]` form
-- payload wording updated to allow the single-child case and to preserve the parent-first invariant
-- missing Heap UI assets added to the contract
-- bad cross-references corrected to point at the proper sections in the design docs
+- **Line 30:** Sift-down grammar rewritten from rigid `T3 → T1 → T2` to the correct `T3 → T1 [1 or 2] → T2 [0 or 1]` form, with cross-references to 05_ALGORITHMS_VIS_SPEC §4.4 and 08_TEST_PLAN TC-A19.
+- **Line 41:** Payload wording rewritten to allow `(parent, left_child)` when only one child exists, preserving the parent-first invariant. Citation updated to point to the exact heading: 03_DATA_CONTRACTS, "OpType.RANGE — Heap Sort Highlight Variants", Variant B — Logical Tree Highlight.
+- **Lines 21, 25, 26:** Three missing Heap UI assets added to §3: active orange edge rendering during T3 logical-tree highlights, sorted-row placeholder outlines, and the heap boundary marker with dash pattern, color, and movement rule.
+- **Lines 21, 25, 26, 30:** Stale `§4.5` and `§8.3` cross-references replaced with correct targets (`04_UI_SPEC §4.3.2`, `08_TEST_PLAN TC-A19`).
 
-### Final assessment
+### Heap Sort final assessment
 
 **Status:** Aligned.
 
@@ -111,20 +111,22 @@ The main contradictions uncovered were actually in the design docs around it.
    - `60-100ms`
    - `100-150ms`
 
-### Fixes confirmed
+### Actions taken
 
-The following updates were later confirmed across the design docs:
+The Bubble Sort contract itself required no changes — it already matched the authoritative animation specs. The following corrections were applied to the surrounding design docs:
 
-- arc-swap wording replaced with the correct lifted horizontal slide wording
-- the generic acceptance test was updated so Bubble was no longer grouped with arc-swap algorithms
-- the compare-lift timing references were normalized to the `0-67 / 67-100 / 100-150` split
-- the remaining `compare_lift_offset` inconsistency in `DECISIONS.md` was fixed to `50px`
+- **05_ALGORITHMS_VIS_SPEC.md:116:** Replaced "swap arc motion begins from the baseline" with the correct lifted horizontal slide description, citing 10_ANIMATION_SPEC §5.1.2.
+- **07_ACCEPTANCE_TESTS.md:70:** Removed Bubble Sort from the arc-swap algorithm list; added its actual motion model (linear horizontal slide while lifted at compare lane).
+- **05_ALGORITHMS_VIS_SPEC.md:136–138:** Timing split updated from `0–60ms / 60–100ms / 100–150ms` to `0–67ms / 67–100ms / 100–150ms`.
+- **06_BEHAVIOR_SPEC.md:57–59:** Same timing normalization applied.
+- **DECISIONS.md:66 (D-059):** Same timing normalization applied.
+- **DECISIONS.md:66 (D-059) and :69 (D-061):** `compare_lift_offset = panel_height * 0.05` replaced with `compare_lift_offset = 50px` (two occurrences).
 
-### Final assessment
+### Bubble Sort final assessment
 
 **Status:** Aligned.
 
-The Bubble contract supported the intended design from the start. The later work mostly repaired stale or less precise design-doc language around it.
+The Bubble contract supported the intended design from the start. The work repaired stale design-doc language around it to match the authoritative frame-level specs in 10_ANIMATION_SPEC.md.
 
 ---
 
@@ -160,18 +162,19 @@ The review also exposed a design-doc ambiguity about Insertion Sort's color boun
 
 This turned out to be a wording problem, not a design intent change.
 
-### Fixes confirmed
+### Actions taken
 
-The following corrections were later confirmed:
+The following corrections were applied directly to `INSERTION_SORT_ANIMATION.md` and verified against the design docs:
 
-- a new terminating-comparison subsection was added
-- the worked example now covers both exit paths:
-  - `j < 0`
-  - exit-by-condition
-- the unsupported post-placement color language was replaced with wording that defers to the standard highlight replacement rule and D-073
-- the ambiguous UI-spec passage was rewritten so it clearly says Insertion Sort does not use the **settled steel-blue** color, while still acknowledging the **green-to-blue** boundary
+- **New §6 (Phase 2b):** Added a terminating-comparison subsection documenting the conditional final T1 compare when the loop exits by `arr[j] <= key`, with cross-references to 05_ALGORITHMS_VIS_SPEC §4.3 Step 3 and 07_ACCEPTANCE_TESTS AT-11 step 5.
+- **§9 Worked Example expanded:** Now covers both exit paths — pass `i=2` (`j < 0`, no terminating comparison) and pass `i=3` (exit-by-condition, terminating comparison fires). Both match the worked examples in 05_ALGORITHMS_VIS_SPEC.md:258–278.
+- **§7 Resolution wording (line 62):** Replaced unsupported "retains orange briefly, transitioning to Green" with wording that defers to the standard highlight replacement rule (12_ANIMATION_FOUNDATION §4.1) and the color-only boundary model (D-073, 05_ALGORITHMS_VIS_SPEC §4.3).
 
-### Final assessment
+The following correction was applied to the design docs:
+
+- **04_UI_SPEC.md:383:** Rewritten to clarify that Insertion Sort does not use the **settled steel-blue** color, while explicitly acknowledging the **green-to-blue** ring color boundary from D-073 and 05_ALGORITHMS_VIS_SPEC §4.3.
+
+### Insertion Sort final assessment
 
 **Status:** Aligned.
 
