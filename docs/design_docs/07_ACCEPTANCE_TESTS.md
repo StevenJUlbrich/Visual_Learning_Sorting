@@ -11,7 +11,7 @@ All items below must pass:
 - No shared mutable array behavior exists between algorithm instances.
 - Selection Sort cannot terminate in a near-sorted state.
 - Global controls map strictly to Path 2 UI expectations.
-- Panels use universal orange active highlight (D-067), circular ring sprites (D-069), and Option C resolution flags without rendering artifacts.
+- Panels use universal orange active highlight (D-067), circular ring sprites (D-069), and fixed resolution presets (Desktop/Tablet) without rendering artifacts.
 - Sprites animate smoothly via `dt` without teleporting, and independent elapsed timers halt precisely upon algorithm completion.
 - Comparisons and writes counters accurately reflect the algorithmic operations performed.
 
@@ -38,6 +38,14 @@ All items below must pass:
 - Verify faster algorithms finish animating earlier, enter their completion state, and permanently halt their individual elapsed timers.
 - For each panel, verify final numbers are ascending `[1, 2, 3, 4, 5, 6, 7]` and unchanged after completion.
 
+### AT-03a Completion Green Panel
+
+- Run all algorithms to completion.
+- Verify that each completed panel's background transitions from the standard dark `(45, 45, 53)` to a muted completion green `(35, 55, 42)` (D-078).
+- Verify the HUD stats (Big-O, elapsed time, steps, comparisons, writes) are frozen at their final values and remain readable on the green panel.
+- Verify the green panel background is visually distinct from the app background `(30, 30, 36)` and the standard panel background.
+- **Regression guard:** If the panel background stays dark after completion, or the HUD stats disappear, the test fails.
+
 ### AT-04 Generator Completion Contract
 
 - Observe full run for each algorithm.
@@ -59,7 +67,7 @@ All items below must pass:
 ### AT-07 Sprite Motion and Tweening Smoothness
 
 - During Play, observe the physical movement of the sprites.
-- Verify that swaps (Bubble, Selection, Heap) utilize a `y`-axis arc to prevent visual collisions.
+- Verify that Selection Sort and Heap Sort swaps utilize a `y`-axis arc to prevent visual collisions. Bubble Sort swaps use a linear horizontal slide while lifted at the compare lane (no arc).
 - Verify that elements do not "teleport" or snap abruptly unless the user pauses or steps mid-animation.
 
 ### AT-08 Duplicate Value Stability
@@ -146,21 +154,24 @@ Run all algorithms to completion with `[4, 7, 2, 6, 1, 5, 3]` and verify:
 - Verify that **settled/extracted** elements in the Heap Sort panel (after leaving the active heap) are clearly readable — they should appear as a muted steel-blue, visually distinct from both the vivid default blue and the orange accent, without blending into the dark panel background.
 - Verify the **completion color** (green) is bright and legible when all elements turn green at algorithm finish.
 
-### AT-17 Portrait Mode Layout Integrity
+### AT-17 Tablet Preset Layout Integrity
 
-- Set `config.toml` to `orientation = "portrait"` (720x996) and launch app.
+- Set `config.toml` to `preset = "tablet"` (1024×768) and launch app.
 - Verify all four panels are visible in the 2x2 grid without overlapping or clipping.
 - Verify the metrics line (Big-O, elapsed time, counters) is fully visible and not truncated or overlapping with the algorithm title.
 - Verify the message line is visible and does not collide with the metrics line above or the array numbers below.
 - Verify number sprites fit within their slots without overlapping adjacent numbers.
 - Verify arc motion during swaps does not cause sprites to overlap with header text or escape the panel boundary.
+- Verify the Heap Sort binary tree renders with clear horizontal separation between nodes at all levels (panel width ≥ 489px).
+- Verify the window cannot be resized during runtime (D-077).
 
-### AT-18 Landscape Mode Layout Integrity
+### AT-18 Desktop Preset Layout Integrity
 
-- Set `config.toml` to `orientation = "landscape"` (1280x720) and launch app.
+- Set `config.toml` to `preset = "desktop"` (1280×720) and launch app.
 - Verify all four panels are visible in the 2x2 grid with proportional spacing.
 - Verify header, metrics, message, and array regions are vertically stacked without overlap.
 - Verify all text is anti-aliased (smooth edges, no jagged stairstepping on curves of letters like "S", "O", "C").
+- Verify the window cannot be resized during runtime (D-077).
 
 ### AT-19 Selection Sort Min Tracking
 

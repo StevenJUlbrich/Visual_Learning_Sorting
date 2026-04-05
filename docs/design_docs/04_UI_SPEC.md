@@ -17,7 +17,11 @@ Scope: This spec locks the visual and compositional behavior for v1 UI, grounded
 
 ### 2.2 Supported Window Sizes
 
-- Dynamic target based on `config.toml` window resolution.
+- Two fixed presets selected via `config.toml`:
+  - **Desktop:** 1280×720
+  - **Tablet:** 1024×768
+- Window size is locked at startup. The `pygame.display.set_mode()` call does not include the `RESIZABLE` flag. No `VIDEORESIZE` event handling is needed (D-077).
+- Portrait orientation (720×996) is removed (D-079).
 
 ### 2.3 Grid Layout
 
@@ -55,19 +59,19 @@ Buttons scale proportionally or center horizontally inside the control bar with 
 
 ### 2.6 Resolution Geometry Reference
 
-Derived values for the two supported configurations:
+Derived values for the two supported presets:
 
-| Token | Landscape (1280x720) | Portrait (720x996) |
+| Token | Desktop (1280×720) | Tablet (1024×768) |
 | --- | --- | --- |
-| `PADDING` | 19px | 11px |
-| `CONTROL_BAR_HEIGHT` | 50px | 70px |
-| `panel_width` | 611px | 343px |
-| `panel_height` | 296px | 441px |
-| `slot_width` (7 items) | 78px | 44px |
-| `arc_height` | 24px | 35px |
-| `lift_offset` | 18px | 26px |
+| `PADDING` | 19px | 15px |
+| `CONTROL_BAR_HEIGHT` | 50px | 54px |
+| `panel_width` | 611px | 489px |
+| `panel_height` | 296px | 327px |
+| `slot_width` (7 items) | 78px | 63px |
+| `arc_height` | 24px | 26px |
+| `lift_offset` | 18px | 20px |
 
-These are computed values for reference; the implementation always calculates dynamically from the window dimensions.
+These are computed values for reference; the implementation calculates them once at startup from the configured window dimensions. Both presets guarantee panel widths ≥ 489px, ensuring the Heap Sort tree renders with ample horizontal spacing.
 
 ## 3) Typography Rules (Locked)
 
@@ -118,32 +122,32 @@ Each algorithm panel contains the following UI regions and elements, laid out ve
 
 ### 4.1 Header Region
 
-The header is a **strictly vertical stack**: Title → Metrics → Message, rendered top-to-bottom with no horizontal adjacency between elements. This vertical stacking is a layout invariant that prevents text overflow in narrow panels (portrait mode at 343px width) and provides a consistent visual rhythm across all resolutions.
+The header is a **strictly vertical stack**: Title → Metrics → Message, rendered top-to-bottom with no horizontal adjacency between elements. This vertical stacking is a layout invariant that provides a consistent visual rhythm across both resolution presets.
 
 #### 4.1.1 Header Vertical Rhythm
 
 The three header elements flow downward from the panel's top-left inset corner, separated by fixed pixel gaps:
 
-```
-┌─ Panel ─────────────────────────────────────────┐
-│  ↕ HEADER_INSET_Y                               │
-│  ← HEADER_INSET_X →                             │
+```plaintext
+┌─ Panel ──────────────────────────────────────────┐
+│  ↕ HEADER_INSET_Y                                │
+│  ← HEADER_INSET_X →                              │
 │  ┌─ Title ────────────────────────────────────┐  │
 │  │ "Heap Sort"  (Inter-Bold 24, primary text) │  │
 │  └────────────────────────────────────────────┘  │
 │  ↕ METRICS_GAP (4px)                             │
 │  ┌─ Metrics ──────────────────────────────────┐  │
-│  │ "O(n log n) | 03.45s | Steps: 35 | ..."   │  │
+│  │ "O(n log n) | 03.45s | Steps: 35 | ..."    │  │
 │  └────────────────────────────────────────────┘  │
 │  ↕ MESSAGE_GAP (6px)                             │
 │  ┌─ Message ──────────────────────────────────┐  │
 │  │ "Swapping index 0 (value 7) with index 6…" │  │
 │  └────────────────────────────────────────────┘  │
-│                                                   │
-│  ═══════ Array Rendering Region ═══════           │
-│         4   7   2   6   1   5   3                 │
-│                                                   │
-└───────────────────────────────────────────────────┘
+│                                                  │
+│  ═══════ Array Rendering Region ═══════          │
+│         4   7   2   6   1   5   3                │
+│                                                  │
+└──────────────────────────────────────────────────┘
 ```
 
 **Spacing tokens:**
@@ -159,8 +163,8 @@ The three header elements flow downward from the panel's top-left inset corner, 
 
 At fixed font sizes (24px title, 16px body × 2 lines), the approximate header height is:
 
-- Landscape (296px panel): ~24 + 4 + 16 + 6 + 16 = 66px rendered content + ~12px top inset = **~78px** (26% of panel height).
-- Portrait (441px panel): same pixel height = **~78px** (18% of panel height).
+- Desktop (296px panel): ~24 + 4 + 16 + 6 + 16 = 66px rendered content + ~12px top inset = **~78px** (26% of panel height).
+- Tablet (327px panel): same pixel height = **~78px** (24% of panel height).
 
 The header must never exceed **35% of panel height**. If a future font or resolution change would exceed this budget, the message line is the first element to be omitted (metrics and title are mandatory).
 
@@ -172,13 +176,13 @@ The header must never exceed **35% of panel height**. If a future font or resolu
 
 #### Metrics Line
 
-- Displayed **below** the title line, never beside it. This vertical separation is the primary overflow prevention mechanism for portrait panels (343px width), where a side-by-side layout would exceed available horizontal space.
+- Displayed **below** the title line, never beside it. This vertical separation provides a consistent layout across both resolution presets.
 - Anchor: `x = rect.x + HEADER_INSET_X`, `y = title_y + title_height + METRICS_GAP`.
 - Format: `"<Big-O> | <elapsed> | Steps: <n> | Comps: <n> | Writes: <n>"`.
 - Example: `"O(n²) | 03.45s | Steps: 35 | Comps: 21 | Writes: 30"`.
 - Color: secondary text `(190, 190, 200)`.
 - Font: body font (Inter-Regular 16).
-- **Portrait overflow rule:** If the metrics string exceeds `panel_width - (HEADER_INSET_X * 2)`, the view truncates with an ellipsis (`…`) from the right. Counter labels are never abbreviated — the string truncates from the `Writes:` field leftward, preserving Big-O and elapsed time as highest priority.
+- **Overflow rule:** If the metrics string exceeds `panel_width - (HEADER_INSET_X * 2)`, the view truncates with an ellipsis (`…`) from the right. Counter labels are never abbreviated — the string truncates from the `Writes:` field leftward, preserving Big-O and elapsed time as highest priority. With the minimum panel width now 489px (Tablet preset), overflow is not expected under normal conditions.
 
 #### Message Line
 
@@ -243,7 +247,7 @@ Each node's horizontal position is computed from the panel center using binary s
 
 General formula for any index `i`:
 
-```
+```python
 depth = floor(log2(i + 1))
 position_in_level = i - (2**depth - 1)
 total_at_level = 2**depth
@@ -305,11 +309,11 @@ Within each panel, sprites are drawn in a defined order to prevent visual occlus
 3. **Among multiple lifted sprites**, the sprite with the **smallest `exact_y`** (highest on screen) draws last (topmost). If tied, array-index order breaks the tie.
 4. **Restoration:** When a lifted sprite returns to `home_y` (lift descent completes, swap arc lands, key settles into place), it immediately reverts to default index-order rendering. No z-elevation persists after the animation concludes.
 
-This rule is a **layout integrity invariant**: a lifted key must never disappear behind a shifting baseline element, regardless of panel dimensions or orientation. The full motion-level specification is in `10_ANIMATION_SPEC.md` Section 4. See also D-033.
+This rule is a **layout integrity invariant**: a lifted key must never disappear behind a shifting baseline element, regardless of panel dimensions. The full motion-level specification is in `10_ANIMATION_SPEC.md` Section 4. See also D-033.
 
 ### 4.6 State Overlays
 
-- Completion state: all numbers in completion color.
+- Completion state: panel background transitions to muted completion green `(35, 55, 42)` (D-078). All numbers display in completion color `(80, 220, 120)`. The HUD stats (Big-O, elapsed time, steps, comparisons, writes) freeze at their final values and remain displayed on the green panel. The green background provides a definitive "finish line" signal visible at a glance.
 - Error state: error border + readable failure message.
   - Error border color: `(235, 80, 80)`.
   - Error border thickness = 3px.
@@ -337,6 +341,7 @@ All colors are verified against panel background `(45, 45, 53)` for WCAG 2.1 con
 | --- | --- | --- | --- |
 | App background | `(30, 30, 36)` | — | N/A (no text) |
 | Panel background | `(45, 45, 53)` | — | Base surface |
+| Panel background (completed) | `(35, 55, 42)` | — | Completion finish line (D-078) |
 | Primary text | `(240, 240, 245)` | 12.0:1 | AAA normal |
 | Secondary text | `(190, 190, 200)` | 7.4:1 | AAA normal |
 | Default array value | `(100, 150, 255)` | 4.8:1 | AAA large |
@@ -375,7 +380,7 @@ Other algorithms in v1 do not use the settled color because:
 
 - **Bubble Sort:** The right-side settled suffix is tracked by the `LimitLine` boundary and cursor exclusion rules rather than by a separate settled-color treatment.
 - **Selection Sort:** Elements swapped into the sorted left region could semantically qualify, but Selection Sort's visual emphasis is on the scan/minimum pattern, and adding a third color state would clutter a panel that already has accent + default + highlight transitions.
-- **Insertion Sort:** The growing sorted region on the left is conceptually similar, but the key-lift/shift/drop choreography already provides strong visual separation between "sorted" and "unsorted" without needing a color distinction.
+- **Insertion Sort:** The growing sorted region on the left is conceptually similar, but the key-lift/shift/drop choreography already provides strong visual separation between "sorted" and "unsorted" without needing the settled steel-blue color. (Insertion Sort does use a green-to-blue ring color transition to mark the sorted/unsorted boundary — see D-073 and 05_ALGORITHMS_VIS_SPEC §4.3 — but that is a different mechanism from the settled/extracted color described here.)
 
 #### Post-v1 Extensibility
 
@@ -408,8 +413,10 @@ The following colors were adjusted to meet AAA accessibility requirements:
   - **Progressive sorted-boundary transition:** The settled region grows from right to left as extractions proceed. After each extraction swap, the sorted boundary advances one position leftward (from index `n-1` toward index `1`), and the newly placed element immediately adopts the settled color. The View determines settled status by comparing each element's current array index against `heap_size`: any element at index `≥ heap_size` renders in settled color. This produces a progressive visual history — the learner watches the right side of the array gradually fill with steel-blue numbers, one element per extraction, while the active heap on the left (default blue / orange highlights) visibly shrinks. The growing steel-blue region directly illustrates that the sorted output is being built incrementally from the maximum downward.
   - **Extraction sequence for `[4, 7, 2, 6, 1, 5, 3]`:** After the max-heap `[7, 6, 5, 4, 1, 2, 3]` is built, the first extraction places `7` at index 6 (settled). The next places `6` at index 5 (settled). The boundary continues leftward: indices 6, 5, 4, 3, 2, 1 transition in sequence. After the final extraction, only index 0 remains in the active heap — it is the last element and needs no swap, so it transitions on the completion tick when all elements turn green.
 - Complete tick:
-  - Entire array row uses completion color.
-  - Panel remains visible and static.
+  - Panel background transitions to muted completion green `(35, 55, 42)` (D-078).
+  - Entire array row uses completion color `(80, 220, 120)`.
+  - HUD stats (Big-O, elapsed time, steps, comparisons, writes) freeze at their final values on the green panel.
+  - Panel remains visible and static — a definitive "finish line" for the race.
   - For Heap Sort, the settled/extracted color is **replaced** by the completion color — all seven numbers turn green uniformly.
 - Failure tick:
   - Panel gets error border and failure text.
@@ -430,4 +437,6 @@ The following colors were adjusted to meet AAA accessibility requirements:
 - No per-panel independent playback controls.
 - No historical trail/replay layers.
 - No audio UI elements.
-- No proportional font scaling (font sizes are fixed at 24/16/28 across resolutions).
+- No proportional font scaling (font sizes are fixed at 24/16/28 across presets).
+- No runtime window resizing (window is locked at startup — D-077).
+- No portrait orientation (D-079).

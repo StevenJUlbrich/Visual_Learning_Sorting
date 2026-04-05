@@ -51,6 +51,7 @@ def sort_generator(self):
 ```
 
 **Key rules:**
+
 - `success=False` is the signal. The Controller checks this field and transitions the panel to `failed` state (see 02_ARCHITECTURE.md Panel Runtime State Machine).
 - `is_complete=False` — a failure is not a successful completion.
 - `message` is required — it appears in the panel's message line so the learner sees a human-readable explanation.
@@ -113,7 +114,7 @@ Required sequence per inner iteration `j`:
 
 1. The `ComparisonPointer` moves to index `j` while remaining to the left of the `LimitLine`, which marks the current right-side boundary of the unsorted region.
 2. `T1 Compare Tick` on `(j, j+1)` before any swap decision. The View applies a **compare-lift** to the adjacent pair: both sprites at indices `j` and `j+1` ease upward from `home_y` to `home_y - compare_lift_offset` over the first half of the T1 duration, hold briefly, then ease back to `home_y` by tick end (see Animation Spec Section 5.1.1). This temporary vertical isolation makes every comparison visually readable — even comparisons that do not result in a swap.
-3. If swap needed, perform swap then emit `T2 Write/Mutation Tick` on `(j, j+1)`. The swap arc motion begins from the baseline (`home_y`), not from the lifted position — the compare-lift has already returned to baseline before the T2 tick starts.
+3. If swap needed, perform swap then emit `T2 Write/Mutation Tick` on `(j, j+1)`. The swap uses a **linear horizontal slide while both sprites remain lifted** at `compare_lane_y` — not an arc. After the horizontal exchange completes, both sprites descend together to `home_y` (see 10_ANIMATION_SPEC Section 5.1.2).
 4. If no swap needed, the algorithm advances to the next `j`. The compare-lift's return to baseline serves as the visual "release" signal that the pair was inspected but left in place.
 
 Pass boundary rules:
@@ -133,8 +134,8 @@ Additional rules:
 
 - **Lift offset:** `compare_lift_offset = 50px` (fixed). This locks Bubble Sort to the observed reference choreography, where the pair rises into a dedicated compare lane before either holding or exchanging.
 - **Timing within the 150ms T1 duration:**
-  - `0–60ms` (40%): both sprites ease upward from `home_y` to `home_y - compare_lift_offset`.
-  - `60–100ms` (27%): hold at lifted position (comparison is visually prominent).
+  - `0–67ms` (45%): both sprites ease upward from `home_y` to `home_y - compare_lift_offset`.
+  - `67–100ms` (22%): hold at lifted position (comparison is visually prominent).
   - `100–150ms` (33%): both sprites ease back down to `home_y`.
 - **Easing:** Standard ease-in-out curve for both ascent and descent.
 - **Both sprites lift equally** — unlike Insertion Sort where only the key lifts, Bubble Sort lifts the entire adjacent pair as a unit, emphasizing that the algorithm evaluates *pairs*, not individual elements.
@@ -157,6 +158,7 @@ For each `j` from `i+1` to `n-1`:
 2. Emit `T1 Compare Tick` with `highlight_indices = (min_idx, j)`.
 
 **Highlight contract:** Every T1 tick during the scan **must** include both `min_idx` and `j` in `highlight_indices`. This two-index highlight serves a dual purpose:
+
 - `min_idx` represents the **running minimum pointer** — the best candidate found so far. By including it on every tick, the learner can visually track the minimum as it "jumps" to a new position whenever a smaller element is found.
 - `j` represents the **scan cursor** — the element currently being evaluated.
 
@@ -292,6 +294,7 @@ Phase 1 is not merely a sequence of array swaps — it is a **structural transfo
 The Heap Sort panel renders a **binary tree layout** of the active heap elements, positioned in the upper portion of the panel's array rendering region. This tree visualization is unique to Heap Sort — the other three algorithms use a flat single-row layout.
 
 **Tree layout rules:**
+
 - Tree nodes are circular outlined rings (D-069) connected by parent-child edge lines drawn in `(120, 120, 130)`.
 - The root node is centered horizontally at the top of the tree area.
 - Each level of the tree is positioned progressively lower, with children spread horizontally beneath their parent.
@@ -300,15 +303,18 @@ The Heap Sort panel renders a **binary tree layout** of the active heap elements
 - Node highlight colors follow the universal active highlight (D-067): orange `(255, 140, 0)` during T1 compare and T3 tree highlights, default blue when at rest within the heap.
 
 **Sorted region row:**
+
 - Below the tree, a compact horizontal row displays elements that have been extracted from the heap.
 - Sorted elements use the settled/extracted color `(130, 150, 190)` steel-blue rings.
 - The sorted row grows from right to left as extractions proceed.
 - On the completion tick, all elements (tree collapses, sorted row becomes full) transition to green `(80, 220, 120)`.
 
 **Heap boundary marker:**
+
 - A subtle vertical dashed line separates the active heap slots from the sorted slots in the row below the tree, labeled "heap boundary".
 
 **Phase label:**
+
 - During Phase 1, the text "BUILD MAX-HEAP" is rendered in orange `(255, 140, 0)` within the tree visualization area.
 - During Phase 2, the text changes to "EXTRACTION".
 - The label is positioned inside the panel content area (between tree nodes or below the tree root), matching the reference video's "Heapify" text placement.
@@ -406,6 +412,7 @@ def sift_down(arr, i, heap_size):
 ```
 
 Key structural points:
+
 - The `while True` loop with `i = largest` at the bottom implements iterative sift-down (no recursion), satisfying the "iteratively or as an inner generator" requirement.
 - The T3 tick is emitted at the **top** of the loop, guaranteeing it precedes every comparison level — including levels reached after a swap cascades downward.
 - The `triangle` list dynamically includes only children within `heap_size`, handling leaf nodes and single-child parents correctly.
@@ -489,6 +496,7 @@ All compare highlights use the universal active highlight color `(255, 140, 0)` 
 The Logical Tree Highlight serves as a **dynamic focus mechanism** that works in conjunction with the rendered binary tree layout (see Section 4.4, Tree Visualization). The T3 tick's highlight pattern identifies the specific parent-child branch being evaluated at each sift-down level, adding operational emphasis on top of the persistent tree edges.
 
 **Branching contract for `highlight_indices`:** The T3 tick's `highlight_indices` field must satisfy all of the following:
+
 - **Must include** the parent index `i` — always present.
 - **Must include** `left` (`2*i+1`) if `left < heap_size` — draws the left branch.
 - **Must include** `right` (`2*i+2`) if `right < heap_size` — draws the right branch.

@@ -99,7 +99,7 @@ The Heap Sort panel is the only panel that does not use the standard flat single
 
 ## Config + Runtime Targets
 
-- Proportional geometry target. The View calculates `x` and `y` baselines, padding, and sprite dimensions dynamically as percentages of the active window resolution defined in `config.toml` (e.g., standard 1080p support).
+- Fixed resolution presets: Desktop (1280×720) or Tablet (1024×768), selected via `config.toml`. The View calculates `x` and `y` baselines, padding, and sprite dimensions once at startup as percentages of the configured resolution. Window size is locked at runtime — no resize handling is needed (D-077).
 - Extensibility Rules: New algorithms must implement `BaseSortAlgorithm` and `sort_generator` contract. Max simultaneous displayed algorithms remains 4 in v1.
 
 ## Sprite Identity

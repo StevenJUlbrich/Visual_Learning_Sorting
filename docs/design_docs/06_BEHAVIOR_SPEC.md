@@ -54,8 +54,8 @@ Bubble Sort uses a stricter sub-state machine inside the standard `T1`/`T2` timi
 - When the compared values do **not** swap, the two orange nodes must pause briefly at the compare lane before returning to baseline.
 - This hold exists specifically to make a non-swap comparison visually legible; the comparison must not read as an instantaneous flash.
 - Timing within the 150ms compare tick is locked as:
-  - `0–60ms`: arrow arrives at `j`, both active nodes turn orange, and the pair lifts to the compare lane.
-  - `60–100ms`: the pair holds in orange at the compare lane.
+  - `0–67ms`: arrow arrives at `j`, both active nodes turn orange, and the pair lifts to the compare lane.
+  - `67–100ms`: the pair holds in orange at the compare lane.
   - `100–150ms`: the pair returns to the baseline while remaining readable as the active comparison.
 
 #### Swap State (`T2`, 400ms total)
@@ -81,7 +81,9 @@ Bubble Sort uses a stricter sub-state machine inside the standard `T1`/`T2` timi
 
 - On `SortResult(success=True, is_complete=True)`, the algorithm queue is emptied and marked inactive.
 - The elapsed timer for that specific panel stops permanently.
-- Completed panel keeps final sorted array visible, applies completion color treatment, and ceases step incrementation.
+- The panel background transitions from `(45, 45, 53)` to muted completion green `(35, 55, 42)` (D-078).
+- Completed panel keeps final sorted array visible in completion color `(80, 220, 120)`, with HUD stats (Big-O, elapsed time, steps, comparisons, writes) frozen at their final values on the green panel.
+- The green panel background provides a definitive "finish line" — the learner can instantly see which algorithms have completed the race.
 
 ## Failure Behavior
 

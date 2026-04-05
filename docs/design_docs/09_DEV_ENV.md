@@ -134,12 +134,13 @@ The app reads `config.toml` from the repo root at startup. If the file is missin
 
 ```toml
 [window]
-# "landscape" (1280x720) or "portrait" (720x996)
-orientation = "landscape"
+# "desktop" (1280x720) or "tablet" (1024x768)
+preset = "desktop"
 ```
 
-* `orientation`: determines window resolution. Default is `"landscape"` (1280x720). Set to `"portrait"` for 720x996.
-* The controller reads this file once at startup; the View layer calculates its `y_home` baselines dynamically based on this setting. Changes require a restart.
+* `preset`: determines window resolution. Default is `"desktop"` (1280×720). Set to `"tablet"` for 1024×768.
+* Portrait orientation (720×996) has been removed (D-079). Both presets are landscape-oriented with panel widths ≥ 489px.
+* The window size is locked at startup and cannot be resized during runtime (D-077). The View layer calculates all geometry once at startup. Changes require a restart.
 
 ## 9) Path and Shell Conventions
 
