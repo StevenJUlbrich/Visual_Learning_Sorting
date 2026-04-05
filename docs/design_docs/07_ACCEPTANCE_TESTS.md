@@ -67,7 +67,7 @@ All items below must pass:
 ### AT-07 Sprite Motion and Tweening Smoothness
 
 - During Play, observe the physical movement of the sprites.
-- Verify that swaps (Bubble, Selection, Heap) utilize a `y`-axis arc to prevent visual collisions.
+- Verify that Selection Sort and Heap Sort swaps utilize a `y`-axis arc to prevent visual collisions. Bubble Sort swaps use a linear horizontal slide while lifted at the compare lane (no arc).
 - Verify that elements do not "teleport" or snap abruptly unless the user pauses or steps mid-animation.
 
 ### AT-08 Duplicate Value Stability

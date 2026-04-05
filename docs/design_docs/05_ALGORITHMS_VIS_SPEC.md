@@ -113,7 +113,7 @@ Required sequence per inner iteration `j`:
 
 1. The `ComparisonPointer` moves to index `j` while remaining to the left of the `LimitLine`, which marks the current right-side boundary of the unsorted region.
 2. `T1 Compare Tick` on `(j, j+1)` before any swap decision. The View applies a **compare-lift** to the adjacent pair: both sprites at indices `j` and `j+1` ease upward from `home_y` to `home_y - compare_lift_offset` over the first half of the T1 duration, hold briefly, then ease back to `home_y` by tick end (see Animation Spec Section 5.1.1). This temporary vertical isolation makes every comparison visually readable — even comparisons that do not result in a swap.
-3. If swap needed, perform swap then emit `T2 Write/Mutation Tick` on `(j, j+1)`. The swap arc motion begins from the baseline (`home_y`), not from the lifted position — the compare-lift has already returned to baseline before the T2 tick starts.
+3. If swap needed, perform swap then emit `T2 Write/Mutation Tick` on `(j, j+1)`. The swap uses a **linear horizontal slide while both sprites remain lifted** at `compare_lane_y` — not an arc. After the horizontal exchange completes, both sprites descend together to `home_y` (see 10_ANIMATION_SPEC Section 5.1.2).
 4. If no swap needed, the algorithm advances to the next `j`. The compare-lift's return to baseline serves as the visual "release" signal that the pair was inspected but left in place.
 
 Pass boundary rules:
@@ -133,8 +133,8 @@ Additional rules:
 
 - **Lift offset:** `compare_lift_offset = 50px` (fixed). This locks Bubble Sort to the observed reference choreography, where the pair rises into a dedicated compare lane before either holding or exchanging.
 - **Timing within the 150ms T1 duration:**
-  - `0–60ms` (40%): both sprites ease upward from `home_y` to `home_y - compare_lift_offset`.
-  - `60–100ms` (27%): hold at lifted position (comparison is visually prominent).
+  - `0–67ms` (45%): both sprites ease upward from `home_y` to `home_y - compare_lift_offset`.
+  - `67–100ms` (22%): hold at lifted position (comparison is visually prominent).
   - `100–150ms` (33%): both sprites ease back down to `home_y`.
 - **Easing:** Standard ease-in-out curve for both ascent and descent.
 - **Both sprites lift equally** — unlike Insertion Sort where only the key lifts, Bubble Sort lifts the entire adjacent pair as a unit, emphasizing that the algorithm evaluates *pairs*, not individual elements.
