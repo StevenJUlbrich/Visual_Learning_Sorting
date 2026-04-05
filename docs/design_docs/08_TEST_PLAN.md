@@ -328,11 +328,12 @@ All simulated elapsed time accumulation must use **integer milliseconds** intern
 - Identify sift-down regions in the trace: contiguous subsequences bounded by `RANGE` (T3 Logical Tree Highlight) ticks that are **not** boundary emphasis ticks. Boundary T3 ticks are distinguished by having contiguous `highlight_indices` (`tuple(range(0, k))`); Logical Tree T3 ticks have non-contiguous `highlight_indices`.
 - For **each** sift-down level (each Logical Tree T3 tick), assert the following sequence contract:
 
-```
+```text
 RANGE (T3)  →  COMPARE (T1) [1 or 2]  →  WRITE (T2) [0 or 1]
 ```
 
 Specifically:
+
 1. The sift-down level **must** begin with exactly one `OpType.RANGE` tick whose `highlight_indices` is non-contiguous (the parent-child triangle).
 2. The `RANGE` tick **must** be immediately followed by 1 or 2 `OpType.COMPARE` ticks (left child comparison, optionally right child comparison).
 3. No `COMPARE` tick may appear at a sift-down level without a preceding `RANGE` tick at that same level.
@@ -345,6 +346,7 @@ Specifically:
 - Phase 2 (Extraction): Assert that after each boundary T3 tick and extraction T2 swap, the subsequent sift-down repair follows the same T3 → T1 → T2 contract at every level, with no T1 tick appearing before its level's T3 tick.
 
 **Anti-patterns this test catches:**
+
 - T3 tick omitted entirely (comparisons happen without tree context).
 - T3 tick emitted after T1 (learner sees comparison before understanding which branch is active).
 - Multiple T3 ticks emitted at the same sift-down level (visual stutter).
