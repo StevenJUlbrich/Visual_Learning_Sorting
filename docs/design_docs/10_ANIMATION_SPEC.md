@@ -259,6 +259,7 @@ The T3 tick for sift-down tree logic communicates the binary heap's parent-child
 **Rendering:** All provided indices highlight **simultaneously** — there is no stagger or sweep. The orange accent snaps on at tick start across all members of the parent-child triangle at the same instant. This simultaneous appearance is the visual mechanism that implies a tree relationship: the learner perceives that these non-contiguous indices (e.g., 1, 3, 4) are grouped because they light up together, even though they are separated by unrelated elements in the flat row.
 
 **Duration:**
+
 - **Phase 1 (Build Max-Heap):** 200ms (standard T3 duration). The learner needs time to absorb the tree relationships during initial heap construction.
 - **Phase 2 (Post-Extraction Sift-Down):** 130ms (reduced sift-down cadence, per Section 5.4.2). The faster timing creates the cascading ripple rhythm appropriate for internal repairs.
 
