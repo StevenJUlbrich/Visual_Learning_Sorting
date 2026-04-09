@@ -2,19 +2,23 @@ wing: visual_learning_sorting
 rooms:
 - name: todo
   description: Files from TODO/
-- name: design
-  description: Files from assets/
 - name: documentation
   description: Files from docs/
 - name: general
   description: Files that don't fit other rooms
-- name: algorithm-contracts
-  description: contract on the use of Algorithm
-- name: animation-physics
-  description: phyisics of the animation
 - name: decisions
-  description: ''
+  description: Locked architectural and design decisions, decision records, and choices
+    that govern implementation
+- name: algorithm-contracts
+  description: Algorithm tick sequences, animation contracts, sort step definitions,
+    T1 compare T2 swap T3 tree T4 completion specifications for Bubble Selection Insertion
+    and Heap Sort
+- name: animation-physics
+  description: Sprite motion, arc height, sine curve interpolation, coordinate tracking,
+    delta time dt, arc swap, lift and drop, panel layout, and frame rendering specifications
 - name: acceptance-tests
-  description: ''
+  description: Acceptance tests, test plans, AT numbered test cases, pass fail criteria,
+    visual correctness verification, and algorithm behavior validation
 - name: architecture
-  description: ''
+  description: MVC structure, src visualizer directory layout, controller model view
+    responsibilities, SortResult data contracts, module boundaries, and system organization

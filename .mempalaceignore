@@ -1,0 +1,13 @@
+get-pip.py
+scripts/
+.venv/
+__pycache__/
+*.pyc
+settings.local.json
+entities.json
+config.toml
+PRD_bucket_sort_visualizer_v1.md
+PRD_bucket_sort_visualizer_v1_1_codex_ready.md
+PRD_bucket_sort_visualizer_v1_1_codex_ready.md
+bucket_sort_visualizer_design_v3.md
+Brick_3_merge_sort.md

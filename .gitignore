@@ -47,4 +47,4 @@ Thumbs.db
 *.log
 
 # MemPalace palace data (stored in home dir, not here)
-# Nothing to add — palace lives in ~/.mempalace by default
+# Nothing to add — palace lives in ~/.mempalace by default~/
