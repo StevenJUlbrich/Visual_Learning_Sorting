@@ -1,0 +1,20 @@
+wing: visual_learning_sorting
+rooms:
+- name: todo
+  description: Files from TODO/
+- name: design
+  description: Files from assets/
+- name: documentation
+  description: Files from docs/
+- name: general
+  description: Files that don't fit other rooms
+- name: algorithm-contracts
+  description: contract on the use of Algorithm
+- name: animation-physics
+  description: phyisics of the animation
+- name: decisions
+  description: ''
+- name: acceptance-tests
+  description: ''
+- name: architecture
+  description: ''
