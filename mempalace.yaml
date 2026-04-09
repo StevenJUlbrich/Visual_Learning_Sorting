@@ -1,24 +1,118 @@
 wing: visual_learning_sorting
 rooms:
-- name: todo
-  description: Files from TODO/
-- name: documentation
-  description: Files from docs/
-- name: general
-  description: Files that don't fit other rooms
-- name: decisions
-  description: Locked architectural and design decisions, decision records, and choices
-    that govern implementation
-- name: algorithm-contracts
-  description: Algorithm tick sequences, animation contracts, sort step definitions,
-    T1 compare T2 swap T3 tree T4 completion specifications for Bubble Selection Insertion
-    and Heap Sort
-- name: animation-physics
-  description: Sprite motion, arc height, sine curve interpolation, coordinate tracking,
-    delta time dt, arc swap, lift and drop, panel layout, and frame rendering specifications
-- name: acceptance-tests
-  description: Acceptance tests, test plans, AT numbered test cases, pass fail criteria,
-    visual correctness verification, and algorithm behavior validation
+
+- name: algorithm_contracts
+  description: Per-algorithm tick sequences and animation contracts
+  keywords:
+    - tick
+    - algorithm
+    - generator
+    - yield
+    - highlight
+    - optype
+    - sortresult
+    - t1
+    - t2
+    - t3
+    - t0
+    - complete
+
+- name: animation_spec
+  description: Sprite motion, easing, interpolation, frame timing
+  keywords:
+    - sprite
+    - motion
+    - easing
+    - interpolat
+    - exact_x
+    - exact_y
+    - dt
+    - frame
+    - clock
+    - tween
+    - arc
+    - animation
+
+- name: acceptance_tests
+  description: Acceptance tests and QA test plan
+  keywords:
+    - acceptance
+    - at-01
+    - at-02
+    - at-03
+    - criteria
+    - qa
+    - quality
+    - risk
+    - fixture
+    - pytest
+    - coverage
+    - test plan
+    - p0
+    - p1
+    - headless
+    - conftest
+    - unit
+    - integration
+    - assert
+    - execution matrix
+    - test infrastructure
+
 - name: architecture
-  description: MVC structure, src visualizer directory layout, controller model view
-    responsibilities, SortResult data contracts, module boundaries, and system organization
+  description: MVC structure, data contracts, module boundaries
+  keywords:
+    - mvc
+    - src/visualizer
+    - controller
+    - orchestrator
+    - contracts.py
+    - module
+    - directory
+
+- name: decisions
+  description: Locked design decisions and decision records
+  keywords:
+    - locked
+    - d-001
+    - d-002
+    - d-003
+    - decision
+    - decided
+    - deferred
+
+- name: behavior_ui
+  description: Runtime controls, panel behavior, UI spec
+  keywords:
+    - pause
+    - play
+    - step
+    - restart
+    - control
+    - panel
+    - behavior
+    - keyboard
+    - startup
+    - operation
+
+- name: todo
+  description: Implementation tracker and task progress
+  keywords:
+    - implementation
+    - tracker
+    - milestone
+    - phase
+    - checklist
+
+- name: reviews
+  description: AI review sessions, gap analysis, agent strategy
+  keywords:
+    - review
+    - trap
+    - gap
+    - agent
+    - strategy
+    - recommendation
+    - supplementary
+
+- name: general
+  description: Files that do not fit any other room
