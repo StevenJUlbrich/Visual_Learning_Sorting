@@ -19,7 +19,8 @@ These items were identified during agentic readiness review (2026-04-05). They f
 
 ### 0.2 Missing Project Files
 
-- [ ] **`pyproject.toml`** — Lock dependencies: `pygame >=2.5`, dev deps `ruff`, `pyright`, `pytest`. Include `[tool.pytest.ini_options]` markers from doc 08 Section 4.3. Include `[tool.ruff]` and `[tool.pyright]` sections.
+- [x] **Path reconciliation (D-080)** — Resolved `src/visualizer/` vs `visual_sort/src/` conflict in favor of `src/visualizer/` (matches all 4,000 lines of specs and CLAUDE.md). Empty scaffold at `visual_sort/` removed; new package skeleton created with `__init__.py` in `models/`, `views/`, `controllers/`, plus `tests/`.
+- [x] **`pyproject.toml`** — Lock dependencies: `pygame >=2.5`, dev deps `ruff`, `pyright`, `pytest`. Include `[tool.pytest.ini_options]` markers from doc 08 Section 4.3. Include `[tool.ruff]` and `[tool.pyright]` sections. *(closed 2026-04-14; hatchling src-layout per D-080, pytest markers exactly as specced, ruff py313 + strict pyright.)*
 - [ ] **`config.toml`** — Create the app config file referenced by docs 04, 08, 09. Content: `[window]` section with `preset = "desktop"`.
 - [ ] **`assets/fonts/`** — Acquire and place `Inter-Bold.ttf`, `Inter-Regular.ttf`, `FiraCode-Regular.ttf` per doc 04 Section 3.2.
 
