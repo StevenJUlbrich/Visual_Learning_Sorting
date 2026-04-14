@@ -1,3 +1,3 @@
 [window]
-# "landscape" (1280x720) or "portrait" (720x996)
-orientation = "landscape"
+# "desktop" (1280x720) or "tablet" (1024x768)
+preset = "desktop"

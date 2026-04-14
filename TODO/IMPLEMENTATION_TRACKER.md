@@ -12,21 +12,23 @@ These items were identified during agentic readiness review (2026-04-05). They f
 
 > **Risk:** An agent can write a valid sort that produces a different tick sequence than the tests expect. The expected counter values (doc 03) and tick sequence contracts (TC-A9, TC-A19) imply a specific implementation, but it's not written down.
 
-- [ ] **Bubble Sort pseudocode** — Document the exact early-exit condition. The spec says "8 swaps with early exit" for `[4, 7, 2, 6, 1, 5, 3]` (doc 03 writes table). Show the outer/inner loop structure and the `swapped` flag.
-- [ ] **Insertion Sort pseudocode** — Document the while-loop structure including when the terminating T1 compare fires (loop exits by `arr[j] > key` failing vs `j < 0`). Must match TC-A9 and TC-A14 expectations (passes i=1, i=3 emit terminating comparisons; passes i=2, i=4 do not).
-- [ ] **Selection Sort pseudocode** — Document the scan loop and min_idx update logic. Must match comparisons=21, writes=10.
-- [ ] **Heap Sort pseudocode** — Document sift-down direction (top-down), child comparison order (left then right), Phase 1 node processing order (floor(n/2)-1 down to 0), and Phase 2 extraction loop. Must match TC-A19 sift-down tick contract (T3 -> T1{1,2} -> T2{0,1} per level).
+All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.md` (closed 2026-04-14).
+
+- [x] **Bubble Sort pseudocode** — Outer/inner loop with `swapped` flag and `inner_limit = n - pass - 1`; verifies cmp=20, wr=26 for `default_7`. See `00_PSEUDOCODE.md` §1.
+- [x] **Insertion Sort pseudocode** — While-loop with terminating-compare rule (`if j >= 0` at loop exit); TC-A14 truth table for passes i=1..6 included. See `00_PSEUDOCODE.md` §3.
+- [x] **Selection Sort pseudocode** — T1 tuple order `(min_idx, j)` per D-065; swap skipped when `min_idx == i`. See `00_PSEUDOCODE.md` §2.
+- [x] **Heap Sort pseudocode** — Sift-down grammar `T3 Logical Tree → T1{1,2} → T2{0,1}` per TC-A19; contiguous-vs-non-contiguous T3 distinction for boundary vs. tree highlights; top-down sift, left-then-right compare order, Phase 1 processes `n//2-1 .. 0`, Phase 2 extraction loop. See `00_PSEUDOCODE.md` §4.
 
 ### 0.2 Missing Project Files
 
 - [x] **Path reconciliation (D-080)** — Resolved `src/visualizer/` vs `visual_sort/src/` conflict in favor of `src/visualizer/` (matches all 4,000 lines of specs and CLAUDE.md). Empty scaffold at `visual_sort/` removed; new package skeleton created with `__init__.py` in `models/`, `views/`, `controllers/`, plus `tests/`.
 - [x] **`pyproject.toml`** — Lock dependencies: `pygame >=2.5`, dev deps `ruff`, `pyright`, `pytest`. Include `[tool.pytest.ini_options]` markers from doc 08 Section 4.3. Include `[tool.ruff]` and `[tool.pyright]` sections. *(closed 2026-04-14; hatchling src-layout per D-080, pytest markers exactly as specced, ruff py313 + strict pyright.)*
-- [ ] **`config.toml`** — Create the app config file referenced by docs 04, 08, 09. Content: `[window]` section with `preset = "desktop"`.
-- [ ] **`assets/fonts/`** — Acquire and place `Inter-Bold.ttf`, `Inter-Regular.ttf`, `FiraCode-Regular.ttf` per doc 04 Section 3.2.
+- [x] **`config.toml`** — Create the app config file referenced by docs 04, 08, 09. Content: `[window]` section with `preset = "desktop"`. *(closed 2026-04-14; replaced obsolete `orientation="landscape"` shape with `preset="desktop"` per D-018 and D-079.)*
+- [~] **`assets/fonts/`** — Acquire and place `Inter-Bold.ttf`, `Inter-Regular.ttf`, `FiraCode-Regular.ttf` per doc 04 Section 3.2. *(2026-04-14: sandbox proxy blocks GitHub release binary downloads. A pinned-version helper script was added at `scripts/fetch_fonts.sh` — run `bash scripts/fetch_fonts.sh` from the repo root on the host (Ubuntu WSL) to pull Inter v4.0 and Fira Code v6.2. Until fonts are placed, the app relies on the SysFont fallback documented in doc 04 §3.3, which keeps the app functional but produces slightly different header metrics. Mark fully closed once the three TTFs are in place.)*
 
 ### 0.3 Implementation Order Document
 
-- [ ] **`docs/design_docs/13_IMPLEMENTATION_ORDER.md`** — Codify the phased build sequence below so agents have a defined starting point and dependency chain.
+- [x] **`docs/design_docs/13_IMPLEMENTATION_ORDER.md`** — Codify the phased build sequence below so agents have a defined starting point and dependency chain. *(closed 2026-04-14; entry/exit criteria and dependency graph for Phases 0–10.)*
 
 ---
 
