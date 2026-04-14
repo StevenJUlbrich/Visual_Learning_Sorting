@@ -6,6 +6,58 @@
 
 ---
 
+## 2026-04-14 — Agentic-coder context and hallucination risk assessment (UNDER REVIEW)
+
+### Worked on
+Stepped back from coding momentum to evaluate whether the existing spec corpus — 4,521 lines / ~306K characters / ~75-80K tokens across 18 markdown files — is appropriately sized and structured for use with agentic coding tools (Claude Code, Cursor, Cline, and similar). The question was not whether the specs are *good* (they are deliberately thorough by methodology) but whether they are *machine-readable in the way agents actually read*.
+
+Measured three density metrics against the corpus to ground the conversation in evidence rather than opinion:
+
+- **Supersession events:** 14 decisions in `DECISIONS.md` are marked REVISED / REPLACED / superseded. D-017 → D-067 (universal orange highlight replaced per-algorithm accents), D-065/D-066 → D-068 (selection sort pointer assets), D-019 → D-074 (heap tree visualization), D-007 → D-056 (tick model), among others.
+- **Cross-reference density:** 270 inter-document citations — 183 D-NNN decision references, 39 AT-NN acceptance test references, 48 TC-A test case references. Averages out to one cross-reference every 17 lines.
+- **Distributed facts:** Counter accuracy table (Bubble 20/26, Selection 21/10, Insertion 17/19, Heap 20/30/35) appears in `CLAUDE.md` and is implicitly referenced elsewhere. Initial array `[4, 7, 2, 6, 1, 5, 3]` appears dozens of times across docs. Tick taxonomy (T0-T4) defined once in `03_DATA_CONTRACTS.md` but used everywhere.
+
+### Identified risk vectors (for the record)
+1. **Context dilution** — Loading 75-80K tokens of spec into a 200K-window agent leaves roughly one-quarter of the window for tool output, reasoning, and working code. On smaller-window agents (128K or less) this is already past comfort.
+2. **Supersession blindness** — Agents grep by concept, not by decision chronology. A search for "accent color" finds the superseded D-017 rule first because it appears earlier in `DECISIONS.md`. The predictable failure mode: agent implements the superseded rule faithfully.
+3. **Cross-reference hallucination** — When an agent sees "see D-058" but D-058 is not loaded in its working context, the common failure is not an error — it's a plausible-sounding fabrication of what D-058 says. Silent, hard to catch in code review.
+4. **Worked-example drift** — `default_7` sorted traces appear in multiple docs. A partial-context agent can "verify" an implementation against the doc it has while violating another doc's more authoritative version.
+5. **Vocabulary fragility** — T0-T4, OpType enum values, tick taxonomy terms are defined in one file. Partial-context agents infer meaning from usage rather than definition, producing occasional confident misuse.
+
+### Proposed mitigations (pending decision)
+Six mitigations were discussed, ordered by leverage:
+
+- **High leverage, small effort:**
+  - Supersession index at top of `DECISIONS.md` — flat table mapping superseded IDs → current binding IDs. ~30 lines. Eliminates supersession-blindness class entirely.
+  - Per-phase context pack doc (`14_CONTEXT_PACKS.md`) naming exactly which files to load for each implementation phase. Cuts working context by 60-70% per task.
+  - Inline `[STILL ACTIVE]` / `[SUPERSEDED BY D-NNN]` marker on each decision for machine-readable status.
+
+- **Medium leverage:**
+  - Root-level glossary in `03_DATA_CONTRACTS.md` defining T0-T4, OpType, SortResult, "tick," "sift-down," "pass," `default_7`, initial array, counter table. Eliminates vocabulary-fragility.
+  - Counter table consolidation into exactly one location (proposed: `03_DATA_CONTRACTS.md`) with other docs linking rather than duplicating.
+
+- **Structural:**
+  - Project-specific skill file (`.claude/skills/vls-context/SKILL.md`) that forces context-loading order for any agent entering the repo.
+
+### Explicitly rejected approaches
+- **Do not** break large design docs into many small files — this worsens cross-reference chasing rather than improving it. Current doc sizes (none exceed ~600 lines) are well-scoped.
+- **Do not** compress decision text for its own sake — D-064's length exists because the shortened version caused agent drift in the first place.
+
+### Decisions
+No binding decisions made this session. The assessment is complete and the proposed mitigations are on the table, but the author is reviewing whether to adopt them, and which subset, before committing.
+
+This is deliberate: the context-pack approach implies a particular way of bounding agent tasks (explicit file-load lists per phase), and adopting it changes how subsequent phases will be executed. Worth making deliberately rather than reactively.
+
+### Open questions
+- **Which mitigations to adopt.** The high-leverage three (supersession index, context packs, active/superseded markers) address the two largest risk classes and are inexpensive; the medium-leverage two (glossary, counter consolidation) depend on the first three. The skill file is structural and only worth doing if the project will routinely be opened by agents rather than the author alone.
+- **Whether to author the mitigations before or after Phase 1.** Argument for before: Phase 1 is the first real code and benefits most from bounded context. Argument for after: Phase 1 is small enough (`contracts.py` only) to fit easily in any agent's context regardless; delaying the mitigations until Phase 2 (algorithm generators, which have the highest risk of tick-sequence drift) is the minimum-regret path.
+- **Whether the author intends to run this project primarily through agents, primarily by hand, or mixed.** The answer shapes how much mitigation effort is warranted. A solo hand-coded project with occasional agent assistance needs less infrastructure than a project where agents own entire phases.
+
+### Next
+Author review in progress. No immediate action. When the review concludes, proceed either with (a) authoring the chosen mitigations before Phase 1, or (b) starting Phase 1 with mitigations deferred.
+
+---
+
 ## 2026-04-14 — Phase 0 closeout: pyproject, config, pseudocode, implementation order, fonts helper
 
 ### Worked on
