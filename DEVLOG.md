@@ -6,6 +6,40 @@
 
 ---
 
+## 2026-04-14 — Mempalace post-mortem and archive
+
+### Worked on
+Reviewed three legacy files at the repo root — `mempalace.yaml` (117 lines, keyword-driven configuration), `mempalace.yaml.bak` (24 lines, prose-description earlier version), and `entities.json` (6 lines, nearly empty). These were the surviving artifacts of an earlier attempt to solve the same retrieval-routing problem that is currently under consideration via the context-pack proposal. The `mempalace` package was a dev dependency in the original `pyproject.toml` (removed during the 2026-04-14 rewrite).
+
+Archived all three files into `docs/AI_Conversations/mempalace-experiment/` with a companion `README.md` documenting the attempt, the specific failure modes identified, and the lessons inherited by the active context-pack design.
+
+### Decisions
+- **Archive rather than delete.** The artifacts earn their keep as teaching material — a worked example of a retrieval-routing attempt that failed, with diagnosis. This is high-value video journal content (failure modes are more instructive than success stories) and a concrete reminder of design pitfalls when the context-pack design begins.
+- **Do not revive.** The underlying mismatch — keyword taxonomy cannot express task-shaped queries over a cross-referenced corpus — is not solved by tuning keywords. A revival would repeat the failure.
+- **Root cleanliness.** Archiving removes three files from repo root that had no active role, reducing noise for anyone (human or agent) doing initial orientation via `ls`.
+
+### Failure modes documented (for posterity and for the context-pack design)
+1. Keyword ambiguity at scale — a single realistic query matched four rooms simultaneously with no tie-breaker.
+2. Taxonomy dimension (by document type) orthogonal to query dimension (by task).
+3. Keywords cannot traverse cross-references; the spec is a graph, not a set.
+4. Room coverage was incomplete; load-bearing files (`CLAUDE.md`, pseudocode) landed in the `general` catch-all.
+5. Iteration moved from prose descriptions to keywords — a move toward mechanization that *reduced* accuracy, signaling the mechanism itself was wrong.
+6. No measurement loop — no log of queries tried, classifications returned, or accuracy. The YAML broke silently and got shelved without diagnosis.
+
+### Lessons carried forward into the context-pack design (pending adoption)
+- Group by **implementation phase**, not document type.
+- **Enumerate file paths explicitly**; no classifier, no keyword matching.
+- **Name cross-references by ID** (D-NNN, TC-A-NN, AT-NN) so they can be fetched deterministically.
+- Define a **coverage test** — a list of archetypal queries that each named pack must answer. Break is detected immediately, not months in.
+
+### Open questions
+None from this session. The mempalace chapter is closed; the lessons are captured.
+
+### Next
+Resume discussion of the context-pack proposal (currently marked UNDER REVIEW in the 2026-04-14 assessment entry below), now informed by the mempalace lessons.
+
+---
+
 ## 2026-04-14 — Agentic-coder context and hallucination risk assessment (UNDER REVIEW)
 
 ### Worked on
