@@ -6,6 +6,36 @@
 
 ---
 
+## 2026-04-14 — Context-pack adoption: Supersession Index + 14_CONTEXT_PACKS.md authored
+
+### Worked on
+Closed the agent-context / hallucination mitigation item identified in the earlier 2026-04-14 assessment. Two concrete artifacts landed, plus a tracker update and this entry.
+
+**Supersession Index** added to the top of `DECISIONS.md`. Six clean supersessions catalogued in a flat table: D-007→D-056 (tick model), D-017→D-067 (theme strategy), D-019→D-074 (Heap Sort flat-row constraint), D-054→D-067 (Heap accent color), D-065→D-068 (Selection minimum tracking), D-066→D-068 (Selection cursor distinction). The index explicitly distinguishes *superseded* decisions (old rule no longer binding) from *refined* decisions marked `(REVISED)` without a `REPLACED` or `SUPERSEDED by D-NNN` clause — the latter remain current binding and are intentionally excluded from the index to prevent over-correction.
+
+**`14_CONTEXT_PACKS.md`** authored. Eleven packs, one per implementation phase (Phase 0 through Phase 10), structured-block format, deterministic file-path and decision-ID enumeration, no classifier or keyword inference. Each pack has sections for Intent, Inputs (spec files + decision IDs + upstream code files + test references), Expected Outputs, Approximate Token Budget, and Notes. An informal coverage test at the bottom lists twelve archetypal queries and names the pack(s) that answer each. An amendment protocol codifies when and how the document should change over time.
+
+### Decisions
+The six-question discussion from the earlier assessment entry resolved as follows:
+
+- **Granularity:** Per-phase, not per-task. Eleven packs total. Tighter per-task packs were an option but were explicitly rejected — the phase boundary in `13_IMPLEMENTATION_ORDER.md` is already the unit of work.
+- **Scope:** Each pack serves both forward (implementation) and backward (audit) modes. One pack per phase; audit mode adds the code outputs to the loaded set but does not require a separate pack entry.
+- **Format:** Structured blocks (Option B) over bullet lists. Better machine-parseability, better for growth, clearer when presenting a pack to an audience.
+- **Coverage test:** Informal. A bottom-of-document table of queries and expected packs. No pytest enforcement. Justified by the project's bounded scope — the pack set is not expected to grow.
+- **Adoption mechanics:** Reference document only. No `.claude/skills/vls-context/SKILL.md`. Platform-neutral. `CLAUDE.md` is listed explicitly in every pack that needs it rather than assumed to be implicitly loaded, because different agent platforms handle `CLAUDE.md` differently.
+- **Authoring order:** Before Phase 1 begins. Phase 1 is deliberately the dogfood test — it is small enough to work without a pack, so any pack-design flaw revealed during Phase 1 can be fixed before Phase 2 (the higher-stakes algorithm implementation) begins.
+- **Supersession ID handling in packs:** Current binding IDs only. The Supersession Index in `DECISIONS.md` carries the full chain for audit reach-back.
+
+### Open questions
+- **Pack token-budget estimates are rough.** The notes include approximate token counts (14K for Phase 1, ~35K for Phase 2, ~45K for Phase 5). These are eyeballed from line counts, not measured against a tokenizer. If an agent run reveals a pack that actually overflows a working window, the budget figures need recalibration. Low-priority until a real overflow is observed.
+- **Phase 5 may want sub-loading.** The view-layer pack is the largest (~45K tokens). The Notes section suggests sub-loading by view module (sprite alone vs. full view set), but this is advisory not prescriptive. If Phase 5 work in practice needs formal sub-packs, amend.
+- **Phase 6 orchestrator rapid-cadence signal.** Still unresolved — whether the model carries a phase flag, whether the orchestrator infers from tick history, or whether a dedicated method is added. Flagged in Phase 6 Notes and carried forward from the earlier entry.
+
+### Next
+Phase 1 begins. Use the Phase 1 pack as the dogfood test. If any input proves missing or any expected output is wrong, fix the pack in place and note it here before proceeding.
+
+---
+
 ## 2026-04-14 — Mempalace post-mortem and archive
 
 ### Worked on

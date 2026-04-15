@@ -4,6 +4,26 @@
 * Not decided: unresolved; requires explicit decision before affected scope expands.
 * Deferred: intentionally postponed beyond v1.
 
+## Supersession Index
+
+**Read this before grepping decisions.** A concept search in this file can match a decision whose rule has since been superseded by a later one. The table below names every case where the earlier decision is no longer the binding rule. If you see an older ID in your search results, consult this table and use the current binding rule instead.
+
+A decision tagged only `(REVISED)` in its title — without `REPLACED`, `SUPERSEDED`, or `REVISED by D-NNN` — is still the current binding rule, just refined over time. Those are not listed here.
+
+| Older Decision | Status | Current Binding Rule | Rule Area |
+| :--- | :--- | :--- | :--- |
+| D-007 | REPLACED | **D-056** | Tick model / orchestration |
+| D-017 | SUPERSEDED | **D-067** | Highlight color strategy |
+| D-019 (flat-row constraint only) | SUPERSEDED | **D-074** | Heap Sort visualization layout |
+| D-054 (accent color only) | SUPERSEDED | **D-067** | Heap active highlight color |
+| D-065 (highlight-only approach) | SUPERSEDED | **D-068** | Selection Sort minimum tracking |
+| D-066 (highlight-only approach) | SUPERSEDED | **D-068** | Selection Sort cursor distinction |
+
+**Usage rules for implementation agents:**
+1. If a spec file references a superseded decision without explicit "superseded" language, apply the current binding rule from the right column.
+2. Context packs (`14_CONTEXT_PACKS.md`) reference only current binding rules; if you see an older ID cited, treat it as a lookup key into this table, not as a rule to follow.
+3. If you identify a spec file or contract that still encodes a superseded rule, flag it as a consistency bug — do not implement to the older rule.
+
 ## Locked
 
 * **D-001 Product:** Build Sorting Algorithm Visualizer.
