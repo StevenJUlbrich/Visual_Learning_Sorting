@@ -44,12 +44,12 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 **Output:** `src/visualizer/models/contracts.py`
 **Testable without Pygame:** Yes
 
-- [ ] `OpType` enum (COMPARE, SWAP, SHIFT, RANGE, TERMINAL, FAILURE)
-- [ ] `SortResult` dataclass with all fields per doc 03
-- [ ] `BaseSortAlgorithm` ABC with `data`, `size`, `comparisons`, `writes`, `name`, `complexity`
-- [ ] `sort_generator` abstract method signature returning `Generator[SortResult, None, None]`
+- [x] `OpType` enum (COMPARE, SWAP, SHIFT, RANGE, TERMINAL, FAILURE) *(closed 2026-04-14)*
+- [x] `SortResult` dataclass with all fields per doc 03 *(closed 2026-04-14; field order verified)*
+- [x] `BaseSortAlgorithm` ABC with `data`, `size`, `comparisons`, `writes`, `name`, `complexity` *(closed 2026-04-14)*
+- [x] `sort_generator` abstract method signature returning `Generator[SortResult]` *(closed 2026-04-14; PEP 696 default-elided form per ruff UP043. Functionally equivalent to doc 03's `Generator[SortResult, None, None]`. See DEVLOG.)*
 
-**Verification:** Import succeeds, pyright clean, ruff clean.
+**Verification:** Import succeeds ✓, pyright strict returns 0 errors/warnings ✓, ruff check clean ✓, ruff format clean ✓.
 
 ---
 

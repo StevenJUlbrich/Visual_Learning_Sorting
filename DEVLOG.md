@@ -6,6 +6,62 @@
 
 ---
 
+## 2026-04-14 — Phase 1 closed: contracts.py authored and verified; dogfood observations
+
+### Worked on
+Authored `src/visualizer/models/contracts.py` against the Phase 1 pack in `14_CONTEXT_PACKS.md`. The pack served as the dogfood test for the context-pack design. The file is 116 lines including docstrings: `OpType` enum with the six tick classes, `SortResult` dataclass with `slots=True` and fields in doc-03 order, and `BaseSortAlgorithm` ABC with `__init__(data, name, complexity)` and an abstract `sort_generator` method.
+
+All four Phase 1 exit criteria verified:
+
+1. `from visualizer.models.contracts import OpType, SortResult, BaseSortAlgorithm` succeeds with `PYTHONPATH=src`.
+2. `pyright src/visualizer/models/contracts.py` → 0 errors, 0 warnings, 0 informations.
+3. `ruff check` → clean after one fix (see judgment calls below).
+4. `SortResult.__slots__` populated with exactly the six fields in the doc-03 order.
+
+### Decisions made during authoring (the seven judgment calls identified in the earlier walkthrough)
+
+- **`message` default** — required, no default. Every tick must carry human-readable text per doc 03 §Field Semantics. Implemented as a positional field.
+- **`array_state` copy enforcement** — left to the generator. The dataclass does not add a `__post_init__` copy; enforcement is a contract at the generator boundary. Inline docstring calls this out explicitly.
+- **`BaseSortAlgorithm.__init__` copy semantics** — `self.data = data.copy()` at construction, matching doc 03 §BaseSortAlgorithm Interface line 215 exactly. External callers cannot mutate the algorithm's view.
+- **`name` and `complexity` as constructor parameters vs. ClassVar** — doc 03 explicitly defines them as `__init__` parameters. My earlier walkthrough suggested `ClassVar` as "reasonable"; the loaded spec overruled that. This is a good example of why the walkthrough is not the implementation — the walkthrough anticipated a decision the spec had already made.
+- **`size` attribute** — computed once in `__init__` (`self.size = len(self.data)`). Matches doc 03 line 216.
+- **Return type of `sort_generator`** — `Generator[SortResult]`, the PEP 696 default-elided form. See "Ruff UP043 fix" below.
+- **`OpType` values via `auto()`** — matches doc 03 exactly. Integer values are fine for v1; serialization (if ever needed) is not a v1 concern.
+
+### Ruff UP043 fix (divergence from doc 03 spec text)
+
+Doc 03 §BaseSortAlgorithm Interface specifies the abstract method return type as `Generator[SortResult, None, None]`. Ruff in py313 mode flagged this as UP043 ("unnecessary default type arguments") because Python 3.13's `collections.abc.Generator` uses PEP 696 defaults, making `Generator[SortResult]` equivalent. Applied the ruff-suggested fix. The runtime behavior and type-checking semantics are identical; only the literal annotation string differs.
+
+**Consequence for spec:** Doc 03 should be updated to reflect the 3.13-idiomatic form, or the ruff rule should be disabled project-wide. Low-priority cleanup — not blocking Phase 2. Recorded as an open question below.
+
+### Dogfood observations on the Phase 1 pack
+
+The pack was sufficient but revealed four observations worth recording:
+
+1. **Spec inconsistency between doc 03 and CLAUDE.md / 00_PSEUDOCODE.md on Bubble Sort swap count.** Doc 03 §Per-Algorithm Expected Write Totals states "8 swaps (with early exit) = 16 writes" for `default_7`. CLAUDE.md's Counter Accuracy table states `Bubble Sort | 20 | 26`. My own trace of `[4, 7, 2, 6, 1, 5, 3]` through bubble with early exit produces 13 swaps (5+4+2+2), which is 26 writes — matching CLAUDE.md and 00_PSEUDOCODE.md, NOT matching doc 03. **Doc 03's table is wrong.** This does not affect contracts.py, but it will bite Phase 2 if the agent reads doc 03 before the counter sanity-check. Needs a correction to doc 03's table (8 → 13, 16 → 26) and a separate DEVLOG entry recording the correction. The Phase 2 pack already notes "CLAUDE.md Counter Accuracy table is the exit gate" — that framing was already correct; this observation just surfaces why the framing matters.
+
+2. **Internal contradiction in doc 03 on `highlight_indices` order.** Line 5: "Order has no semantic meaning." But §Tick Taxonomy for Selection Sort says the tuple is `(min_idx, j)` with order implied, and D-058 plus §OpType.RANGE rules for Heap Sort mandate the parent as first element. The contract invariant exists for Heap Sort and Selection Sort (per-algorithm, tuple-order-sensitive); the blanket "order has no semantic meaning" is wrong. Suggest amending doc 03 to say "Order has no rendering semantics, but per-algorithm contracts may require a specific position for the lead index (see per-algorithm sections and D-058)."
+
+3. **Pack input list was complete.** No additional files needed during authoring beyond the four named inputs (`03_DATA_CONTRACTS.md`, `00_PSEUDOCODE.md §Conventions`, `CLAUDE.md`, `pyproject.toml`) plus the four decision IDs. No additions proposed to the Phase 1 pack's Inputs section.
+
+4. **Token budget estimate (~14K) held up.** The actual load was in that neighborhood; no surprises.
+
+### Environment observations
+
+- The dev sandbox does not allow UV to download the Python toolchain from GitHub releases (same proxy block that prevented font downloads). Installing tooling via `pip install --break-system-packages` against the system Python worked. This is a sandbox/CI-path issue, not a project issue; on the WSL host, `uv sync --dev` should work normally.
+- Ruff 0.15.10 and Pyright were installed from PyPI without issue.
+- Pyright required no additional configuration beyond the `[tool.pyright]` block in `pyproject.toml` (strict mode, include src + tests, py313 target).
+
+### Open questions
+- **Doc 03 swap count correction for Bubble Sort.** Update `8 swaps` → `13 swaps` and `16` → `26` in §Per-Algorithm Expected Write Totals. Small surgical edit; low risk. Consider bundling with the other doc-03 corrections (the `highlight_indices` ordering clarification). Timing: before Phase 2 starts.
+- **Doc 03 update for `Generator[SortResult]` idiom.** Matches contracts.py, more modern, ruff-compatible. Alternatively disable UP043 project-wide if you prefer the explicit form for pedagogical clarity. Either is defensible.
+- **No other surprises from Phase 1.** The pack-design proved sound on its first real test.
+
+### Next
+**Phase 2 (algorithm generators) is unblocked.** Before starting, consider closing the two doc-03 corrections identified above — both are small and both improve agent accuracy on the higher-stakes Phase 2 work. Alternatively, proceed to Phase 2 and record the corrections as known-good deviations.
+
+---
+
 ## 2026-04-14 — Context-pack adoption: Supersession Index + 14_CONTEXT_PACKS.md authored
 
 ### Worked on
