@@ -30,6 +30,12 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 
 - [x] **`docs/design_docs/13_IMPLEMENTATION_ORDER.md`** — Codify the phased build sequence below so agents have a defined starting point and dependency chain. *(closed 2026-04-14; entry/exit criteria and dependency graph for Phases 0–10.)*
 
+### 0.4 Agent Context and Hallucination Mitigation *(added 2026-04-14)*
+
+- [x] **Supersession Index in `DECISIONS.md`** — Flat table at top of DECISIONS.md mapping superseded decision IDs to current binding rules (D-007→D-056, D-017→D-067, D-019→D-074, D-054→D-067, D-065→D-068, D-066→D-068). Eliminates supersession-blindness hallucination class. *(closed 2026-04-14.)*
+- [x] **`docs/design_docs/14_CONTEXT_PACKS.md`** — Phase-bound reading lists, one pack per phase (0–10), aligned with `13_IMPLEMENTATION_ORDER.md`. Deterministic file-path and decision-ID enumeration; no classifier. Structured blocks per pack. Informal coverage test at bottom. Platform-neutral (no skill dependency). *(closed 2026-04-14; Phase 1 will serve as the dogfood test.)*
+- [x] **Mempalace archive** — Three legacy files (`mempalace.yaml`, `mempalace.yaml.bak`, `entities.json`) moved from repo root to `docs/AI_Conversations/mempalace-experiment/` with a companion README documenting the failed attempt and lessons inherited by the context-pack design. *(closed 2026-04-14.)*
+
 ---
 
 ## Phase 1 — Data Contracts and Base Classes
@@ -38,12 +44,12 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 **Output:** `src/visualizer/models/contracts.py`
 **Testable without Pygame:** Yes
 
-- [ ] `OpType` enum (COMPARE, SWAP, SHIFT, RANGE, TERMINAL, FAILURE)
-- [ ] `SortResult` dataclass with all fields per doc 03
-- [ ] `BaseSortAlgorithm` ABC with `data`, `size`, `comparisons`, `writes`, `name`, `complexity`
-- [ ] `sort_generator` abstract method signature returning `Generator[SortResult, None, None]`
+- [x] `OpType` enum (COMPARE, SWAP, SHIFT, RANGE, TERMINAL, FAILURE) *(closed 2026-04-14)*
+- [x] `SortResult` dataclass with all fields per doc 03 *(closed 2026-04-14; field order verified)*
+- [x] `BaseSortAlgorithm` ABC with `data`, `size`, `comparisons`, `writes`, `name`, `complexity` *(closed 2026-04-14)*
+- [x] `sort_generator` abstract method signature returning `Generator[SortResult]` *(closed 2026-04-14; PEP 696 default-elided form per ruff UP043. Functionally equivalent to doc 03's `Generator[SortResult, None, None]`. See DEVLOG.)*
 
-**Verification:** Import succeeds, pyright clean, ruff clean.
+**Verification:** Import succeeds ✓, pyright strict returns 0 errors/warnings ✓, ruff check clean ✓, ruff format clean ✓.
 
 ---
 

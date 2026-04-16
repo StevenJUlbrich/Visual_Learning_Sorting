@@ -1,8 +1,8 @@
 # 03 DATA CONTRACTS - Canonical Source
 
 This file is the single source of truth for algorithm/controller/view runtime contracts.
-Indices must be unique.
-Order has no semantic meaning.
+
+**`highlight_indices` conventions (preamble):** Indices in any tuple must be unique and in-bounds for `array_state`. Tuple order does **not** affect rendering — the View treats the set equivalently regardless of position. However, per-algorithm tick contracts may **require** a specific index to appear first (or in a specific position) so that model-layer readers and downstream tools can rely on positional semantics. See `Tick Taxonomy` below, `OpType.RANGE — Heap Sort Highlight Variants`, and decisions **D-058** (Heap sift-down parent always first) and **D-065/D-066 → D-068** (Selection Sort `(min_idx, j)` ordering).
 
 ## SortResult (Definitive)
 
@@ -47,8 +47,9 @@ TERMINAL → no motion; apply completion styling
 ### highlight_indices rules
 
 - Indices must be unique.
-- Order does not affect rendering.
-- Indices must exist within array_state bounds.
+- Order does not affect rendering — the View treats the tuple as a set.
+- Order **does** carry algorithmic meaning per per-algorithm contracts: for Heap Sort T3 Logical Tree Highlights, the sift-down parent is always the first element (D-058); for Selection Sort T1 scan ticks, the tuple is `(min_idx, j)` with `min_idx` first (D-068). Model-layer code and tick-trace tests rely on these positions.
+- Indices must exist within `array_state` bounds.
 
 ### OpType.RANGE — Heap Sort Highlight Variants
 
@@ -174,10 +175,19 @@ These expected values serve as QA verification anchors for the default dataset:
 
 | Algorithm | Write Operations | Calculation | Expected `writes` |
 | --- | --- | --- | --- |
-| **Bubble Sort** | 8 swaps (with early exit) | 8 × 2 = 16 | **16** |
+| **Bubble Sort** | 13 swaps (with early exit) | 13 × 2 = 26 | **26** |
 | **Selection Sort** | 5 swaps | 5 × 2 = 10 | **10** |
 | **Insertion Sort** | 13 shifts + 6 placements | 13 × 1 + 6 × 1 = 19 | **19** |
-| **Heap Sort** | 3 build swaps + 6 extraction swaps + sift-down swaps | varies by sift-down depth | **~22** (exact count depends on sift-down paths) |
+| **Heap Sort** | 3 build swaps + 6 extraction swaps + sift-down repair swaps | varies by sift-down depth | **30** (matches `CLAUDE.md` Counter Accuracy table) |
+
+**Bubble Sort trace** (recorded 2026-04-14 during Phase 1 authoring, source of truth for the 13-swap count):
+
+- Pass 1 (j = 0..5): 5 swaps → `[4, 2, 6, 1, 5, 3, 7]`
+- Pass 2 (j = 0..4): 4 swaps → `[2, 4, 1, 5, 3, 6, 7]`
+- Pass 3 (j = 0..3): 2 swaps → `[2, 1, 4, 3, 5, 6, 7]`
+- Pass 4 (j = 0..2): 2 swaps → `[1, 2, 3, 4, 5, 6, 7]`
+- Pass 5 (j = 0..1): 0 swaps → early-exit via `swapped = False`
+- Total: 13 swaps × 2 = 26 writes; comparisons 6+5+4+3+2 = 20. Matches `CLAUDE.md` Counter Accuracy.
 
 **Note:** These totals are derived from the specific input `[4, 7, 2, 6, 1, 5, 3]`. Different inputs produce different write counts. The values above are for QA regression testing, not general algorithm properties.
 
