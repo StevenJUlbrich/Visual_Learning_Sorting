@@ -23,7 +23,14 @@
       "Bash(git status:*)",
       "Bash(ls -lah docs/*.md)",
       "Bash(ls /home/sju/projects/Visual_Learning_Sorting/*.md)",
-      "Bash(ls /home/sju/projects/Visual_Learning_Sorting/TODO*)"
+      "Bash(ls /home/sju/projects/Visual_Learning_Sorting/TODO*)",
+      "Bash(uv run *)",
+      "Bash(sudo apt-get *)",
+      "Read(//usr/bin/**)",
+      "Bash(ldconfig -p)",
+      "Read(//home/sju/.nvm/versions/**)",
+      "Read(//usr/**)",
+      "Bash(apt-get install *)"
     ]
   }
 }
