@@ -48,6 +48,43 @@ Phase 2b: `selection.py`. Bring `bubble.py` to the Cowork (Opus) session for spe
 
 ---
 
+## 2026-04-20 — Phase 2b closed: selection.py authored and smoke-tested
+
+### Worked on
+
+Implemented `src/visualizer/models/selection.py` against the Phase 2 pack in `14_CONTEXT_PACKS.md`. Pseudocode source: `00_PSEUDOCODE.md §2`. `SelectionSort` extends `BaseSortAlgorithm` with `name="Selection Sort"` and `complexity="O(n²)"`. Outer loop selects sorted boundary `i`; inner scan tracks `min_idx`. Swap skipped when `min_idx == i` (no T2 emitted in that pass).
+
+Smoke script `scripts/smoke_selection.py` verified all exit criteria plus a highlight-uniqueness guard:
+
+1. `comparisons == 21` on `[4, 7, 2, 6, 1, 5, 3]` ✓
+2. `writes == 10` on `[4, 7, 2, 6, 1, 5, 3]` ✓
+3. Final tick `is_complete == True` ✓
+4. Empty input yields exactly one `FAILURE` tick ✓
+5. No duplicate indices in any T1 `highlight_indices` (new-minimum case) ✓
+
+Ruff: clean after one fix (RUF002 — Unicode multiplication sign `×` in docstring, replaced with ASCII `x`). Format check: clean.
+
+Pyright still blocked by missing `libatomic1`; same environment constraint as Phase 2a.
+
+### Decisions
+
+- **Two-variant T1 message, determined after comparison.** Doc 03 §Tick Taxonomy line 122 specifies two message forms: the standard compare form and a "New minimum" form when `arr[j] < arr[min_idx]`. Comparison is evaluated before the yield; the message branch is chosen from the result. One T1 per `j` iteration preserved — comparisons counter unaffected.
+
+- **`prev_min` saves old `min_idx` before update; highlight uses `(prev_min, j)`.** After `min_idx = j`, using `(min_idx, j)` in the highlight would produce `(j, j)` — duplicate indices, a contract violation. Saving the old position as `prev_min` and using `(prev_min, j)` keeps `highlight_indices` unique while matching the D-068 semantic: the tuple shows the two indices whose values were just compared. The pseudocode comment "the next T1 will show it" confirms the old min_idx is correct for the current tick's highlight.
+
+- **Swap message follows pseudocode literal: `f"Swap arr[{i}] and arr[{min_idx}]"`.** Doc 03 prescribes no specific Selection Sort swap message format; pseudocode §2 is the reference.
+
+### Open questions
+
+- **libatomic1 still missing.** Pyright cannot run until `sudo apt-get install libatomic1` is executed on the WSL2 host. Both Phase 2a and 2b deliverables are pending that one-time fix.
+- **Cowork review gate.** Before moving to Phase 2c (Insertion Sort), bring `bubble.py` and `selection.py` to the Opus oversight session for spec-level review.
+
+### Next
+
+Phase 2c: `insertion.py` (Opus — terminating-compare rule is high-risk). Escalation path if Sonnet is used: switch on first counter failure.
+
+---
+
 ## 2026-04-19 — Model strategy for agentic implementation: Opus / Sonnet / Haiku assignment per phase
 
 ### Worked on
