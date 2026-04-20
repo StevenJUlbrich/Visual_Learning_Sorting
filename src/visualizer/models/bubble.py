@@ -48,7 +48,7 @@ class BubbleSort(BaseSortAlgorithm):
                 self.comparisons += 1
                 yield SortResult(
                     success=True,
-                    message=f"Compare {arr[j]} and {arr[j + 1]}",
+                    message=f"Comparing index {j} (value {arr[j]}) and index {j + 1} (value {arr[j + 1]})",
                     operation_type=OpType.COMPARE,
                     array_state=list(arr),
                     highlight_indices=(j, j + 1),
