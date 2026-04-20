@@ -71,14 +71,16 @@ Heap Sort emits two distinct variants of `OpType.RANGE` ticks. Both use the same
 - **When emitted:** Before each sift-down level's comparisons, in both Phase 1 (Build Max-Heap) and Phase 2 (Extraction sift-down).
 - **Active sift-down parent rule:** The sift-down parent index (`i`) must **always** be the first member of the highlight tuple. This is a contract invariant — the parent is the anchor of the tree relationship being communicated. If only one child exists (e.g., a left child with no right sibling), the tuple is `(parent, left_child)`. The parent is never omitted.
 
-#### Distinguishing the two variants
+#### Distinguishing the two variants (D-081)
 
-The View layer distinguishes Boundary from Logical Tree T3 ticks by the **contiguity** of the highlight set:
+The View layer and test harnesses distinguish Boundary from Logical Tree T3 ticks by the **message prefix**, not by highlight-set contiguity:
 
-- If `highlight_indices == tuple(range(min_idx, max_idx + 1))` (contiguous from 0), it is a Boundary Emphasis tick → render with sweep (Section 5.3.1 of Animation Spec).
-- Otherwise (non-contiguous, or not starting at 0), it is a Logical Tree Highlight tick → render as simultaneous accent flash.
+- If `tick.message.startswith("Active heap")`, it is a Boundary Emphasis tick → render with sweep (Section 5.3.1 of Animation Spec).
+- If `tick.message.startswith("Evaluating tree level")`, it is a Logical Tree Highlight tick → render as simultaneous accent flash.
 
 This distinction is deterministic and requires no additional metadata on `SortResult`.
+
+**Why not contiguity?** Contiguity fails whenever the sift-down parent is index 0 — the Logical Tree T3 tuple `(0, 1, 2)` or `(0, 1)` is indistinguishable from a Boundary T3 by shape alone. This affects every Phase 2 sift-down and the last Phase 1 sift-down (6 of 11 Logical Tree T3 ticks for `default_7`). See D-081 for the full rationale.
 
 ## Field Semantics
 

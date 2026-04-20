@@ -107,7 +107,7 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 - [x] Step count = 35 (T3 ticks excluded)
 - [x] T3 tick count = 6 boundary emphasis ticks for n=7
 - [x] Bonus: Logical Tree T3 count = 11 (4 Phase 1 + 7 Phase 2); T3 monotonicity verified
-- [!] **Known issue:** T3 contiguity distinction breaks at heap_size ∈ {2, 3} — classify by message prefix, not tuple shape. Flagged for TC-A19 in Phase 3.
+- [x] **Resolved (D-081):** T3 contiguity distinction breaks at parent=0 sift-downs (6 of 11 Logical Tree T3 ticks for default_7). Resolved by message-prefix classification: `"Active heap"` = Boundary, `"Evaluating tree level"` = Logical Tree. Six spec docs amended. No production code change. TC-A19 unblocked for Phase 3.
 
 ---
 

@@ -17,6 +17,38 @@
 
 ---
 
+## 2026-04-20 — D-081: T3 contiguity spec bug resolved — message-prefix classification locked
+
+### Worked on
+
+Resolved the T3 contiguity spec bug discovered during Phase 2d (heap.py). The bug was more severe than initially framed: it affects every sift-down rooted at index 0, not just the edge cases at heap_size ∈ {2, 3}. For `default_7`, 6 of 11 Logical Tree T3 ticks produce contiguous tuples that a contiguity-based classifier would misidentify as Boundary T3 ticks.
+
+Resolution: classify by **message prefix** (`"Active heap"` = Boundary, `"Evaluating tree level"` = Logical Tree), locked as D-081. No production code changes — `heap.py` already emits the correct distinct prefixes. Six spec documents amended to replace all contiguity-based classification language with message-prefix references.
+
+### Amended documents
+
+1. `03_DATA_CONTRACTS.md` §Distinguishing the two variants — replaced contiguity rule with message-prefix rule, added rationale paragraph.
+2. `00_PSEUDOCODE.md` §4 — updated TC-A19 invariants and boundary T3 inline comment.
+3. `08_TEST_PLAN.md` TC-A19 — replaced `_is_contiguous` helper with `_is_logical_tree_t3` using message prefix; updated procedure prose and assertion rule #1.
+4. `05_ALGORITHMS_VIS_SPEC.md` §6.1 — updated "Distinction from boundary T3 ticks" paragraph.
+5. `heap.py` module docstring — replaced "distinguished by index contiguity" with "distinguished by message prefix" and added explicit warning against contiguity classification.
+6. `DECISIONS.md` — added D-081 with full rationale and list of amended docs.
+
+### Decisions
+
+- **D-081 (locked).** Message-prefix classification chosen over sequencing-context (which would require lookahead/buffering in the View and a state machine in TC-A19). Message prefix is self-contained — each tick classifiable in isolation.
+- **No SortResult schema change.** Adding a `range_variant` field was considered and rejected; the existing `message` field already carries the discriminator, and changing the Phase 1 data contract would ripple across the project.
+
+### Open questions
+
+- None from this resolution. The bug is fully closed. TC-A19 can now be authored correctly in Phase 3.
+
+### Next
+
+Phase 3 (algorithm unit tests) is unblocked. Phase 4 (easing module) can run in parallel.
+
+---
+
 ## 2026-04-20 — DEVLOG restructure: archive-by-phase + tracker separation
 
 ### Worked on

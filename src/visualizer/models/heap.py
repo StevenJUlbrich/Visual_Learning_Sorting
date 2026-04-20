@@ -11,13 +11,18 @@ both phases.  It emits the TC-A19 sift-down grammar per level:
 Logical-Tree T3 → T1 compare(s) (1 or 2) → T2 swap (0 or 1), repeating until
 the heap property holds or the left child is out of range.
 
-Two T3 RANGE variants, distinguished by index contiguity:
+Two T3 RANGE variants, distinguished by **message prefix** (D-081):
 
-- **Boundary T3** — contiguous ``tuple(range(0, heap_size))``, emitted once per
-  extraction before the root swap.  Shows the active heap region.
-- **Logical Tree T3** — non-contiguous ``(parent, left, right)`` or
-  ``(parent, left)``, emitted at the start of every sift-down level.  Parent
-  is always the first element per D-058.
+- **Boundary T3** — message starts with ``"Active heap"``.
+  ``tuple(range(0, heap_size))``, emitted once per extraction before the root
+  swap.  Shows the active heap region.
+- **Logical Tree T3** — message starts with ``"Evaluating tree level"``.
+  ``(parent, left, right)`` or ``(parent, left)``, emitted at the start of
+  every sift-down level.  Parent is always the first element per D-058.
+
+**Do not classify by contiguity** — Logical Tree T3 at parent=0 produces
+contiguous tuples ``(0, 1, 2)`` or ``(0, 1)`` that collide with Boundary T3
+shape.  This affects every Phase 2 sift-down and the last Phase 1 sift-down.
 
 T3 ticks do NOT increment any counters per D-041.
 
