@@ -5,9 +5,9 @@ Control flow: outer loop selects sorted boundary ``i``; inner loop scans
 ``min_idx == i`` (no T2 emitted).
 
 T1 highlight tuple is always ``(min_idx, j)`` with ``min_idx`` first (D-068).
-When a new minimum is found, the tick is yielded using the *previous* min_idx so
-that ``highlight_indices`` stays unique — the update to ``min_idx`` happens
-before the yield, and the saved ``prev_min`` carries the old position.
+The yield fires *before* the ``min_idx`` update (matching pseudocode §2 exactly),
+so ``highlight_indices`` is never ``(j, j)`` — the update happens silently after
+the yield and the next T1 naturally shows the updated minimum.
 
 Counter targets for ``[4, 7, 2, 6, 1, 5, 3]``: comparisons = 21, writes = 10.
 ``comparisons`` = sum of inner-loop iterations = 6+5+4+3+2+1 = 21.
@@ -51,29 +51,18 @@ class SelectionSort(BaseSortAlgorithm):
 
             for j in range(i + 1, n):
                 self.comparisons += 1
+                yield SortResult(
+                    success=True,
+                    message=(
+                        f"Comparing index {j} (value {arr[j]})"
+                        f" with current min {arr[min_idx]} at index {min_idx}"
+                    ),
+                    operation_type=OpType.COMPARE,
+                    array_state=list(arr),
+                    highlight_indices=(min_idx, j),
+                )
                 if arr[j] < arr[min_idx]:
-                    prev_min = min_idx
                     min_idx = j
-                    # Yield with prev_min so highlight_indices stays unique;
-                    # the next T1 will reflect the updated min_idx as current min.
-                    yield SortResult(
-                        success=True,
-                        message=f"New minimum: {arr[j]} at index {j}",
-                        operation_type=OpType.COMPARE,
-                        array_state=list(arr),
-                        highlight_indices=(prev_min, j),
-                    )
-                else:
-                    yield SortResult(
-                        success=True,
-                        message=(
-                            f"Comparing index {j} (value {arr[j]})"
-                            f" with current min {arr[min_idx]} at index {min_idx}"
-                        ),
-                        operation_type=OpType.COMPARE,
-                        array_state=list(arr),
-                        highlight_indices=(min_idx, j),
-                    )
 
             if min_idx != i:
                 arr[i], arr[min_idx] = arr[min_idx], arr[i]

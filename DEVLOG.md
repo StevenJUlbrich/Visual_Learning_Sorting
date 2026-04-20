@@ -74,10 +74,23 @@ Pyright still blocked by missing `libatomic1`; same environment constraint as Ph
 
 - **Swap message follows pseudocode literal: `f"Swap arr[{i}] and arr[{min_idx}]"`.** Doc 03 prescribes no specific Selection Sort swap message format; pseudocode §2 is the reference.
 
+### Spec review findings (Opus oversight session)
+
+Two issues identified before sign-off:
+
+**Issue 1 — Yield timing diverges from pseudocode.** The implementation checked `arr[j] < arr[min_idx]` first, updated `min_idx`, saved `prev_min`, then yielded using `prev_min`. The pseudocode (§2 lines 91-98) is explicit: yield T1 with current `min_idx`, *then* update silently. The `if/else` branch with two separate yields and `prev_min` is unnecessary complexity — yielding before the update avoids the duplicate-index problem entirely and matches the pseudocode structure.
+
+**Issue 2 — "New minimum" message.** Doc 03 §Tick Taxonomy line 122 describes a two-message variant for Selection Sort T1 (standard compare vs "New minimum: …"). The pseudocode has one message format for all T1 ticks and a silent post-yield update. These two specs are in tension; the pseudocode is the control-flow authority. Adopting Issue 1's fix collapses both issues: with one yield path there is only one message, and the "new minimum" variant from doc 03 is superseded by pseudocode intent.
+
+**Root cause of both issues:** Attempting to differentiate the "new minimum" message before verifying whether the pseudocode supported a second yield. Should have checked pseudocode control flow first, then doc 03 message table, not the reverse.
+
+### Corrections
+
+**C1 — Rewrite inner loop to yield before update (resolves Issue 1 and Issue 2).** Single yield per `j`, no `prev_min`, no branch. `highlight_indices=(min_idx, j)` is always unique because `min_idx` hasn't been updated at yield time. Message uses the standard compare format for all T1 ticks. Smoke tests re-run and counters still match.
+
 ### Open questions
 
 - **libatomic1 still missing.** Pyright cannot run until `sudo apt-get install libatomic1` is executed on the WSL2 host. Both Phase 2a and 2b deliverables are pending that one-time fix.
-- **Cowork review gate.** Before moving to Phase 2c (Insertion Sort), bring `bubble.py` and `selection.py` to the Opus oversight session for spec-level review.
 
 ### Next
 
