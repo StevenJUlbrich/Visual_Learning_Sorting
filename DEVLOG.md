@@ -49,6 +49,59 @@ Phase 3 (algorithm unit tests) is unblocked. Phase 4 (easing module) can run in 
 
 ---
 
+## 2026-04-20 — Phase 3d closed: test_heap.py (post-action)
+
+### Worked on
+
+Created `tests/unit/test_heap.py` (9 tests: TC-A1, TC-A2, TC-A3, TC-A10, single-element guard, TC-A7 phase contract, TC-A8 sift-down correctness, TC-A13 T3 step exclusion, TC-A19 sift-down tick sequence). Includes four module-level helpers: `_is_logical_tree_t3` (D-081 message-prefix classifier), `_is_max_heap` (max-heap property checker), `extract_sift_down_levels` (sift-down level segmenter from doc 08 skeleton), `assert_sift_down_level_contract` (T3→T1→T2 contract checker). Full unit suite now at 29 tests.
+
+### Results
+
+- `uv run pytest tests/unit/test_heap.py -v`: **9/9 PASSED**
+- `uv run pytest tests/unit/ -v`: **29/29 PASSED**
+- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright tests/`: **0 errors, 0 warnings**
+- `uv run ruff check tests/` + `uv run ruff format --check tests/`: **clean**
+
+### Corrections
+
+1. **Ruff I001 import block formatting** — blank line inside the import block triggered isort violation. Fixed with `ruff check --fix && ruff format`. No logic change.
+
+### Decisions
+
+- **TC-A19 passed on first attempt — no Opus escalation.** The `_is_logical_tree_t3` helper correctly classified all 11 logical-tree T3 ticks by message prefix. Level count asserted at exactly 11 (4 Phase 1 + 7 Phase 2).
+- **heap.py docstring typo noted, not fixed.** Docstring says "10 logical-tree T3" but correct count is 11 (confirmed by trace and test plan TC-A13). Test asserts 11. Docstring correction deferred — a non-functional comment, not a production code issue.
+- **TC-A8 implemented via full generator, not private `_sift_down` call.** Verifies the last Phase 1 tick's `array_state` satisfies `_is_max_heap`. Cleaner than accessing the private method and tests the same contract.
+- **Contaminated level in `extract_sift_down_levels` is benign.** Extraction 5's sift_down (heap_size=2, no swap) leaves `current_level` open; the subsequent Extraction 6 boundary T3 + extraction swap contaminate it. `assert_sift_down_level_contract` still passes (1 compare, 1 write count both within valid ranges). The total level count of 11 is correct.
+
+### Open questions
+
+- **heap.py docstring typo (10 vs 11 logical-tree T3).** Non-critical, deferred.
+
+### Next
+
+Phase 3 (model unit tests) is complete. Phase 4 (easing module) and Phase 5 (view layer) are unblocked.
+
+---
+
+## 2026-04-20 — Phase 3d start: test_heap.py plan (pre-action)
+
+### Model / session
+Sonnet 4.6 per model strategy. TC-A19 escalation trigger: if the _is_logical_tree_t3 helper misclassifies on first attempt, stop and escalate to Opus.
+
+### Plan
+Create `tests/unit/test_heap.py` with TC-A1, TC-A2, TC-A3, TC-A7, TC-A8, TC-A10, TC-A13, TC-A19, plus single-element guard.
+
+### Critical context
+D-081 — classify T3 ticks by message prefix, not contiguity. TC-A19 helper skeleton in doc 08 §5 TC-A19. Docstring in heap.py says "10 logical-tree T3" but trace and test plan confirm 11 (4 Phase 1 + 7 Phase 2). Test against 11.
+
+### Exit criteria
+- `uv run pytest tests/unit/test_heap.py -v` all green
+- `uv run pytest tests/unit/ -v` all green (cumulative, should be 28+ tests)
+- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright tests/` clean
+- `uv run ruff check tests/` + `uv run ruff format --check tests/` clean
+
+---
+
 ## 2026-04-20 — Phase 3c closed: test_insertion.py (post-action)
 
 ### Worked on
