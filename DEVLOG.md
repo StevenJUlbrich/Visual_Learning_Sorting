@@ -6,48 +6,6 @@
 
 ---
 
-## 2026-04-20 — Phase 2a closed: bubble.py authored and smoke-tested
-
-### Worked on
-
-Implemented `src/visualizer/models/bubble.py` against the Phase 2 pack in `14_CONTEXT_PACKS.md`. Pseudocode source: `00_PSEUDOCODE.md §1`. `BubbleSort` extends `BaseSortAlgorithm`, constructing with `name="Bubble Sort"` and `complexity="O(n²)"`. Generator control flow is classic two-loop with `swapped` early-exit; inner limit is `n - pass_idx - 1` (the LimitLine boundary).
-
-Smoke script `scripts/smoke_bubble.py` verified all four exit criteria:
-
-1. `comparisons == 20` on `[4, 7, 2, 6, 1, 5, 3]` ✓
-2. `writes == 26` on `[4, 7, 2, 6, 1, 5, 3]` ✓
-3. Final tick `is_complete == True` ✓
-4. Empty input yields exactly one `FAILURE` tick ✓
-
-Ruff check + format check: clean.
-
-**Pyright blocked by environment:** WSL2 system is missing `libatomic1`, which the pyright-python Node.js runtime requires. Manual type review performed instead (see Decisions). To enable pyright: `sudo apt-get install libatomic1`.
-
-### Decisions
-
-- **Manual pyright review findings:** All annotations are explicit. `sort_generator` return type matches the base class `Generator[SortResult]` exactly. `arr = self.data` is `list[int]`; `list(arr)` copies produce `list[int]`. Tuple literals `(j, j+1)` satisfy `tuple[int, ...]`. No `Any` escapes. No issues found that would fail strict mode.
-- **Single-element guard yields TERMINAL with `highlight_indices=(0,)`.** Pseudocode says `yield T4_done()` for `n==1`; `T4_done` is `highlight_indices=tuple(range(n))`, which is `(0,)` for n=1. Consistent with the final tick convention.
-- **Swap message uses post-mutation values.** Pseudocode says `f"Swap {arr[j+1]} and {arr[j]}"` after the swap; both `arr[j]` and `arr[j+1]` already hold the exchanged values at that point. Matches the pseudocode literally.
-- **No T3 ticks emitted.** Confirmed — Bubble Sort emits only T1 and T2 ticks plus the terminal. Per 00_PSEUDOCODE.md §1 invariants.
-
-### Corrections
-
-**C1 — Bubble Sort compare message format.** Line 51 used `f"Compare {arr[j]} and {arr[j + 1]}"`. Doc 03 §Tick Taxonomy specifies `f"Comparing index {j} (value {arr[j]}) and index {j + 1} (value {arr[j + 1]})"`. Fixed in place; smoke tests still pass.
-
-**Why it was missed:** The Phase 2 pack names `00_PSEUDOCODE.md` as the canonical control-flow spec and the pseudocode §1 shows the terse `f"Compare {arr[j]} and {arr[j+1]}"` form. Doc 03 §Tick Taxonomy carries the fuller pedagogical format, but the pack lists doc 03 as a secondary input and the implementation session followed the pseudocode wording literally without cross-checking doc 03's message schema. The fix is a one-line message string change with no counter or tick-structure impact.
-
-**Lesson for remaining generators:** When authoring the T1 message string, verify the exact format against doc 03 §Tick Taxonomy, not just `00_PSEUDOCODE.md`. The pseudocode is authoritative for *when* a tick fires; doc 03 is authoritative for *what each field contains*.
-
-### Open questions
-
-- **libatomic1 missing on dev WSL2.** `sudo apt-get install libatomic1` resolves it. Until then, pyright cannot be invoked and CI will need to be run on a machine with the library available.
-
-### Next
-
-Phase 2b: `selection.py`. Bring `bubble.py` to the Cowork (Opus) session for spec-level review before proceeding.
-
----
-
 ## 2026-04-20 10:46 EDT — Phase 2c closed: insertion.py authored and smoke-tested (post-action)
 
 ### Worked on
@@ -87,6 +45,15 @@ Ruff: clean on first run. Format: clean on first run. Pyright: still blocked by 
 
 - **libatomic1 still missing.** Pyright blocker carries forward to Phase 2d. `sudo apt-get install libatomic1` resolves it.
 
+### DEVLOG housekeeping (2026-04-20 10:54 EDT)
+
+Two post-review fixes to the DEVLOG itself, flagged during Phase 2c sign-off:
+
+- **Entry ordering restored to newest-first.** The Phase 2a (bubble) entry had drifted to the very top of the file, above the Phase 2c entries that followed it chronologically. Root cause: the pre-action/post-action entries were prepended via `Edit` with the same anchor used for the first DEVLOG update, which pushed Phase 2a up instead of Phase 2c. Moved Phase 2a to its correct position between Phase 2b and the 2026-04-19 model-strategy entry. Final top-to-bottom order: Phase 2c post → Phase 2c pre → Phase 2b → Phase 2a → model strategy → Correction C → Phase 1 → earlier.
+- **Model version corrected.** The pre-action entry's "Model / session" section said "Opus 4.7"; the session is actually on Opus 4.6. Fixed inline.
+
+Neither fix touched the technical content of any entry — only ordering and the single model-version string. Spec-review feedback confirmed Issue 2 (the Selection Sort `prev_min` narrative) was intentionally preserved as a correction story valuable for the video journal.
+
 ### Next
 
 Phase 2d: `heap.py` — the last Phase 2 algorithm. Two phases (build + extract), recursive sift-down with `yield from`, two T3 variants (boundary contiguous vs logical-tree non-contiguous), D-058 parent-first highlight, counter reconciliation 20/30/35 with 6 excluded boundary ticks. Staying on Opus for this one per the model strategy.
@@ -97,7 +64,7 @@ Phase 2d: `heap.py` — the last Phase 2 algorithm. Two phases (build + extract)
 
 ### Model / session
 
-Opus 4.7 (1M context, xhigh effort) per the 2026-04-19 model-strategy entry — Insertion Sort's terminating-compare rule is the highest-risk control-flow decision in the project, which is exactly the constraint-density the Opus assignment anticipates.
+Opus 4.6 (1M context, xhigh effort) per the 2026-04-19 model-strategy entry — Insertion Sort's terminating-compare rule is the highest-risk control-flow decision in the project, which is exactly the constraint-density the Opus assignment anticipates.
 
 ### Plan
 
@@ -190,6 +157,48 @@ Two issues identified before sign-off:
 ### Next
 
 Phase 2c: `insertion.py` (Opus — terminating-compare rule is high-risk). Escalation path if Sonnet is used: switch on first counter failure.
+
+---
+
+## 2026-04-20 — Phase 2a closed: bubble.py authored and smoke-tested
+
+### Worked on
+
+Implemented `src/visualizer/models/bubble.py` against the Phase 2 pack in `14_CONTEXT_PACKS.md`. Pseudocode source: `00_PSEUDOCODE.md §1`. `BubbleSort` extends `BaseSortAlgorithm`, constructing with `name="Bubble Sort"` and `complexity="O(n²)"`. Generator control flow is classic two-loop with `swapped` early-exit; inner limit is `n - pass_idx - 1` (the LimitLine boundary).
+
+Smoke script `scripts/smoke_bubble.py` verified all four exit criteria:
+
+1. `comparisons == 20` on `[4, 7, 2, 6, 1, 5, 3]` ✓
+2. `writes == 26` on `[4, 7, 2, 6, 1, 5, 3]` ✓
+3. Final tick `is_complete == True` ✓
+4. Empty input yields exactly one `FAILURE` tick ✓
+
+Ruff check + format check: clean.
+
+**Pyright blocked by environment:** WSL2 system is missing `libatomic1`, which the pyright-python Node.js runtime requires. Manual type review performed instead (see Decisions). To enable pyright: `sudo apt-get install libatomic1`.
+
+### Decisions
+
+- **Manual pyright review findings:** All annotations are explicit. `sort_generator` return type matches the base class `Generator[SortResult]` exactly. `arr = self.data` is `list[int]`; `list(arr)` copies produce `list[int]`. Tuple literals `(j, j+1)` satisfy `tuple[int, ...]`. No `Any` escapes. No issues found that would fail strict mode.
+- **Single-element guard yields TERMINAL with `highlight_indices=(0,)`.** Pseudocode says `yield T4_done()` for `n==1`; `T4_done` is `highlight_indices=tuple(range(n))`, which is `(0,)` for n=1. Consistent with the final tick convention.
+- **Swap message uses post-mutation values.** Pseudocode says `f"Swap {arr[j+1]} and {arr[j]}"` after the swap; both `arr[j]` and `arr[j+1]` already hold the exchanged values at that point. Matches the pseudocode literally.
+- **No T3 ticks emitted.** Confirmed — Bubble Sort emits only T1 and T2 ticks plus the terminal. Per 00_PSEUDOCODE.md §1 invariants.
+
+### Corrections
+
+**C1 — Bubble Sort compare message format.** Line 51 used `f"Compare {arr[j]} and {arr[j + 1]}"`. Doc 03 §Tick Taxonomy specifies `f"Comparing index {j} (value {arr[j]}) and index {j + 1} (value {arr[j + 1]})"`. Fixed in place; smoke tests still pass.
+
+**Why it was missed:** The Phase 2 pack names `00_PSEUDOCODE.md` as the canonical control-flow spec and the pseudocode §1 shows the terse `f"Compare {arr[j]} and {arr[j+1]}"` form. Doc 03 §Tick Taxonomy carries the fuller pedagogical format, but the pack lists doc 03 as a secondary input and the implementation session followed the pseudocode wording literally without cross-checking doc 03's message schema. The fix is a one-line message string change with no counter or tick-structure impact.
+
+**Lesson for remaining generators:** When authoring the T1 message string, verify the exact format against doc 03 §Tick Taxonomy, not just `00_PSEUDOCODE.md`. The pseudocode is authoritative for *when* a tick fires; doc 03 is authoritative for *what each field contains*.
+
+### Open questions
+
+- **libatomic1 missing on dev WSL2.** `sudo apt-get install libatomic1` resolves it. Until then, pyright cannot be invoked and CI will need to be run on a machine with the library available.
+
+### Next
+
+Phase 2b: `selection.py`. Bring `bubble.py` to the Cowork (Opus) session for spec-level review before proceeding.
 
 ---
 
