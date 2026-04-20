@@ -49,6 +49,55 @@ Phase 3 (algorithm unit tests) is unblocked. Phase 4 (easing module) can run in 
 
 ---
 
+## 2026-04-20 — Phase 3a closed: conftest + test_bubble.py (post-action)
+
+### Worked on
+
+Created `tests/conftest.py` (session-scoped headless Pygame init, 6 data fixtures), `tests/unit/__init__.py` (empty), and `tests/unit/test_bubble.py` (6 tests covering TC-A1, TC-A2, TC-A3, TC-A10, TC-A12, plus single-element guard).
+
+### Results
+
+- `uv run pytest tests/unit/test_bubble.py -v`: **6/6 PASSED**
+- `uv run pyright tests/`: **0 errors, 0 warnings**
+- `uv run ruff check tests/` + `uv run ruff format --check tests/`: **clean**
+
+Two corrections before clean pass:
+1. **`_pygame_session` return type** — first draft used `pytest.FixtureRequest` (wrong). Fixed to `Generator[None]` (the correct type for a generator fixture).
+2. **`noqa: E402` unnecessary** — ruff does not flag `import pygame` after module-level `os.environ` assignments as E402; the noqa was spurious (`RUF100`). Removed.
+3. **Pyright `reportUnusedFunction`** — `_pygame_session` is called by pytest's fixture system, invisible to static analysis. Suppressed with `# pyright: ignore[reportUnusedFunction]` on the `def` line.
+
+### Decisions
+
+- **`Generator[None]` not `Generator[None, None, None]`** — Python 3.13 PEP 696 makes the send/return type arguments default to `None`. Ruff UP043 flags the explicit form. Using the short form is consistent with the project's `py313` target.
+- **Removed doc 08's `# noqa: E402` comment** — it was specified verbatim in the spec but ruff 0.5+ no longer flags the import as E402 in this context. Removing it keeps ruff clean without changing semantics.
+
+### Open questions
+
+None from this sub-phase. conftest is complete and reusable for all remaining Phase 3 files.
+
+### Next
+
+Phase 3b: test_selection.py (TC-A1, TC-A2, TC-A3, TC-A10).
+
+---
+
+## 2026-04-20 — Phase 3a start: conftest + test_bubble.py plan (pre-action)
+
+### Model / session
+Sonnet 4.6 per model strategy. Bubble Sort tests are well-specified with explicit counter targets and straightforward tick structure.
+
+### Plan
+- Create `tests/conftest.py` verbatim from doc 08 §4.2
+- Create `tests/unit/__init__.py` (empty)
+- Create `tests/unit/test_bubble.py` with TC-A1, TC-A2, TC-A3, TC-A10, TC-A12
+
+### Exit criteria
+- `uv run pytest tests/unit/test_bubble.py -v` all green
+- `uv run pyright tests/` clean
+- `uv run ruff check tests/` + `uv run ruff format --check tests/` clean
+
+---
+
 ## 2026-04-20 — DEVLOG restructure: archive-by-phase + tracker separation
 
 ### Worked on

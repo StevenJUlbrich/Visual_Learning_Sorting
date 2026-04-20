@@ -116,20 +116,21 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 **Depends on:** Phase 1, Phase 2
 **Output:** `tests/conftest.py`, `tests/unit/test_*.py`
 **Testable without Pygame:** Yes (model tests only)
+**Phase 3a status:** conftest + test_bubble.py delivered and signed off (2026-04-20, Sonnet 4.6). 6/6 tests pass. Pyright 0 errors. Ruff clean. Two minor corrections: generator return type annotation, spurious noqa directive.
 
-- [ ] Root `conftest.py` — verbatim from doc 08 Section 4.2 (SDL_VIDEODRIVER=dummy at module level, fixtures)
-- [ ] `pyproject.toml` markers registered (unit, integration, slow)
-- [ ] **TC-A1** Final sortedness (all algorithms, all fixtures)
-- [ ] **TC-A2** Completion tick contract (exactly one, success=True, is_complete=True, full highlight)
-- [ ] **TC-A3** Empty input contract (exactly one failure tick)
+- [x] Root `conftest.py` — verbatim from doc 08 Section 4.2 (SDL_VIDEODRIVER=dummy at module level, fixtures). *Note: `Generator[None]` used per PEP 696/UP043; `# noqa: E402` removed (ruff does not flag in this context). `reportUnusedFunction` suppressed with pyright inline comment.*
+- [x] `pyproject.toml` markers registered (unit, integration, slow)
+- [~] **TC-A1** Final sortedness (all algorithms, all fixtures) — *Bubble Sort covered (test_bubble.py). Selection, Insertion, Heap pending.*
+- [~] **TC-A2** Completion tick contract (exactly one, success=True, is_complete=True, full highlight) — *Bubble Sort covered. Remaining pending.*
+- [~] **TC-A3** Empty input contract (exactly one failure tick) — *Bubble Sort covered. Remaining pending.*
 - [ ] **TC-A5** Easing function math (ease_in_out_quad boundary values)
 - [ ] **TC-A7** Heap Sort phase contract (T3 variants, boundary decreasing k)
 - [ ] **TC-A8** Sift-down correctness (subtree satisfies max-heap after sift-down)
 - [ ] **TC-A9** Insertion Sort tick sequence (per-pass first/last tick, T1/T2 alternation)
-- [ ] **TC-A10** Counter accuracy (all 4 algorithms, exact values)
+- [~] **TC-A10** Counter accuracy (all 4 algorithms, exact values) — *Bubble Sort covered (comparisons=20, writes=26). Remaining pending.*
 - [ ] **TC-A11** Key-selection does not increment comparisons
-- [ ] **TC-A12** Swap writes count (Bubble Sort: writes == swap_count * 2)
-- [ ] **TC-A13** T3 step counter exclusion (steps=35, T3 count=6)
+- [x] **TC-A12** Swap writes count (Bubble Sort: writes == swap_count * 2) — *Bubble Sort only. Complete.*
+- [ ] **TC-A13** T3 step counter exclusion (steps=35, T3 count=17)
 - [ ] **TC-A14** Insertion Sort terminating comparison (sorted_7 fixture)
 - [ ] **TC-A19** Heap Sort sift-down tick sequence contract (T3->T1->T2 per level)
 - [ ] **TC-A20** Tree layout node positioning (both presets, no overlap)
