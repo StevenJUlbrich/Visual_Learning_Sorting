@@ -49,6 +49,50 @@ Phase 3 (algorithm unit tests) is unblocked. Phase 4 (easing module) can run in 
 
 ---
 
+## 2026-04-20 — Phase 3b closed: test_selection.py (post-action)
+
+### Worked on
+
+Created `tests/unit/test_selection.py` (6 tests: TC-A1, TC-A2, TC-A3, TC-A10, single-element guard, swap-skip test on `sorted_7`). Full unit suite now at 12 tests (bubble + selection).
+
+### Results
+
+- `uv run pytest tests/unit/test_selection.py -v`: **6/6 PASSED**
+- `uv run pytest tests/unit/ -v`: **12/12 PASSED**
+- `uv run pyright tests/`: **0 errors, 0 warnings**
+- `uv run ruff check tests/` + `uv run ruff format --check tests/`: **clean**
+
+No corrections needed — first write was clean.
+
+### Decisions
+
+- **`sorted_7` swap-skip test asserts both `len(swap_ticks) == 0` and `writes == 0`** — double-checking the same invariant via two independent views (tick list and counter) catches a hypothetical bug where a swap happened but didn't yield a tick, or vice versa.
+
+### Open questions
+
+None.
+
+### Next
+
+Phase 3c: test_insertion.py (TC-A1, TC-A2, TC-A3, TC-A9, TC-A10, TC-A11, TC-A14).
+
+---
+
+## 2026-04-20 — Phase 3b start: test_selection.py plan (pre-action)
+
+### Model / session
+Sonnet 4.6 per model strategy. Selection Sort tests are well-specified with straightforward counter targets.
+
+### Plan
+Create `tests/unit/test_selection.py` with TC-A1, TC-A2, TC-A3, TC-A10 for Selection Sort, plus Selection-specific checks.
+
+### Exit criteria
+- `uv run pytest tests/unit/test_selection.py -v` all green
+- `uv run pyright tests/` clean
+- `uv run ruff check tests/` + `uv run ruff format --check tests/` clean
+
+---
+
 ## 2026-04-20 — Phase 3a closed: conftest + test_bubble.py (post-action)
 
 ### Worked on
