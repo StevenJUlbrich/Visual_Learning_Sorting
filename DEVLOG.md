@@ -48,6 +48,101 @@ Phase 2b: `selection.py`. Bring `bubble.py` to the Cowork (Opus) session for spe
 
 ---
 
+## 2026-04-20 10:46 EDT — Phase 2c closed: insertion.py authored and smoke-tested (post-action)
+
+### Worked on
+
+Implemented `src/visualizer/models/insertion.py` per the pre-action plan below. All four pseudocode phases (key selection, compare-and-shift, terminating compare, placement) emit ticks in the prescribed order with the prescribed counters.
+
+### Results
+
+**Exit criteria — all met:**
+
+1. `comparisons == 17` on `[4, 7, 2, 6, 1, 5, 3]` ✓
+2. `writes == 19` on `[4, 7, 2, 6, 1, 5, 3]` ✓
+3. Final tick `is_complete == True`; final array `[1, 2, 3, 4, 5, 6, 7]` ✓
+4. Empty input yields exactly one `FAILURE` tick ✓
+
+**Bonus checks — all met:**
+
+- Pass-by-pass counter segmentation matches the `00_PSEUDOCODE.md §3` truth table exactly across all 6 passes (shift-compares, shifts, placements, terminating-present).
+- No duplicate indices in any 2-element `highlight_indices`.
+- Key-selection and placement emit single-index highlights as specified.
+
+Ruff: clean on first run. Format: clean on first run. Pyright: still blocked by missing `libatomic1` on WSL2 host (Phase 2a DEVLOG open question still pending); manual type review found no issues — all annotations explicit, no `Any` escapes, all `SortResult` fields typed correctly.
+
+### Decisions made during authoring
+
+- **Terminating compare uses the same doc 03 compare message as shift-loop compares.** Doc 03 §Tick Taxonomy line 124 prescribes one compare format for Insertion Sort; it does not specify a distinct "terminating" variant. Pseudocode uses a suffix ("— stop") but doc 03 is the message authority per the Phase 2b lesson. Using one format keeps the message line pedagogically consistent. If a future spec update adds a terminating-specific message, it's a one-line change.
+- **Shift and placement messages follow pseudocode format verbatim.** Doc 03 is silent on T2 text for Insertion Sort. Pseudocode §3 supplies `"Shift arr[{j}]={arr[j]} right to slot {j + 1}"` and `"Place key={key} at slot {j + 1}"`. Used these literally.
+- **Key-selection tick is `OpType.COMPARE` with no counter increment.** Doc 03 line 153 is explicit: key-selection uses `COMPARE` for timing alignment but is not a data comparison. Implemented by emitting the tick without touching `self.comparisons`.
+- **Smoke script includes pass-segmentation bonus check.** The pseudocode pass-by-pass truth table is the single highest-risk spec in the project. A smoke test that re-verifies it per-pass (not just in aggregate) catches off-by-one errors that the counter totals would mask (e.g., an extra compare in one pass balanced by a missing compare in another). Cheap insurance for a cheap test.
+
+### Surprises / non-obvious findings
+
+- **None.** The pre-flight manual trace against the truth table caught every potential off-by-one before the first yield was written. Writing against a fully-traced target array is strictly better than writing-then-fixing.
+- **`arr[j]` in the shift message is the post-copy value.** After `arr[j+1] = arr[j]`, both slots hold the same value and `arr[j]` in the f-string still resolves to the shifted value (the original was never overwritten on the source slot — it gets overwritten on the *next* iteration when a new `arr[j+1] = arr[j]` executes with the decremented j). Pseudocode convention confirmed consistent.
+
+### Open questions (status)
+
+- **libatomic1 still missing.** Pyright blocker carries forward to Phase 2d. `sudo apt-get install libatomic1` resolves it.
+
+### Next
+
+Phase 2d: `heap.py` — the last Phase 2 algorithm. Two phases (build + extract), recursive sift-down with `yield from`, two T3 variants (boundary contiguous vs logical-tree non-contiguous), D-058 parent-first highlight, counter reconciliation 20/30/35 with 6 excluded boundary ticks. Staying on Opus for this one per the model strategy.
+
+---
+
+## 2026-04-20 10:45 EDT — Phase 2c start: insertion.py plan (pre-action)
+
+### Model / session
+
+Opus 4.7 (1M context, xhigh effort) per the 2026-04-19 model-strategy entry — Insertion Sort's terminating-compare rule is the highest-risk control-flow decision in the project, which is exactly the constraint-density the Opus assignment anticipates.
+
+### Plan
+
+Implement `src/visualizer/models/insertion.py` strictly against `00_PSEUDOCODE.md §3`. Phase structure per pass:
+
+1. **Key Selection (Phase 1).** Single T1 tick with `highlight_indices=(i,)`, `OpType.COMPARE`. Does **NOT** increment `self.comparisons` — visual/pedagogical tick only per D-071 / doc 03 line 153. Message: doc 03 format `"Selecting key: {arr[i]} at index {i}"`.
+
+2. **Compare-and-shift loop (Phase 2).** Each iteration emits T1 compare + T2 shift individually. Never batch (D-060, D-064). Each shift is `OpType.SHIFT`, `writes += 1`, `highlight_indices=(j, j+1)`. Compare message: doc 03 format `"Comparing index {j} (value {arr[j]}) with key {key}"`. Shift message: pseudocode format (doc 03 silent on T2 text).
+
+3. **Terminating Compare (Phase 2b).** Fires **only** when while-loop exits by `arr[j] <= key`, NOT by `j < 0`. Control-flow gate: `if j >= 0`. Uses same doc 03 compare message format. This is the rule TC-A14 pins down.
+
+4. **Placement (Phase 3).** `arr[j+1] = key`, `writes += 1`, `OpType.SHIFT`, `highlight_indices=(j+1,)` single-index. Pseudocode message.
+
+### Traps to watch for
+
+- **Key-selection counter rule.** The key-selection T1 uses `OpType.COMPARE` for timing alignment but does NOT increment the counter. Easy to over-count if the comparisons++ is pattern-matched to every COMPARE yield.
+- **Terminating-compare gate.** Yielding the terminating T1 unconditionally would over-count comparisons by roughly 1 per pass where `j < 0` at exit. For `default_7` that's 2 extra comparisons → 19 instead of 17. Counter table catches this.
+- **Sequential shift emission.** Batching shifts into a single T2 would break D-060 / D-064 and TC-A9. Each shift must be its own T2 tick preceded by its own T1 compare.
+- **Single-index highlight on placement.** Placement uses `(j+1,)`, not `(j, j+1)`. The view layer differentiates these.
+- **Message format source of truth.** Lesson from Phase 2a/2b: doc 03 §Tick Taxonomy is the message authority; pseudocode is the control-flow authority. Where doc 03 prescribes a message format, use doc 03 (compare, key-selection). Where doc 03 is silent (shift, placement), follow pseudocode.
+
+### Manual trace (pre-flight)
+
+Traced `[4, 7, 2, 6, 1, 5, 3]` against the pseudocode pass-by-pass truth table to verify my mental model before coding:
+
+| Pass | key | Shift compares | Terminating? | Shifts | Placement |
+|------|-----|----------------|--------------|--------|-----------|
+| i=1  | 7   | 0              | Yes (j=0)    | 0      | 1         |
+| i=2  | 2   | 2              | No (j=-1)    | 2      | 1         |
+| i=3  | 6   | 1              | Yes (j=1)    | 1      | 1         |
+| i=4  | 1   | 4              | No (j=-1)    | 4      | 1         |
+| i=5  | 5   | 2              | Yes (j=2)    | 2      | 1         |
+| i=6  | 3   | 4              | Yes (j=1)    | 4      | 1         |
+
+Totals: compares = 13 + 4 = **17** ✓; writes = 13 shifts + 6 placements = **19** ✓. Matches CLAUDE.md Counter Accuracy table.
+
+### Exit criteria
+
+- `pyright` clean (blocked by missing `libatomic1` same as Phase 2a/2b; manual type review will substitute)
+- `ruff check` + `ruff format --check` clean
+- Smoke script: comparisons=17, writes=19, final tick `is_complete=True`, empty input yields single FAILURE tick
+- Optional bonus checks: pass-by-pass counter segmentation matches the truth table above; no duplicate indices in any 2-element `highlight_indices`
+
+---
+
 ## 2026-04-20 — Phase 2b closed: selection.py authored and smoke-tested
 
 ### Worked on
