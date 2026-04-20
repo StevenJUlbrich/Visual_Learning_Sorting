@@ -118,21 +118,22 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 **Testable without Pygame:** Yes (model tests only)
 **Phase 3a status:** conftest + test_bubble.py delivered and signed off (2026-04-20, Sonnet 4.6). 6/6 tests pass. Pyright 0 errors. Ruff clean. Two minor corrections: generator return type annotation, spurious noqa directive.
 **Phase 3b status:** test_selection.py delivered and signed off (2026-04-20, Sonnet 4.6). 6/6 tests pass. 12/12 cumulative. Pyright 0 errors. Ruff clean. Zero corrections.
+**Phase 3c status:** test_insertion.py delivered and signed off (2026-04-20, Sonnet 4.6). 8/8 tests pass. 20/20 cumulative. Pyright 0 errors (requires `PYRIGHT_PYTHON_GLOBAL_NODE=false` — system Node v12 crashes pyright; nodeenv v25.9.0 is correct runtime). Ruff clean. Two corrections: unused `exp_sc` → added shift-compare assertion; ruff format alignment. **Pyright Node workaround documented in DEVLOG.**
 
 - [x] Root `conftest.py` — verbatim from doc 08 Section 4.2 (SDL_VIDEODRIVER=dummy at module level, fixtures). *Note: `Generator[None]` used per PEP 696/UP043; `# noqa: E402` removed (ruff does not flag in this context). `reportUnusedFunction` suppressed with pyright inline comment.*
 - [x] `pyproject.toml` markers registered (unit, integration, slow)
-- [~] **TC-A1** Final sortedness (all algorithms, all fixtures) — *Bubble + Selection covered. Insertion, Heap pending.*
-- [~] **TC-A2** Completion tick contract (exactly one, success=True, is_complete=True, full highlight) — *Bubble + Selection covered. Remaining pending.*
-- [~] **TC-A3** Empty input contract (exactly one failure tick) — *Bubble + Selection covered. Remaining pending.*
+- [~] **TC-A1** Final sortedness (all algorithms, all fixtures) — *Bubble + Selection + Insertion covered. Heap pending.*
+- [~] **TC-A2** Completion tick contract (exactly one, success=True, is_complete=True, full highlight) — *Bubble + Selection + Insertion covered. Heap pending.*
+- [~] **TC-A3** Empty input contract (exactly one failure tick) — *Bubble + Selection + Insertion covered. Heap pending.*
 - [ ] **TC-A5** Easing function math (ease_in_out_quad boundary values)
 - [ ] **TC-A7** Heap Sort phase contract (T3 variants, boundary decreasing k)
 - [ ] **TC-A8** Sift-down correctness (subtree satisfies max-heap after sift-down)
-- [ ] **TC-A9** Insertion Sort tick sequence (per-pass first/last tick, T1/T2 alternation)
-- [~] **TC-A10** Counter accuracy (all 4 algorithms, exact values) — *Bubble (20/26) + Selection (21/10) covered. Insertion, Heap pending.*
-- [ ] **TC-A11** Key-selection does not increment comparisons
+- [x] **TC-A9** Insertion Sort tick sequence (per-pass first/last tick, T1/T2 alternation) — *Complete. Truth table verified across all 6 passes.*
+- [~] **TC-A10** Counter accuracy (all 4 algorithms, exact values) — *Bubble (20/26) + Selection (21/10) + Insertion (17/19) covered. Heap pending.*
+- [x] **TC-A11** Key-selection does not increment comparisons — *Insertion Sort covered. Complete.*
 - [x] **TC-A12** Swap writes count (Bubble Sort: writes == swap_count * 2) — *Bubble Sort only. Complete.*
 - [ ] **TC-A13** T3 step counter exclusion (steps=35, T3 count=17)
-- [ ] **TC-A14** Insertion Sort terminating comparison (sorted_7 fixture)
+- [x] **TC-A14** Insertion Sort terminating comparison (sorted_7 fixture) — *Complete. 6/6 passes verified: 0 shifts, 1 terminating compare, 1 placement each.*
 - [ ] **TC-A19** Heap Sort sift-down tick sequence contract (T3->T1->T2 per level)
 - [ ] **TC-A20** Tree layout node positioning (both presets, no overlap)
 - [ ] **TC-A21** Tree layout edge connectivity

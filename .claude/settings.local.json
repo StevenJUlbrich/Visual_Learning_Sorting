@@ -30,7 +30,17 @@
       "Bash(ldconfig -p)",
       "Read(//home/sju/.nvm/versions/**)",
       "Read(//usr/**)",
-      "Bash(apt-get install *)"
+      "Bash(apt-get install *)",
+      "Bash(echo \"Exit: $?\")",
+      "Read(//tmp/**)",
+      "Bash(echo \"Old files exit: $?\")",
+      "Bash(.venv/bin/pyright --version)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(.venv/bin/pyright tests/)",
+      "Bash(node -e \"console.log\\('node works'\\)\")",
+      "Bash(node .venv/lib/python3.13/site-packages/pyright/dist/pyright.js tests/conftest.py)",
+      "Bash(/home/sju/.cache/pyright-python/nodeenv/bin/node *)",
+      "Bash(PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright tests/)"
     ]
   }
 }

@@ -49,6 +49,56 @@ Phase 3 (algorithm unit tests) is unblocked. Phase 4 (easing module) can run in 
 
 ---
 
+## 2026-04-20 — Phase 3c closed: test_insertion.py (post-action)
+
+### Worked on
+
+Created `tests/unit/test_insertion.py` (8 tests: TC-A1, TC-A2, TC-A3, TC-A10, single-element guard, TC-A9 per-pass sequence, TC-A11 key-selection counter rule, TC-A14 terminating compare on `sorted_7`). Includes module-level `_segment_passes` helper that splits the tick stream into per-pass buckets for TC-A9 and TC-A14. Full unit suite now at 20 tests.
+
+### Results
+
+- `uv run pytest tests/unit/test_insertion.py -v`: **8/8 PASSED**
+- `uv run pytest tests/unit/ -v`: **20/20 PASSED**
+- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright tests/`: **0 errors, 0 warnings**
+- `uv run ruff check tests/` + `uv run ruff format --check tests/`: **clean**
+
+### Corrections
+
+1. **`exp_sc` unreferenced (pyright `reportUnusedVariable`)** — shift-compare count was unpacked from the truth table tuple but never asserted. Fixed by adding `shift_compare_count = len(compare_ticks) - (1 if has_terminating else 0)` and asserting it equals `exp_sc`. This strengthens TC-A9 — it now validates all four per-pass dimensions (shift compares, terminating, shifts, placements).
+2. **Ruff format** — trailing-space alignment in the `expected` tuples was reformatted by `ruff format`.
+3. **Pyright Node.js environment** — system Node v12 causes pyright to crash and dump its JS bundle to stderr (same class of failure as the `libatomic1` incident). Root cause: `pyright-python` defaults `PYRIGHT_PYTHON_GLOBAL_NODE=True`, which picks up the stale system node before checking the nodeenv. Workaround: prefix pyright calls with `PYRIGHT_PYTHON_GLOBAL_NODE=false`. The nodeenv at `~/.cache/pyright-python/nodeenv/bin/node` (v25.9.0) is the correct runtime.
+
+### Decisions
+
+- **`_segment_passes` as a module-level helper, not a nested function** — used by both TC-A9 and TC-A14, so factoring it out avoids duplication. The leading `_` marks it as module-private without triggering `reportUnusedFunction` (it is called, so pyright doesn't flag it).
+- **Shift-compare assertion added proactively** — the pyright error was a signal that the truth table tuple had an unused element. Rather than rename to `_`, adding the assertion closes a real test gap.
+
+### Open questions
+
+- **Pyright Node.js env** — `PYRIGHT_PYTHON_GLOBAL_NODE=false` is the current workaround. A permanent fix would be to uninstall or deactivate the system Node v12, or to add a `pyrightconfig.json` override. For now, document the env var requirement.
+
+### Next
+
+Phase 3d: test_heap.py (TC-A1, TC-A2, TC-A3, TC-A7, TC-A8, TC-A10, TC-A13, TC-A19).
+
+---
+
+## 2026-04-20 — Phase 3c start: test_insertion.py plan (pre-action)
+
+### Model / session
+Sonnet 4.6 per model strategy. Insertion Sort tests are the most complex pre-heap file — TC-A9 requires per-pass tick sequence verification, TC-A11 isolates the key-selection counter rule, TC-A14 exercises the terminating-compare truth table.
+
+### Plan
+Create `tests/unit/test_insertion.py` with TC-A1, TC-A2, TC-A3, TC-A9, TC-A10, TC-A11, TC-A14, plus single-element guard.
+
+### Exit criteria
+- `uv run pytest tests/unit/test_insertion.py -v` all green
+- `uv run pytest tests/unit/ -v` all green (cumulative)
+- `uv run pyright tests/` clean
+- `uv run ruff check tests/` + `uv run ruff format --check tests/` clean
+
+---
+
 ## 2026-04-20 — Phase 3b closed: test_selection.py (post-action)
 
 ### Worked on
