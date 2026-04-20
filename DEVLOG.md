@@ -6,6 +6,57 @@
 
 ---
 
+## 2026-04-19 — Model strategy for agentic implementation: Opus / Sonnet / Haiku assignment per phase
+
+### Worked on
+Evaluated each remaining project phase against the three available Claude models (Opus 4.6, Sonnet 4.6, Haiku 4.5) to optimize token cost without sacrificing output quality. The evaluation considered constraint density per phase, reasoning depth required, risk of subtle spec violations, and the mechanical vs. architectural nature of each task.
+
+Additionally established a two-session workflow: Claude Code (VSCode/Ubuntu) handles implementation with the assigned model; this Cowork session (Opus) serves as the oversight/review layer with full spec context loaded. One algorithm at a time for Phase 2.
+
+### Model assignments
+
+**Opus 4.6 — high-constraint, multi-spec-intersection work (~30% of implementation):**
+
+- Phase 2c: Insertion Sort generator — terminating-compare rule (`if j >= 0` at loop exit) is the highest-risk control-flow decision in the project; key-selection T1 does NOT increment comparisons. Pass-by-pass truth table exists specifically because agents get this wrong.
+- Phase 2d: Heap Sort generator — two phases, recursive sift-down with `yield from`, two T3 variants distinguished by contiguity, D-058 parent-first highlight, counter reconciliation 20/30/35 with 6 excluded boundary ticks.
+- Phase 5 (partial): `sprite.py` and `panel.py` — sprite identity-by-ID (Critical Rule #1), z-order, highlight state machine, per-algorithm motion signatures, header rhythm, completion styling all converge.
+- Phase 6: Orchestrator — independent-queue model, operation-weighted timing, Heap rapid-cadence trigger, pause-during-interpolation, dt clamp. Open design question on Heap phase signaling.
+- Oversight/review: This Cowork session remains on Opus for spec-level review of all deliverables.
+
+**Sonnet 4.6 — well-specified, single-constraint-domain work (~55% of implementation):**
+
+- Phase 2a: Bubble Sort generator — explicit pseudocode, straightforward loop shape, simple counter math.
+- Phase 2b: Selection Sort generator — `(min_idx, j)` ordering and skip-swap rules are clearly specified.
+- Phase 3: Algorithm unit tests — TC-A identifiers are prescriptive, counter table is the exit gate. Escalate TC-A19 sift-down segmentation helper to Opus only if Sonnet struggles.
+- Phase 4: Easing module — pure math, smallest pack (~8K tokens), no cross-cutting constraints.
+- Phase 5 (partial): `tree_layout.py`, `pointer.py`, `limitline.py`, `hud.py`, `window.py` — self-contained modules with clear specs.
+- Phase 7: Main entry — config loading, Pygame init, event loop wiring. Low ambiguity.
+- Phase 8: Integration tests — named test cases (TC-A15 through TC-A18), documented state machine.
+
+**Haiku 4.5 — mechanical bookkeeping (~15% of implementation):**
+
+- Phase 9: CI pipeline — GitHub Actions YAML from doc 11 spec. Boilerplate.
+- All DEVLOG and tracker updates across every phase — structured append to established format.
+
+**Human only:**
+
+- Phase 10: Manual acceptance — real-monitor visual inspection of AT-01 through AT-27. Cowork (Opus) assists with check-off sheet organization and result recording.
+
+### Decisions
+- **Model-per-task, not model-per-session.** Claude Code supports model switching (`--model` flag or `/model` command). The implementation agent should switch models between algorithms rather than running everything on one model.
+- **Oversight stays on Opus.** The review role needs full spec context and the ability to catch violations the implementation model missed. Catching a bug in review is cheaper than discovering it three phases later.
+- **Escalation rule:** If Sonnet produces a deliverable that fails exit criteria after one correction attempt, escalate to Opus for that specific file rather than iterating further on Sonnet.
+- **DEVLOG updates via Haiku.** The format is established, the content is known, no reasoning required. This is the single easiest token savings in the project.
+
+### Open questions
+- **Claude Code model switching friction.** Need to confirm the `/model` command or `--model` flag works smoothly mid-session in VSCode. If switching models requires restarting the session, the per-algorithm model switching may not be practical — in that case, run Bubble+Selection in one Sonnet session, then start a new Opus session for Insertion+Heap.
+- **Haiku for DEVLOG in practice.** Haiku needs the existing DEVLOG format and the content to append handed to it explicitly. If the implementation agent is already Sonnet or Opus, it may be simpler to let that model write the DEVLOG entry inline rather than switching to Haiku for a 200-token append. Evaluate after the first algorithm.
+
+### Next
+Begin Phase 2a (Bubble Sort) in Claude Code with Sonnet. Bring the completed `bubble.py` back to this Cowork session for spec-level review before moving to Selection Sort.
+
+---
+
 ## 2026-04-16 — Correction C verified: Heap Sort writes = 30 confirmed by independent trace
 
 ### Worked on
