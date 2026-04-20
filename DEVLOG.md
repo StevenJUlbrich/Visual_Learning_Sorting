@@ -30,6 +30,14 @@ Ruff check + format check: clean.
 - **Swap message uses post-mutation values.** Pseudocode says `f"Swap {arr[j+1]} and {arr[j]}"` after the swap; both `arr[j]` and `arr[j+1]` already hold the exchanged values at that point. Matches the pseudocode literally.
 - **No T3 ticks emitted.** Confirmed — Bubble Sort emits only T1 and T2 ticks plus the terminal. Per 00_PSEUDOCODE.md §1 invariants.
 
+### Corrections
+
+**C1 — Bubble Sort compare message format.** Line 51 used `f"Compare {arr[j]} and {arr[j + 1]}"`. Doc 03 §Tick Taxonomy specifies `f"Comparing index {j} (value {arr[j]}) and index {j + 1} (value {arr[j + 1]})"`. Fixed in place; smoke tests still pass.
+
+**Why it was missed:** The Phase 2 pack names `00_PSEUDOCODE.md` as the canonical control-flow spec and the pseudocode §1 shows the terse `f"Compare {arr[j]} and {arr[j+1]}"` form. Doc 03 §Tick Taxonomy carries the fuller pedagogical format, but the pack lists doc 03 as a secondary input and the implementation session followed the pseudocode wording literally without cross-checking doc 03's message schema. The fix is a one-line message string change with no counter or tick-structure impact.
+
+**Lesson for remaining generators:** When authoring the T1 message string, verify the exact format against doc 03 §Tick Taxonomy, not just `00_PSEUDOCODE.md`. The pseudocode is authoritative for *when* a tick fires; doc 03 is authoritative for *what each field contains*.
+
 ### Open questions
 
 - **libatomic1 missing on dev WSL2.** `sudo apt-get install libatomic1` resolves it. Until then, pyright cannot be invoked and CI will need to be run on a machine with the library available.
