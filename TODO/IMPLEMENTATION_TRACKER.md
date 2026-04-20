@@ -58,50 +58,56 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 **Depends on:** Phase 1
 **Output:** `src/visualizer/models/{bubble,selection,insertion,heap}.py`
 **Testable without Pygame:** Yes
+**Status:** All four generators delivered and signed off (2026-04-20). Counter accuracy verified against CLAUDE.md binding table. Ruff + format clean on all files. Pyright clean after libatomic1 install. See `docs/devlog/phase_02.md` for full details.
 
-### 2.1 Bubble Sort
+### 2.1 Bubble Sort *(closed 2026-04-20)*
 
-- [ ] Generator yields T1 compare on `(j, j+1)` before swap decision
-- [ ] Early-exit optimization (swapped flag per pass)
-- [ ] LimitLine boundary: inner loop stops at `n - pass - 1`
-- [ ] Completion tick with full-array highlight
-- [ ] Empty-input T0 failure tick guard
-- [ ] Counter accuracy: comparisons=20, writes=26 for default array
+- [x] Generator yields T1 compare on `(j, j+1)` before swap decision
+- [x] Early-exit optimization (swapped flag per pass)
+- [x] LimitLine boundary: inner loop stops at `n - pass - 1`
+- [x] Completion tick with full-array highlight
+- [x] Empty-input T0 failure tick guard
+- [x] Counter accuracy: comparisons=20, writes=26 for default array
+- [x] Correction C1: compare message updated to doc 03 §Tick Taxonomy format
 
-### 2.2 Selection Sort
+### 2.2 Selection Sort *(closed 2026-04-20)*
 
-- [ ] Scan phase: T1 on `(min_idx, j)` with min tracking
-- [ ] Message includes current minimum on every scan tick
-- [ ] T2 swap on `(i, min_idx)` — skip when `i == min_idx`
-- [ ] Completion tick with full-array highlight
-- [ ] Empty-input T0 failure tick guard
-- [ ] Counter accuracy: comparisons=21, writes=10 for default array
+- [x] Scan phase: T1 on `(min_idx, j)` with min tracking
+- [x] Message includes current minimum on every scan tick
+- [x] T2 swap on `(i, min_idx)` — skip when `i == min_idx`
+- [x] Completion tick with full-array highlight
+- [x] Empty-input T0 failure tick guard
+- [x] Counter accuracy: comparisons=21, writes=10 for default array
+- [x] Correction C1: yield-before-update pattern adopted per pseudocode §2 (single message format, no prev_min)
 
-### 2.3 Insertion Sort
+### 2.3 Insertion Sort *(closed 2026-04-20)*
 
-- [ ] T1 key-selection on `(i,)` — single-index highlight, does NOT increment comparisons
-- [ ] T1 compare on `(j, j+1)` during shift loop — increments comparisons
-- [ ] T2 shift on `(j, j+1)` — one element at a time, never batch (D-060, D-064)
-- [ ] Terminating T1 compare when loop exits by condition (not by `j < 0`)
-- [ ] T2 placement tick as final tick of each pass
-- [ ] Completion tick with full-array highlight
-- [ ] Empty-input T0 failure tick guard
-- [ ] Counter accuracy: comparisons=17, writes=19 for default array
+- [x] T1 key-selection on `(i,)` — single-index highlight, does NOT increment comparisons
+- [x] T1 compare on `(j, j+1)` during shift loop — increments comparisons
+- [x] T2 shift on `(j, j+1)` — one element at a time, never batch (D-060, D-064)
+- [x] Terminating T1 compare when loop exits by condition (not by `j < 0`)
+- [x] T2 placement tick as final tick of each pass
+- [x] Completion tick with full-array highlight
+- [x] Empty-input T0 failure tick guard
+- [x] Counter accuracy: comparisons=17, writes=19 for default array
+- [x] Zero corrections needed — pre-flight trace caught all edge cases
 
-### 2.4 Heap Sort
+### 2.4 Heap Sort *(closed 2026-04-20)*
 
-- [ ] Phase 1 (Build Max-Heap): process nodes floor(n/2)-1 down to 0
-- [ ] Sift-down tick sequence per level: T3 Logical Tree -> T1 compare(s) -> T2 swap (if needed)
-- [ ] T3 Logical Tree Highlight: non-contiguous `(parent, left_child, right_child)`, parent always first
-- [ ] Phase 2 (Extraction): T3 Boundary Emphasis (contiguous range, strictly decreasing k) before each extraction
-- [ ] Extraction T2 swap on `(0, end)`
-- [ ] Post-extraction sift-down repair with same tick sequence contract
-- [ ] Settled elements: indices >= heap_size after extraction
-- [ ] Completion tick with full-array highlight
-- [ ] Empty-input T0 failure tick guard
-- [ ] Counter accuracy: comparisons=20, writes=30 for default array
-- [ ] Step count = 35 (T3 ticks excluded)
-- [ ] T3 tick count = 6 boundary emphasis ticks for n=7
+- [x] Phase 1 (Build Max-Heap): process nodes floor(n/2)-1 down to 0
+- [x] Sift-down tick sequence per level: T3 Logical Tree -> T1 compare(s) -> T2 swap (if needed)
+- [x] T3 Logical Tree Highlight: non-contiguous `(parent, left_child, right_child)`, parent always first (D-058 verified)
+- [x] Phase 2 (Extraction): T3 Boundary Emphasis (contiguous range, strictly decreasing k) before each extraction
+- [x] Extraction T2 swap on `(0, end)`
+- [x] Post-extraction sift-down repair with same tick sequence contract
+- [x] Settled elements: indices >= heap_size after extraction
+- [x] Completion tick with full-array highlight
+- [x] Empty-input T0 failure tick guard
+- [x] Counter accuracy: comparisons=20, writes=30 for default array
+- [x] Step count = 35 (T3 ticks excluded)
+- [x] T3 tick count = 6 boundary emphasis ticks for n=7
+- [x] Bonus: Logical Tree T3 count = 11 (4 Phase 1 + 7 Phase 2); T3 monotonicity verified
+- [!] **Known issue:** T3 contiguity distinction breaks at heap_size ∈ {2, 3} — classify by message prefix, not tuple shape. Flagged for TC-A19 in Phase 3.
 
 ---
 
