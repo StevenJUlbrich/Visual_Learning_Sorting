@@ -6,6 +6,143 @@
 
 ---
 
+## 2026-04-20 11:06 EDT — Phase 2d closed: heap.py authored and smoke-tested (post-action)
+
+### Worked on
+
+Implemented `src/visualizer/models/heap.py` per the pre-action plan below. `HeapSort` extends `BaseSortAlgorithm` with `name="Heap Sort"` and `complexity="O(n log n)"`. `_sift_down` is a private generator method invoked via `yield from` from both Phase 1 (build) and Phase 2 (extraction).
+
+### Results
+
+**Exit criteria — all met:**
+
+1. `comparisons == 20` on `[4, 7, 2, 6, 1, 5, 3]` ✓
+2. `writes == 30` on `[4, 7, 2, 6, 1, 5, 3]` ✓
+3. Final tick `is_complete == True`; final array `[1, 2, 3, 4, 5, 6, 7]` ✓
+4. Empty input yields exactly one `FAILURE` tick ✓
+
+**Bonus checks — all met:**
+
+- D-058 verified across all 11 Logical Tree T3 ticks: parent is always first; the non-parent indices are a subset of `{2p+1, 2p+2}` in every case.
+- Boundary T3 count = 6 (one per extraction); each is contiguous `range(0, heap_size)`.
+- Logical Tree T3 count = 11 (4 in Phase 1 + 7 in Phase 2 across the six extraction sift-downs).
+- T3 ticks never advance `comparisons` or `writes` — monotonicity check on RANGE ticks reports zero violations.
+- Step count (T1 + T2) = **35** — matches CLAUDE.md Counter Accuracy table exactly.
+
+Ruff + format: clean on first run (production file). Pyright: still blocked by missing `libatomic1` on WSL2 (Phase 2a/2b/2c open question carries forward); manual type review found no issues — `_sift_down` return type `Generator[SortResult]` matches `sort_generator`, no `Any` escapes, every `SortResult` field explicitly typed.
+
+### Decisions made during authoring
+
+- **`_sift_down` as a private method, not a module-level function.** The pseudocode sketches `sift_down(arr, start, end)` as a free function, but it mutates counters on the sorting instance. Making it a method gives natural access to `self.comparisons`, `self.writes`, and `self.data` without threading them through parameters. Leading underscore marks it private — not part of the `BaseSortAlgorithm` contract.
+- **`largest = right` decision is NOT a yielded T1.** Pseudocode §4 is explicit: after the two per-child T1 compares, an internal `if arr[right] > arr[left]: largest = right` fires as a pure decision (not a data comparison in the pedagogical sense). Yielding it as T1 would bump `comparisons` from 20 to 22+. Encoded as a plain `if` with no yield or counter touch.
+- **Swap condition uses strict `>` not `>=`.** Pseudocode has `if arr[largest] > arr[parent]`. For duplicate values no swap fires, which is correct behaviour for Heap Sort and matches the pseudocode literally.
+- **Boundary T3 uses `tuple(range(heap_size))`, not `tuple(range(0, heap_size))`.** Single-argument `range` is idiomatic Python; semantically identical. No spec impact.
+- **T1 message uses doc 03 format `"Comparing index {x} (value {arr[x]}) and index {y} (value {arr[y]})"`; T2 swap and both T3 variants follow pseudocode format.** Doc 03 §Tick Taxonomy line 125 prescribes only the T1 compare text for Heap Sort; pseudocode §4 supplies the rest. Consistent with the Phase 2a/2b/2c authority split.
+
+### Surprises and corrections
+
+**Surprise 1 — Contiguity alone cannot distinguish Boundary T3 from Logical Tree T3.** The pseudocode §4 note claims "Boundary T3 ticks are contiguous `tuple(range(0, k))` — distinguishable from Logical Tree T3." This is only true for `heap_size >= 4`. When `heap_size = 3`, the boundary tuple `(0, 1, 2)` collides exactly with the Logical Tree T3 emitted at parent=0 with both children (`left=1, right=2`). When `heap_size = 2`, boundary `(0, 1)` collides with a parent=0 single-child logical tree T3. My first smoke-test classifier used contiguity alone and misclassified 5 logical-tree ticks as boundary. Resolution: classify by message-text prefix (`"Active heap:"` vs `"Evaluating tree level"`), which the generator emits unambiguously. Spec implication: if TC-A19 (the test-plan helper) relies on contiguity alone, it will mis-segment the Phase 2 tail end. Worth a follow-up in Phase 3 when TC-A19 is authored. Captured as an open question below.
+
+**Surprise 2 — Pre-flight trace miscounted Phase 1 logical-tree T3 count.** Pre-action table said 10 total logical T3 ticks; actual is 11 (Phase 1 = 4, not 3). Root cause: I counted the three Phase 1 sift-downs but only summed their T2 swaps, not their T3 level-entry emissions. The counter-relevant totals (`comparisons=20`, `writes=30`, `steps=35`) were all correct — only the book-keeping bonus count was off. Smoke-test expected value corrected to 11; no production-code change needed.
+
+Neither surprise impacted the counter targets. The production implementation matched the pseudocode on the first code-write pass.
+
+### Open questions
+
+- **libatomic1 still missing.** Blocker carries forward from Phase 2a → 2b → 2c → 2d. Fix: `sudo apt-get install libatomic1`.
+- **TC-A19 contiguity-based segmentation may need revision.** The pseudocode's claim that "Boundary T3 ticks are contiguous — distinguishable from Logical Tree T3" breaks for `heap_size ∈ {2, 3}` when the logical-tree T3 at parent=0 is also contiguous. If Phase 3's TC-A19 helper relies on contiguity alone, it must either (a) add a message-prefix check or (b) use sequencing context (boundary T3 always precedes an extraction T2; logical-tree T3 always precedes one or two T1 compares). Flag for Phase 3 test authoring.
+
+### Next
+
+**Phase 2 complete.** All four generators delivered: `bubble.py` (20/26), `selection.py` (21/10), `insertion.py` (17/19), `heap.py` (20/30/35). Next up: Phase 3 — algorithm unit tests. Could run in parallel with Phase 4 (easing module) per the original implementation order. Bring `heap.py` to the Cowork (Opus) session for spec-level review before moving to Phase 3.
+
+---
+
+## 2026-04-20 11:03 EDT — Phase 2d start: heap.py plan (pre-action)
+
+### Model / session
+
+Opus 4.6 (1M context, xhigh effort) per the 2026-04-19 model-strategy entry. Heap Sort is the most complex generator in Phase 2: two algorithmic phases, a recursive sift-down helper called via `yield from`, two distinct T3 variants, counter reconciliation across 15 swaps and 10 logical-tree levels, and the D-058 parent-first highlight rule. This is exactly the constraint-intersection density that justifies Opus.
+
+### Plan
+
+Implement `src/visualizer/models/heap.py` against `00_PSEUDOCODE.md §4`. Structure:
+
+- **`HeapSort.sort_generator`** — top-level generator that drives Phase 1 (build) and Phase 2 (extract).
+- **`HeapSort._sift_down(start, end)`** — private generator method. `end` is the exclusive upper bound. Called via `yield from` from both phases. Emits the sift-down grammar per TC-A19: T3 Logical Tree → T1 compare(s) (1 or 2) → T2 swap (0 or 1), repeated per level until heap property holds or left child falls out of range.
+
+**Phase 1 — Build Max-Heap:**
+
+```text
+for start in range(n // 2 - 1, -1, -1):
+    yield from self._sift_down(start, n)
+```
+
+Three sift-downs for n=7: start = 2, 1, 0.
+
+**Phase 2 — Extraction:**
+
+```text
+heap_size = n
+while heap_size > 1:
+    end = heap_size - 1
+    yield boundary-T3 (contiguous tuple(range(0, heap_size)))
+    swap arr[0] with arr[end]; writes += 2; yield T2
+    heap_size -= 1
+    yield from self._sift_down(0, heap_size)
+```
+
+Six extractions for n=7.
+
+### Traps to watch for
+
+- **D-058 — parent first in Logical Tree T3.** `highlight_indices` must be `(parent, left, right)` or `(parent, left)` — never `(left, right, parent)` or similar. The TC-A19 segmentation helper relies on this.
+- **T3 contiguity distinction.** Boundary T3 is `tuple(range(0, heap_size))` — contiguous. Logical Tree T3 is non-contiguous (parent, left, right or parent, left). The View differentiates by checking `tuple(sorted(indices)) == tuple(range(min, max+1))`. Confusing the two breaks TC-A19.
+- **T3 does NOT increment any counters.** No `self.comparisons += 1`, no `self.writes += 1`, no step counter touch. Pure visual aid per D-041. Bug potential: pattern-matching "every yield ↔ counter++" would over-count.
+- **`largest` update uses arr[right] > arr[left] comparison — NOT yielded as a T1.** Pseudocode §4 sets `largest = left`, emits T1(parent, left), conditionally emits T1(parent, right), then internally decides `largest = right if arr[right] > arr[left]`. That last inequality is a decision, not a tick. Yielding it as T1 would inflate `comparisons` to 22+.
+- **Swap condition uses arr[largest] > arr[parent].** Not `>=`. If equal values exist, no swap is emitted. Matters for duplicate-value arrays (not default_7, but worth encoding correctly).
+- **Extraction swap happens BEFORE heap_size decrement; sift-down uses the decremented heap_size.** The sift-down repair must operate on the shrunken heap — the just-extracted root value (now at `end`) must not be touched again.
+- **Message authority: doc 03 for T1, pseudocode for T2 and T3.** Doc 03 line 125 prescribes the T1 compare format (`"Comparing index {x} (value {arr[x]}) and index {y} (value {arr[y]})"`). Doc 03 is silent on T2 swap text and both T3 variants; pseudocode §4 supplies those.
+- **`sift_down(0, 1)` after the last extraction must return immediately** (left=1 >= end=1). Otherwise a stray tick is emitted for a one-element heap. The gate `if left >= end: return` handles this.
+
+### Manual trace (pre-flight) for `[4, 7, 2, 6, 1, 5, 3]`
+
+Phase 1 (build max-heap from `n//2-1 = 2` down to 0):
+
+| Sift-down | Parent | Children | T1 compares | T2 swaps | Compares Δ | Writes Δ |
+|-----------|--------|----------|-------------|----------|------------|----------|
+| `sd(2,7)` | 2      | 5,6      | 2           | 1        | 2          | 2        |
+| `sd(1,7)` | 1      | 3,4      | 2           | 0        | 2          | 0        |
+| `sd(0,7)` | 0 → 1  | 1,2 then 3,4 | 4       | 2        | 4          | 4        |
+
+Phase 1 subtotals: compares=8, writes=6. Max-heap = `[7, 6, 5, 4, 1, 2, 3]`.
+
+Phase 2 (6 extractions):
+
+| Ext | Pre-swap heap_size | Boundary T3 tuple length | Sift-down T1 | Sift-down T2 | Compares Δ | Writes Δ |
+|-----|--------------------|--------------------------|--------------|--------------|------------|----------|
+| 1   | 7                  | 7                        | 4            | 2            | 4          | 2+4 = 6  |
+| 2   | 6                  | 6                        | 2            | 1            | 2          | 2+2 = 4  |
+| 3   | 5                  | 5                        | 3            | 2            | 3          | 2+4 = 6  |
+| 4   | 4                  | 4                        | 2            | 1            | 2          | 2+2 = 4  |
+| 5   | 3                  | 3                        | 1            | 0            | 1          | 2+0 = 2  |
+| 6   | 2                  | 2                        | 0            | 0            | 0          | 2+0 = 2  |
+
+Phase 2 subtotals: compares=12, writes=24. Final array = `[1, 2, 3, 4, 5, 6, 7]`.
+
+**Grand totals:** comparisons = 8+12 = **20** ✓; writes = 6+24 = **30** ✓.
+
+Step count cross-check: T1 + T2 ticks = 20 + 15 = **35** ✓ (6 boundary T3 and 10 logical-tree T3 excluded per D-041; terminal tick not a step).
+
+### Exit criteria
+
+- `ruff check` + `ruff format --check` clean
+- `pyright` clean (still blocked by missing `libatomic1`; manual type review substitutes — same status as Phase 2a/2b/2c)
+- Smoke script: comparisons=20, writes=30, final tick `is_complete=True`, empty input yields single FAILURE tick
+- Bonus checks: final array `[1,2,3,4,5,6,7]`; D-058 parent-first verified across all Logical Tree T3 ticks; boundary T3 count == 6 and each is contiguous; Logical Tree T3 count == 10 across Phase 1+2 and each is non-contiguous; T3 ticks produce no counter change (comparisons and writes advance only on T1/T2); step count (T1+T2) == 35
+
+---
+
 ## 2026-04-20 10:46 EDT — Phase 2c closed: insertion.py authored and smoke-tested (post-action)
 
 ### Worked on
