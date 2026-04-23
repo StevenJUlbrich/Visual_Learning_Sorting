@@ -123,9 +123,19 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 
 ## Build Status
 
-**All phases are not started.** Phase 0 (spec gaps: pseudocode, pyproject.toml, config.toml, fonts, implementation order doc) must complete before coding begins. See `TODO/IMPLEMENTATION_TRACKER.md` for the full phase breakdown and dependency graph.
+**Active phase: Phase 5 (View Layer).** Phases 0–4 and Phase 5a are complete. See `TODO/IMPLEMENTATION_TRACKER.md` for the full breakdown.
 
-Build order: Phase 0 (spec gaps) → Phase 1 (contracts.py) → Phase 2 (algorithm generators) + Phase 4 (easing, parallel) → Phase 3 (unit tests) → Phase 5 (view layer) → Phase 6 (controller) → Phase 7 (main.py integration) → Phase 8 (integration tests) → Phase 9 (CI) → Phase 10 (manual acceptance).
+**Completed (2026-04-23):**
+- Phase 0: Spec gaps (pyproject.toml, config.toml, pseudocode, fonts helper, implementation order)
+- Phase 1: `contracts.py` — SortResult, OpType, BaseSortAlgorithm
+- Phase 2: All four generators — Bubble (20/26), Selection (21/10), Insertion (17/19), Heap (20/30/35)
+- Phase 3: Model unit tests — 50 tests, TC-A1/A2/A3/A5/A7/A8/A9/A10/A11/A12/A13/A14/A19
+- Phase 4: `easing.py` — ease_in_out_quad, ease_out_cubic, sine_arc (21 tests, TC-A5)
+- Phase 5a: `window.py` — GridLayout, load_preset, init_display (25 tests); cumulative 75/75
+
+**Next:** Phase 5b — `sprite.py` (NumberSprite: circular ring, float coords, easing integration).
+
+Build order: Phase 0 → Phase 1 → Phase 2 + Phase 4 (parallel) → Phase 3 → Phase 5 → Phase 6 → Phase 7 → Phase 8 → Phase 9 → Phase 10.
 
 ## Initial Array
 
