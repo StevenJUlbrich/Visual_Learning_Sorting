@@ -27,7 +27,7 @@ shape.  This affects every Phase 2 sift-down and the last Phase 1 sift-down.
 T3 ticks do NOT increment any counters per D-041.
 
 Counter targets for ``[4, 7, 2, 6, 1, 5, 3]``: comparisons = 20, writes = 30,
-steps = 35 (T1 + T2 only; 6 boundary T3 + 10 logical-tree T3 are excluded).
+steps = 35 (T1 + T2 only; 6 boundary T3 + 11 logical-tree T3 are excluded).
 
 Message-format authority:
 
