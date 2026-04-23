@@ -40,7 +40,10 @@
       "Bash(node -e \"console.log\\('node works'\\)\")",
       "Bash(node .venv/lib/python3.13/site-packages/pyright/dist/pyright.js tests/conftest.py)",
       "Bash(/home/sju/.cache/pyright-python/nodeenv/bin/node *)",
-      "Bash(PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright tests/)"
+      "Bash(PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright tests/)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(PYRIGHT_PYTHON_GLOBAL_NODE=false uv run *)"
     ]
-  }
+  },
+  "outputStyle": "default"
 }

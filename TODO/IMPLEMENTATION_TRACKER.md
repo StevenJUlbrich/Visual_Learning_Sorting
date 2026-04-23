@@ -119,14 +119,14 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 **Phase 3a status:** conftest + test_bubble.py delivered and signed off (2026-04-20, Sonnet 4.6). 6/6 tests pass. Pyright 0 errors. Ruff clean. Two minor corrections: generator return type annotation, spurious noqa directive.
 **Phase 3b status:** test_selection.py delivered and signed off (2026-04-20, Sonnet 4.6). 6/6 tests pass. 12/12 cumulative. Pyright 0 errors. Ruff clean. Zero corrections.
 **Phase 3c status:** test_insertion.py delivered and signed off (2026-04-20, Sonnet 4.6). 8/8 tests pass. 20/20 cumulative. Pyright 0 errors (requires `PYRIGHT_PYTHON_GLOBAL_NODE=false` — system Node v12 crashes pyright; nodeenv v25.9.0 is correct runtime). Ruff clean. Two corrections: unused `exp_sc` → added shift-compare assertion; ruff format alignment. **Pyright Node workaround documented in DEVLOG.**
-**Phase 3d status:** test_heap.py delivered and signed off (2026-04-20, Sonnet 4.6). 9/9 tests pass. 29/29 cumulative. Pyright 0 errors. Ruff clean. One correction: ruff I001 import block. TC-A19 passed on first attempt — no Opus escalation.
+**Phase 3d status:** test_heap.py delivered and signed off (2026-04-20, Sonnet 4.6). 9/9 tests pass. 29/29 cumulative (model tests). Pyright 0 errors. Ruff clean. One correction: ruff I001 import block. TC-A19 passed on first attempt — no Opus escalation. *(Phase 4 added 21 easing tests; cumulative now 50/50.)*
 
 - [x] Root `conftest.py` — verbatim from doc 08 Section 4.2 (SDL_VIDEODRIVER=dummy at module level, fixtures). *Note: `Generator[None]` used per PEP 696/UP043; `# noqa: E402` removed (ruff does not flag in this context). `reportUnusedFunction` suppressed with pyright inline comment.*
 - [x] `pyproject.toml` markers registered (unit, integration, slow)
 - [x] **TC-A1** Final sortedness (all algorithms, all fixtures) — *All four algorithms covered.*
 - [x] **TC-A2** Completion tick contract (exactly one, success=True, is_complete=True, full highlight) — *All four algorithms covered.*
 - [x] **TC-A3** Empty input contract (exactly one failure tick) — *All four algorithms covered.*
-- [ ] **TC-A5** Easing function math (ease_in_out_quad boundary values)
+- [x] **TC-A5** Easing function math (ease_in_out_quad boundary values) — *21 tests in test_easing.py. Complete (Phase 4).*
 - [x] **TC-A7** Heap Sort phase contract (T3 variants, boundary decreasing k) — *Complete. Phase split verified, 6 boundary T3 with k=7..2, Logical Tree T3 in both phases.*
 - [x] **TC-A8** Sift-down correctness (subtree satisfies max-heap after sift-down) — *Complete. Phase 1 final state verified as valid max-heap via `_is_max_heap`.*
 - [x] **TC-A9** Insertion Sort tick sequence (per-pass first/last tick, T1/T2 alternation) — *Complete. Truth table verified across all 6 passes.*
@@ -149,11 +149,15 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 **Depends on:** None (can parallel with Phase 2)
 **Output:** `src/visualizer/views/easing.py`
 **Testable without Pygame:** Yes (pure math, no Pygame imports)
+**Status:** Delivered and signed off (2026-04-23, Sonnet 4.6). 21/21 TC-A5 tests pass. 50/50 cumulative. Pyright 0 errors. Ruff clean. No Pygame dependency. Two minor corrections: unused `import math`, I001 import sort.
 
-- [ ] `ease_in_out_quad(t)` — quadratic ease-in-out
-- [ ] Boundary guarantees: `f(0.0) == 0.0`, `f(1.0) == 1.0`
-- [ ] Non-linear at `t=0.2` and `t=0.8`
-- [ ] Clamp: `t >= 1.0` returns exactly `1.0`
+- [x] `ease_in_out_quad(t)` — quadratic ease-in-out
+- [x] Boundary guarantees: `f(0.0) == 0.0`, `f(1.0) == 1.0`
+- [x] Non-linear at `t=0.2` and `t=0.8`
+- [x] Clamp: `t >= 1.0` returns exactly `1.0`
+- [x] `ease_out_cubic(t)` — cubic ease-out (fast start, decelerates)
+- [x] `sine_arc(t)` — sine arc lift (peaks at t=0.5, returns to 0; not monotonic)
+- [x] **TC-A5** Easing function math (boundary, clamp, linearity, symmetry, monotonicity) — *21 tests. Complete.*
 
 ---
 

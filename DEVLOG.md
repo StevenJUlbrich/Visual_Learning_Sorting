@@ -49,6 +49,57 @@ Phase 3 (algorithm unit tests) is unblocked. Phase 4 (easing module) can run in 
 
 ---
 
+## 2026-04-23 — Phase 4 closed: easing.py (post-action)
+
+### Worked on
+
+Created `src/visualizer/views/easing.py` with three easing functions (`ease_in_out_quad`, `ease_out_cubic`, `sine_arc`) and `tests/unit/test_easing.py` with 21 TC-A5 tests covering boundary values, clamp behavior, linearity assertions, symmetry, and monotonicity properties.
+
+### Results
+
+- `uv run pytest tests/unit/test_easing.py -v`: **21/21 PASSED**
+- `uv run pytest tests/unit/ -v`: **50/50 PASSED** (cumulative)
+- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright src/visualizer/views/easing.py tests/unit/test_easing.py`: **0 errors** (3 pre-existing `pytest.approx` warnings, same as other test files)
+- `uv run ruff check` + `uv run ruff format --check`: **clean**
+- `grep -l "import pygame" src/visualizer/views/easing.py`: **empty** (no Pygame dependency)
+
+### Corrections
+
+1. **Unused `import math` in test file** — removed after pyright flagged `reportUnusedImport`. Math module was leftover from drafting; no test used it directly.
+2. **Ruff I001 import block** — auto-fixed with `ruff check --fix`. Blank line inside single import block triggered isort.
+
+### Decisions
+
+- **`pytest.approx` pyright warnings are pre-existing.** Three `reportUnknownMemberType` warnings on `pytest.approx` appear identically in the other test files. Not a regression; no suppression added (adding `# type: ignore` for a known pytest typing gap would be noisy).
+- **`sine_arc` f(1.0) boundary uses `abs=1e-15`.** `math.sin(math.pi)` returns `1.2246467991473532e-16` in CPython (float precision limit, not exactly 0). The `abs` tolerance is tighter than the actual float epsilon, making the intent clear.
+
+### Open questions
+
+- None.
+
+### Next
+
+Phase 5 (view layer) is unblocked. TC-A5 complete.
+
+---
+
+## 2026-04-23 — Phase 4 start: easing.py plan (pre-action)
+
+### Model / session
+Sonnet 4.6 per model strategy. Pure math, smallest pack (~8K tokens).
+
+### Plan
+Create `src/visualizer/views/easing.py` with three easing functions and `tests/unit/test_easing.py` with TC-A5 tests.
+
+### Exit criteria
+- `uv run pytest tests/unit/test_easing.py -v` all green
+- `uv run pytest tests/unit/ -v` all green (cumulative, should be 30+ tests)
+- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright src/visualizer/views/easing.py tests/unit/test_easing.py` clean
+- `uv run ruff check src/visualizer/views/easing.py tests/unit/test_easing.py` + format check clean
+- `grep -l "import pygame" src/visualizer/views/easing.py` returns empty (no Pygame imports)
+
+---
+
 ## 2026-04-20 — Phase 3d closed: test_heap.py (post-action)
 
 ### Worked on
