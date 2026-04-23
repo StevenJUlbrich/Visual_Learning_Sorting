@@ -70,10 +70,6 @@ Create `src/visualizer/views/window.py` (display init, 2×2 grid math, config.to
 
 ---
 
-(no entries yet beyond the pre-action above — Phase 5 post-action entries will follow)
-
----
-
 ## Entry Template (for future use)
 
 ```markdown
