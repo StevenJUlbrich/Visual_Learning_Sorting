@@ -88,7 +88,7 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 
 | File | What it locks |
 |------|--------------|
-| `docs/design_docs/DECISIONS.md` | 79 locked decisions (D-001 through D-079). Canonical authority. |
+| `docs/design_docs/DECISIONS.md` | 81 locked decisions (D-001 through D-081). Canonical authority. |
 | `docs/design_docs/02_ARCHITECTURE.md` | MVC structure, module boundaries, independent queue semantics |
 | `docs/design_docs/03_DATA_CONTRACTS.md` | SortResult, OpType, tick taxonomy, highlight rules |
 | `TODO/IMPLEMENTATION_TRACKER.md` | Current build status, phase dependencies, what's done/blocked |
@@ -129,7 +129,7 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 - Phase 0: Spec gaps (pyproject.toml, config.toml, pseudocode, fonts helper, implementation order)
 - Phase 1: `contracts.py` — SortResult, OpType, BaseSortAlgorithm
 - Phase 2: All four generators — Bubble (20/26), Selection (21/10), Insertion (17/19), Heap (20/30/35)
-- Phase 3: Model unit tests — 50 tests, TC-A1/A2/A3/A5/A7/A8/A9/A10/A11/A12/A13/A14/A19
+- Phase 3: Model unit tests — 29 tests, TC-A1/A2/A3/A7/A8/A9/A10/A11/A12/A13/A14/A19
 - Phase 4: `easing.py` — ease_in_out_quad, ease_out_cubic, sine_arc (21 tests, TC-A5)
 - Phase 5a: `window.py` — GridLayout, load_preset, init_display (25 tests); cumulative 75/75
 
