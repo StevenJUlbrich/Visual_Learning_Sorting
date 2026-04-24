@@ -123,17 +123,18 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 
 ## Build Status
 
-**Active phase: Phase 5 (View Layer).** Phases 0–4 and Phase 5a are complete. See `TODO/IMPLEMENTATION_TRACKER.md` for the full breakdown.
+**Active phase: Phase 5 (View Layer).** Phases 0–4, 5a, and 5b are complete. See `TODO/IMPLEMENTATION_TRACKER.md` for the full breakdown.
 
-**Completed (2026-04-23):**
+**Completed (2026-04-23 / 2026-04-24):**
 - Phase 0: Spec gaps (pyproject.toml, config.toml, pseudocode, fonts helper, implementation order)
 - Phase 1: `contracts.py` — SortResult, OpType, BaseSortAlgorithm
 - Phase 2: All four generators — Bubble (20/26), Selection (21/10), Insertion (17/19), Heap (20/30/35)
 - Phase 3: Model unit tests — 29 tests, TC-A1/A2/A3/A7/A8/A9/A10/A11/A12/A13/A14/A19
 - Phase 4: `easing.py` — ease_in_out_quad, ease_out_cubic, sine_arc (21 tests, TC-A5)
 - Phase 5a: `window.py` — GridLayout, load_preset, init_display (25 tests); cumulative 75/75
+- Phase 5b: `sprite.py` — NumberSprite, ColorState, COLOR_MAP (19 tests); cumulative 94/94
 
-**Next:** Phase 5b — `sprite.py` (NumberSprite: circular ring, float coords, easing integration).
+**Next:** Phase 5c — `panel.py` (per-algorithm panel rendering, header rhythm, array region, state overlays).
 
 Build order: Phase 0 → Phase 1 → Phase 2 + Phase 4 (parallel) → Phase 3 → Phase 5 → Phase 6 → Phase 7 → Phase 8 → Phase 9 → Phase 10.
 

@@ -45,7 +45,8 @@
       "Bash(PYRIGHT_PYTHON_GLOBAL_NODE=false uv run *)",
       "Bash(gh pr *)",
       "Bash(git rebase *)",
-      "Bash(git stash *)"
+      "Bash(git stash *)",
+      "Bash(xargs ls *)"
     ]
   },
   "outputStyle": "default"

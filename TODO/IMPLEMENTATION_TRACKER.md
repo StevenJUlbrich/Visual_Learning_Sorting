@@ -168,7 +168,7 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 **Requires Pygame:** Yes (headless OK for coordinate math)
 **Phase 5a status:** window.py delivered and signed off (2026-04-23, Sonnet 4.6). 25/25 tests pass. 75/75 cumulative. Pyright 0 errors. Ruff clean. Three corrections: reportConstantRedefinition (switched dataclass→plain class), RUF002/RUF003 ambiguous × char, ruff format wrap.
 
-- [ ] `NumberSprite` — circular outlined ring, float `(exact_x, exact_y)`, font surface caching per color state (D-034, D-069)
+- [x] `NumberSprite` — circular outlined ring, float `(exact_x, exact_y)`, font surface caching per color state (D-034, D-069). *19 tests: home_x/home_y slot math, ring_radius, ColorState cycling, is_lifted, surface_cache completeness, update_home preserves exact coords, draw no-error, identity. surface_cache public (pyright reportPrivateUsage). 94/94 cumulative. Pyright 0 errors. Ruff clean. Doc 12 §4.3 color fixed: (100, 149, 237) → (100, 150, 255). 2026-04-24, Sonnet 4.6.*
 - [x] `window.py` — display init, 2x2 grid layout with proportional tokens (doc 04 Section 2). *25 tests: desktop/tablet dimensions, all 4 panel rects, non-overlap + bounds invariants, min-width guard, unknown-preset ValueError. panel_height=297 (formula authoritative over spec table 296). Plain class over dataclass (avoids pyright reportConstantRedefinition).*
 - [ ] `panel.py` — header vertical rhythm (title -> metrics -> message), array region, state overlays
 - [ ] `tree_layout.py` — binary tree positioning for Heap Sort, edge rendering, sorted row (doc 04 Section 4.3.2)

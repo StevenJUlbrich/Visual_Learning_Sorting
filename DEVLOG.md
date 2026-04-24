@@ -20,6 +20,70 @@
 
 ---
 
+## 2026-04-24 16:52 — Phase 5b closed: sprite.py (post-action)
+
+### Worked on
+
+Created `src/visualizer/views/sprite.py` (`ColorState`, `COLOR_MAP`, `NumberSprite`) and `tests/unit/test_sprite.py` (19 tests: home_x/home_y math for slots 0/3/6, ring_radius, initial color state, is_lifted, surface_cache completeness, update_home preserves exact coords, draw no-error, sprite identity, distinct-slot home_x). Fixed doc 12 §4.3: `(100, 149, 237)` → `(100, 150, 255)` to align with doc 04 §5.1 authoritative palette.
+
+### Results
+
+- `uv run pytest tests/unit/test_sprite.py -v`: **19/19 PASSED** (first run)
+- `uv run pytest tests/unit/ -v`: **94/94 PASSED** (cumulative)
+- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright src/visualizer/views/sprite.py tests/unit/test_sprite.py`: **0 errors** (12 pre-existing `pytest.approx` warnings)
+- `uv run ruff check` + `uv run ruff format --check`: **clean**
+- `grep "(100, 150, 255)" docs/design_docs/12_ANIMATION_FOUNDATION.md`: **1 match** — doc 12 fix confirmed
+
+### Corrections
+
+1. **`reportPrivateUsage` on `_surface_cache`** — pyright strict flags single-underscore attributes accessed outside the class. Tests legitimately inspect the cache to verify init behavior. Renamed `_surface_cache` → `surface_cache` (public). `_build_surface_cache` remains private (internal helper).
+2. **`replace_all` collateral** — using `replace_all` to rename `_surface_cache` also mangled `_build_surface_cache` → `_buildsurface_cache` and two test function names (`test_surface_cache_*` → `testsurface_cache_*`). Fixed with targeted edits. Tests still passed during the mangled state because pytest runs whatever names it finds; the names themselves were wrong. Lesson: use targeted edits for partial-token renames, not `replace_all`.
+3. **Import order** — ruff I001: `pygame` must precede `pytest` in test imports (alphabetical within third-party group). Swapped.
+4. **Ruff format** — reformatted `home_x` multi-line expression in sprite.py from 4-line to 1-line form (within 88 char limit).
+5. **Doc 12 color fix** — `(100, 149, 237)` → `(100, 150, 255)` to align with doc 04 §5.1 authoritative palette (WCAG contrast ratios calculated against `(100, 150, 255)`).
+
+### Decisions
+
+- **`surface_cache` public, `_build_surface_cache` private** — the cache itself is inspectable state; the builder is an internal initialization detail. Public cache allows tests and future Controller code to inspect state without hacks.
+- **Five color states as `Enum`** — `ColorState.DEFAULT` etc. gives pyright-checkable exhaustiveness over the `COLOR_MAP` dict; string literals would not.
+
+### Open questions
+
+- None.
+
+### Next
+
+Phase 5c: `panel.py` (per-algorithm panel rendering — header vertical rhythm, array region, state overlays).
+
+---
+
+## 2026-04-24 16:47 — Phase 5b start: sprite.py plan (pre-action)
+
+### Model / session
+Sonnet 4.6. Core View layer class — NumberSprite with ring rendering, font caching, color states.
+
+### Plan
+Create `src/visualizer/views/sprite.py` (NumberSprite class) and `tests/unit/test_sprite.py` (coordinate math + color state tests). Fix doc 12 §4.3 color discrepancy.
+
+### Critical context
+- Doc 04 §5.1 says default array blue is `(100, 150, 255)` — this is authoritative (WCAG contrast calculated against it).
+- Doc 12 §4.3 says `(100, 149, 237)` — this is wrong. Fix doc 12 to match doc 04.
+- Ring: 3px stroke, diameter = int(slot_width * 0.65), interior fill = panel background (45, 45, 53).
+- Ring outline color and number text color always match (doc 04 §4.3).
+- Five color states: DEFAULT (100, 150, 255), ACTIVE (255, 140, 0), SETTLED (130, 150, 190), COMPLETE (80, 220, 120), ERROR (255, 120, 120).
+- Font surface caching: pre-render text for all 5 states at init, select cached surface at draw time (doc 04 §3.5).
+- Sprite identity: permanent unique ID, never changes (doc 12 §1.1 rule #1).
+- The sprite does NOT own animation, color-state decisions, or slot mapping — those are Controller responsibilities.
+
+### Exit criteria
+- `uv run pytest tests/unit/test_sprite.py -v` all green
+- `uv run pytest tests/unit/ -v` all green (cumulative, 76+ tests)
+- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright src/visualizer/views/sprite.py tests/unit/test_sprite.py` clean
+- `uv run ruff check src/visualizer/views/sprite.py tests/unit/test_sprite.py` + format check clean
+- Doc 12 §4.3 color fixed
+
+---
+
 ## 2026-04-23 10:03 — Phase 5a closed: window.py (post-action)
 
 ### Worked on
