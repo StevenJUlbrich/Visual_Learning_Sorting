@@ -173,7 +173,7 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 - [x] `panel.py` — header vertical rhythm (title → metrics → message), state overlays. *31 tests: Desktop/Tablet spacing tokens, anchor positions, header budget (≤35% panel height), color constants, pixel-check background variants, draw no-crash (running/completed/failed), truncate_text. 125/125 cumulative. Pyright 0 errors. Ruff clean. 2026-04-30, Sonnet 4.6.*
 - [x] `tree_layout.py` — binary tree node positions, edges, sorted row geometry (TC-A20/A21/A22). *38 tests: node bounds, root centering, level symmetry, no-overlap, edge connectivity, tree shrinking heap_size 7→0, sorted row formula. 163/163 cumulative. Pyright 0 errors. Ruff clean. 2026-04-30, Sonnet 4.6.*
 - [x] `pointer.py` — Selection Sort i/j/min pointer arrows with coalescing (D-068, TC-A23). *25 tests: arrow positions, slot_center_x formula, coalescing all cases (j==min, j≠min, j/min None), color constants, draw no-crash (all states, edge slots 0+6). 188/188 cumulative. Pyright 0 errors. Ruff clean. Zero corrections. 2026-04-30, Sonnet 4.6.*
-- [ ] `limitline.py` — Bubble Sort vertical dashed boundary
+- [x] `limitline.py` — Bubble Sort vertical dashed boundary. *21 tests: position formula, visibility states, advance/reset, slot-center bounds, line-span invariant, color constant, draw no-crash. LINE_COLOR exported for hud.py reuse. 209/209 cumulative. Pyright 0 errors. Ruff clean. Zero first-run corrections. 2026-04-30, Sonnet 4.6.*
 - [ ] `hud.py` — Bubble Sort comparison/exchange counters overlay
 - [ ] Z-ordering: lifted sprites on top of baseline (doc 12 Section 3)
 - [ ] Highlight behavior: instant apply/replace, no fade (doc 12 Section 4)

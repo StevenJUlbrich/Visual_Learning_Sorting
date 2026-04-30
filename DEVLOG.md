@@ -20,6 +20,69 @@
 
 ---
 
+## 2026-04-30 10:12 — Phase 5f closed: limitline.py (post-action)
+
+### Worked on
+
+Created `src/visualizer/views/limitline.py` (LimitLine class: `boundary_index`, `x_position`, `is_visible` properties; `advance()`, `reset()`, `draw()`; `LINE_COLOR` exported for reuse in hud.py) and `tests/unit/test_limitline.py` (21 tests: initial state, advance/reset behavior, visibility transitions, x formula, slot-center bounds check, line-span invariant, color constant, draw no-crash for all states).
+
+### Results
+
+- `uv run pytest tests/unit/test_limitline.py -v`: **21/21 PASSED** (first run, zero corrections)
+- `uv run pytest tests/unit/ -v`: **209/209 PASSED** (cumulative)
+- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright src/visualizer/views/limitline.py tests/unit/test_limitline.py`: **0 errors** (3 pre-existing pytest.approx warnings)
+- `uv run ruff check` + `uv run ruff format --check`: **clean** (limitline.py reformatted once — multiline x_position expression collapsed to one line by ruff)
+
+### Corrections
+
+1. **Ruff format** — `x_position` return expression reformatted from multiline to single line (fits within 88 chars). Tests still passed throughout.
+
+### Decisions
+
+- **`LINE_COLOR` exported at module level** — doc 04 §4.3.2 confirms the same color `(150, 150, 160)` is used for Heap Sort boundary marker. Exporting from `limitline.py` establishes it as the single source of truth; `hud.py` will import from here.
+- **`is_visible = 0 < boundary_index < array_size`** — the line has no meaning when at the far right (array_size, before any pass) or at 0 (everything sorted). Strictly interior visibility prevents rendering a line at a nonsensical position.
+- **`advance()` guard at 0** — prevents `boundary_index` going negative if the Controller somehow calls advance() more times than there are passes. Safe and silent.
+
+### Open questions
+
+- None.
+
+### Next
+
+Phase 5g: `hud.py` (Bubble Sort HUD overlay counters + Heap Sort phase label).
+
+---
+
+## 2026-04-30 10:12 — Phase 5f start: limitline.py plan (pre-action)
+
+### Model / session
+Sonnet 4.6. View layer — LimitLine: Bubble Sort vertical dashed boundary line.
+
+### Plan
+Create `src/visualizer/views/limitline.py` (LimitLine class — boundary_index, x_position, is_visible, advance, reset, draw) and `tests/unit/test_limitline.py` (~20 tests: position formula, visibility states, advance/reset, draw no-crash, slot-center bounds check, line span invariant).
+
+### Critical context
+- Line sits at `x = panel_rect.x + array_x_padding + (boundary_index * slot_width)` — left edge of the boundary slot, i.e. midpoint between slot [boundary_index-1] and slot [boundary_index].
+- Initial: `boundary_index = array_size` → is_visible=False (no boundary before first pass).
+- Visible when `0 < boundary_index < array_size`.
+- advance() decrements by 1, guarded at 0.
+- Dash pattern: 6px draw, 4px gap; draw with pygame.draw.line per segment.
+- `LINE_COLOR = (150, 150, 160)` — shared with Heap Sort boundary marker (doc 04 §4.3.2); exported so hud.py can reuse.
+- Line vertical extent: `home_y ± ring_radius ± LINE_MARGIN` (keeps line contained to array region).
+
+### Pre-computed Desktop values (array_size=7, ring_radius=25, home_y=167)
+- Initial x = 19 + 30 + 7*(551/7) = 600.0 (past last slot)
+- After advance: x = 49 + 6*(551/7) ≈ 521.29; between slot 5 center (481.93) and slot 6 center (560.64) ✓
+- Line top = 167 - 25 - 12 = 130; line bottom = 167 + 25 + 12 = 204
+
+### Exit criteria
+- `uv run pytest tests/unit/test_limitline.py -v` all green
+- `uv run pytest tests/unit/ -v` cumulative (188 + new tests)
+- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright src/visualizer/views/limitline.py tests/unit/test_limitline.py` 0 errors
+- `uv run ruff check` + `uv run ruff format --check` clean
+
+---
+
 ## 2026-04-30 09:51 — Phase 5e closed: pointer.py (post-action)
 
 ### Worked on

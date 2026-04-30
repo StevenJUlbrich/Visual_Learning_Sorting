@@ -136,8 +136,9 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 - Phase 5c: `panel.py` — PanelRenderer, header rhythm, state overlays (31 tests); cumulative 125/125
 - Phase 5d: `tree_layout.py` — binary tree node positions, edges, sorted row (38 tests, TC-A20/A21/A22); cumulative 163/163
 - Phase 5e: `pointer.py` — Selection Sort i/j/min arrows, coalescing (25 tests, TC-A23); cumulative 188/188
+- Phase 5f: `limitline.py` — Bubble Sort dashed boundary, advance/reset (21 tests); cumulative 209/209
 
-**Next:** Phase 5f — `limitline.py` (Bubble Sort vertical dashed boundary line).
+**Next:** Phase 5g — `hud.py` (Bubble Sort HUD overlay counters + Heap Sort phase label).
 
 Build order: Phase 0 → Phase 1 → Phase 2 + Phase 4 (parallel) → Phase 3 → Phase 5 → Phase 6 → Phase 7 → Phase 8 → Phase 9 → Phase 10.
 
