@@ -172,7 +172,7 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 - [x] `window.py` — display init, 2x2 grid layout with proportional tokens (doc 04 Section 2). *25 tests: desktop/tablet dimensions, all 4 panel rects, non-overlap + bounds invariants, min-width guard, unknown-preset ValueError. panel_height=297 (formula authoritative over spec table 296). Plain class over dataclass (avoids pyright reportConstantRedefinition).*
 - [x] `panel.py` — header vertical rhythm (title → metrics → message), state overlays. *31 tests: Desktop/Tablet spacing tokens, anchor positions, header budget (≤35% panel height), color constants, pixel-check background variants, draw no-crash (running/completed/failed), truncate_text. 125/125 cumulative. Pyright 0 errors. Ruff clean. 2026-04-30, Sonnet 4.6.*
 - [x] `tree_layout.py` — binary tree node positions, edges, sorted row geometry (TC-A20/A21/A22). *38 tests: node bounds, root centering, level symmetry, no-overlap, edge connectivity, tree shrinking heap_size 7→0, sorted row formula. 163/163 cumulative. Pyright 0 errors. Ruff clean. 2026-04-30, Sonnet 4.6.*
-- [ ] `pointer.py` — Selection Sort `i`/`j`/`min` arrows with coalescing (D-068)
+- [x] `pointer.py` — Selection Sort i/j/min pointer arrows with coalescing (D-068, TC-A23). *25 tests: arrow positions, slot_center_x formula, coalescing all cases (j==min, j≠min, j/min None), color constants, draw no-crash (all states, edge slots 0+6). 188/188 cumulative. Pyright 0 errors. Ruff clean. Zero corrections. 2026-04-30, Sonnet 4.6.*
 - [ ] `limitline.py` — Bubble Sort vertical dashed boundary
 - [ ] `hud.py` — Bubble Sort comparison/exchange counters overlay
 - [ ] Z-ordering: lifted sprites on top of baseline (doc 12 Section 3)

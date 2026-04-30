@@ -20,6 +20,68 @@
 
 ---
 
+## 2026-04-30 09:51 — Phase 5e closed: pointer.py (post-action)
+
+### Worked on
+
+Created `src/visualizer/views/pointer.py` (`PointerSet` class: `slot_center_x`, `i_arrow_y`, `jmin_arrow_y`, `coalesced_pointers`, `draw`; private `_draw_i_pointer` and `_draw_jmin_pointer` helpers) and `tests/unit/test_pointer.py` (25 tests: arrow position invariants, slot center formula, D-068 coalescing all cases, color constants, draw no-crash for all states including edge slots 0 and 6).
+
+### Results
+
+- `uv run pytest tests/unit/test_pointer.py -v`: **25/25 PASSED** (first run, zero corrections)
+- `uv run pytest tests/unit/ -v`: **188/188 PASSED** (cumulative)
+- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright src/visualizer/views/pointer.py tests/unit/test_pointer.py`: **0 errors** (6 pre-existing pytest.approx warnings)
+- `uv run ruff check` + `uv run ruff format --check`: **clean** (both files already formatted)
+
+### Corrections
+
+None — first-run clean on all four exit criteria.
+
+### Decisions
+
+- **`coalesced_pointers` exposed as public method** — allows tests to verify the D-068 coalescing rule (j==min → j hidden) directly without pixel inspection. `draw()` calls it internally, guaranteeing tests and production code share the same coalescing path.
+- **Colors imported from existing constants** — `POINTER_I_COLOR = PRIMARY_TEXT` (panel.py), `POINTER_J_COLOR = POINTER_MIN_COLOR = COLOR_MAP[ColorState.ACTIVE]` (sprite.py). No new color definitions.
+- **`round()` for polygon vertices** — `slot_center_x()` returns float; converting to int via `round()` before polygon construction avoids pygame type ambiguity and produces crisp pixel-aligned arrows.
+
+### Open questions
+
+- None.
+
+### Next
+
+Phase 5f: `limitline.py` (Bubble Sort vertical dashed boundary line).
+
+---
+
+## 2026-04-30 09:51 — Phase 5e start: pointer.py plan (pre-action)
+
+### Model / session
+Sonnet 4.6. View layer — PointerSet: Selection Sort i/j/min labeled arrow geometry and rendering.
+
+### Plan
+Create `src/visualizer/views/pointer.py` (PointerSet class — slot_center_x, i_arrow_y, jmin_arrow_y, coalesced_pointers, draw) and `tests/unit/test_pointer.py` (~25 tests: arrow positions, slot center formula, coalescing D-068, color constants, draw no-crash).
+
+### Critical context
+- Three arrows: `i` (downward, above baseline), `j` and `min` (upward, below baseline).
+- Coalescing rule (D-068): when `j_index == min_index` both not None, only `min` is shown. `j` is hidden.
+- `i_arrow_y() = home_y - ring_radius - ARROW_GAP` (above ring, tip points toward ring).
+- `jmin_arrow_y() = home_y + ring_radius + ARROW_GAP` (below ring, tip points toward ring).
+- Colors: i uses PRIMARY_TEXT (240,240,245) from panel.py; j and min use COLOR_MAP[ColorState.ACTIVE] (255,140,0) from sprite.py.
+- Use `pygame.draw.polygon` for triangle arrows, font.render for labels.
+- Expose `coalesced_pointers(i,j,min)` method so tests can verify coalescing logic directly.
+
+### Pre-computed Desktop values (panel_rect=Rect(19,19,611,297))
+- ARRAY_X_PADDING=30, slot_width=551/7≈78.714, ring_radius=25, home_y=167
+- i_arrow_y=137 (above baseline), jmin_arrow_y=197 (below baseline)
+
+### Exit criteria
+- `uv run pytest tests/unit/test_pointer.py -v` all green
+- `uv run pytest tests/unit/ -v` cumulative (163 + new tests)
+- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright src/visualizer/views/pointer.py tests/unit/test_pointer.py` 0 errors
+- `uv run ruff check` + `uv run ruff format --check` clean
+
+---
+
 ## 2026-04-30 09:23 — Phase 5d closed: tree_layout.py (post-action)
 
 ### Worked on
