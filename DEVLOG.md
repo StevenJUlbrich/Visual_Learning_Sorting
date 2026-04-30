@@ -20,6 +20,77 @@
 
 ---
 
+## 2026-04-30 09:23 — Phase 5d closed: tree_layout.py (post-action)
+
+### Worked on
+
+Created `src/visualizer/views/tree_layout.py` (pure-geometry `TreeLayout` class: `node_positions`, `edges`, `sorted_row_x`, `tree_node_radius` property; public attributes `tree_top`, `sorted_row_y`, `tree_area_height`, `tree_node_diameter`) and `tests/unit/test_tree_layout.py` (38 tests covering TC-A20/A21/A22, geometry invariants, sorted row formula).
+
+### Results
+
+- `uv run pytest tests/unit/test_tree_layout.py -v`: **38/38 PASSED** (first run after 1 test fix)
+- `uv run pytest tests/unit/ -v`: **163/163 PASSED** (cumulative)
+- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright src/visualizer/views/tree_layout.py tests/unit/test_tree_layout.py`: **0 errors** (6 pre-existing pytest.approx warnings, same as other test files)
+- `uv run ruff check` + `uv run ruff format --check`: **clean** (both files reformatted once, then clean)
+
+### Corrections
+
+1. **`pytest.approx` as right operand of `>=`** — `assert abs(...) >= pytest.approx(...)` raises `TypeError`. Fixed by using `>= desktop.tree_node_diameter` directly (the gap is 137.75px vs 34.0px; no floating-point ambiguity).
+2. **3 unused imports** — `SORTED_ROW_MARGIN_RATIO`, `TREE_HEADER_GAP`, `TREE_SORTED_GAP` imported but not directly referenced in tests (they're implicit in fixture construction). Removed from test imports; pyright `reportUnusedImport` resolved.
+3. **RUF007** — ruff flags `zip(level2, level2[1:])` as preferring `itertools.pairwise()`. Switched to `itertools.pairwise(level2)`.
+4. **Ruff format** — `tree_layout.py` reformatted once (long `edges` return type annotation). Tests passed throughout.
+
+### Decisions
+
+- **Public attributes for `tree_top`, `sorted_row_y`, `tree_area_height`, `tree_node_diameter`** — tests need to verify geometry constraints; exposing as attributes is simpler than properties and consistent with `window.py`'s approach.
+- **`tree_node_radius` as `@property`** — always derived from `tree_node_diameter`, so a property enforces the `int(diameter) // 2` invariant.
+- **Level spacing division-by-zero guard** — `max_depth=0` when `heap_size=1`; `level_spacing=0.0` prevents the div by zero, and `level_y(0) = tree_top + 0*0 = tree_top` correctly positions the single root node.
+
+### Open questions
+
+- None.
+
+### Next
+
+Phase 5e: `pointer.py` (Selection Sort i/j/min arrows with coalescing, D-068, TC-A23).
+
+---
+
+## 2026-04-30 09:23 — Phase 5d start: tree_layout.py plan (pre-action)
+
+### Model / session
+Sonnet 4.6. Pure geometry module — Heap Sort binary tree node positions, edges, sorted row.
+
+### Plan
+Create `src/visualizer/views/tree_layout.py` (TreeLayout class, pure coordinates, no rendering) and `tests/unit/test_tree_layout.py` (~24 tests covering TC-A20 node positioning, TC-A21 edge connectivity, TC-A22 tree shrinking, plus additional geometry invariants).
+
+### Critical context
+- PURE GEOMETRY — no `pygame.draw` calls anywhere in `tree_layout.py`. Coordinates only.
+- Authoritative horizontal formula (doc 04 §4.3.2 code block):
+  `x = panel_rect.x + ARRAY_X_PADDING + (position_in_level + 0.5) * (panel_width - 2*ARRAY_X_PADDING) / total_at_level`
+  Produces root exactly at `panel_rect.x + panel_width/2` (float center).
+- `sorted_row_y = panel_rect.y + panel_height - int(panel_height * 0.18)`
+- `tree_area_height = sorted_row_y - tree_top - 20`
+- `tree_node_diameter = min(slot_width * 0.55, tree_area_height / 4)` — limits to 1/4 height (3 levels fit)
+- Edge case: `heap_size=1` → `max_depth=0`, avoid div-by-zero in level_spacing; `level_spacing=0.0`.
+- Edge case: `heap_size=0` → empty lists.
+- `tree_node_radius = int(tree_node_diameter) // 2` — must be int.
+- Public attributes for `tree_top`, `sorted_row_y`, `tree_area_height`, `tree_node_diameter` so tests can verify geometry without exposing private state.
+
+### Pre-computed Desktop values (header_total=78)
+- tree_top=107, sorted_row_y=263, tree_area_height=136, tree_node_diameter=34.0, radius=17
+- Root x=324.5 (panel centerx=324, diff=0.5 ≤ 1px ✓)
+- Level 1 dist from center: 137.75px each side
+- Level 2 min adjacent gap: 137.75px >> 34.0px (no overlap)
+
+### Exit criteria
+- `uv run pytest tests/unit/test_tree_layout.py -v` all green
+- `uv run pytest tests/unit/ -v` cumulative green (125 + new tests)
+- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright src/visualizer/views/tree_layout.py tests/unit/test_tree_layout.py` 0 errors
+- `uv run ruff check` + `uv run ruff format --check` clean on both files
+
+---
+
 ## 2026-04-30 09:08 — Phase 5c closed: panel.py (post-action)
 
 ### Worked on

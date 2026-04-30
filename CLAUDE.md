@@ -123,7 +123,7 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 
 ## Build Status
 
-**Active phase: Phase 5 (View Layer).** Phases 0–4, 5a, 5b, and 5c are complete. See `TODO/IMPLEMENTATION_TRACKER.md` for the full breakdown.
+**Active phase: Phase 5 (View Layer).** Phases 0–4, 5a–5d are complete. See `TODO/IMPLEMENTATION_TRACKER.md` for the full breakdown.
 
 **Completed (2026-04-23 / 2026-04-24 / 2026-04-30):**
 - Phase 0: Spec gaps (pyproject.toml, config.toml, pseudocode, fonts helper, implementation order)
@@ -134,8 +134,9 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 - Phase 5a: `window.py` — GridLayout, load_preset, init_display (25 tests); cumulative 75/75
 - Phase 5b: `sprite.py` — NumberSprite, ColorState, COLOR_MAP (19 tests); cumulative 94/94
 - Phase 5c: `panel.py` — PanelRenderer, header rhythm, state overlays (31 tests); cumulative 125/125
+- Phase 5d: `tree_layout.py` — binary tree node positions, edges, sorted row (38 tests, TC-A20/A21/A22); cumulative 163/163
 
-**Next:** Phase 5d — `tree_layout.py` (Heap Sort binary tree positioning, edge rendering, sorted row).
+**Next:** Phase 5e — `pointer.py` (Selection Sort i/j/min arrows with coalescing, D-068, TC-A23).
 
 Build order: Phase 0 → Phase 1 → Phase 2 + Phase 4 (parallel) → Phase 3 → Phase 5 → Phase 6 → Phase 7 → Phase 8 → Phase 9 → Phase 10.
 
