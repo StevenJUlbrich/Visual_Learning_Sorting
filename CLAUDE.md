@@ -123,7 +123,7 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 
 ## Build Status
 
-**Active phase: Phase 5 (View Layer).** Phases 0–4, 5a–5d are complete. See `TODO/IMPLEMENTATION_TRACKER.md` for the full breakdown.
+**Active phase: Phase 5 (View Layer).** Phases 0–4, 5a–5f are complete. See `TODO/IMPLEMENTATION_TRACKER.md` for the full breakdown.
 
 **Completed (2026-04-23 / 2026-04-24 / 2026-04-30):**
 - Phase 0: Spec gaps (pyproject.toml, config.toml, pseudocode, fonts helper, implementation order)
@@ -138,10 +138,4 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 - Phase 5e: `pointer.py` — Selection Sort i/j/min arrows, coalescing (25 tests, TC-A23); cumulative 188/188
 - Phase 5f: `limitline.py` — Bubble Sort dashed boundary, advance/reset (21 tests); cumulative 209/209
 
-**Next:** Phase 5g — `hud.py` (Bubble Sort HUD overlay counters + Heap Sort phase label).
-
-Build order: Phase 0 → Phase 1 → Phase 2 + Phase 4 (parallel) → Phase 3 → Phase 5 → Phase 6 → Phase 7 → Phase 8 → Phase 9 → Phase 10.
-
-## Initial Array
-
-`[4, 7, 2, 6, 1, 5, 3]` — chosen because it is not a valid max-heap (3 violations), has 13 inversions, and produces meaningful visual activity across all four algorithms (D-006).
+**Next:** Phase 5g — `hud.py` (Bubble Sort comparison/exchange counters overlay + Heap Sort phase label + heap boundary label). Then Phase 6 (Controller/Orchestrator).
