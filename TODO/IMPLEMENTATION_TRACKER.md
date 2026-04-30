@@ -170,7 +170,7 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 
 - [x] `NumberSprite` — circular outlined ring, float `(exact_x, exact_y)`, font surface caching per color state (D-034, D-069). *19 tests: home_x/home_y slot math, ring_radius, ColorState cycling, is_lifted, surface_cache completeness, update_home preserves exact coords, draw no-error, identity. surface_cache public (pyright reportPrivateUsage). 94/94 cumulative. Pyright 0 errors. Ruff clean. Doc 12 §4.3 color fixed: (100, 149, 237) → (100, 150, 255). 2026-04-24, Sonnet 4.6.*
 - [x] `window.py` — display init, 2x2 grid layout with proportional tokens (doc 04 Section 2). *25 tests: desktop/tablet dimensions, all 4 panel rects, non-overlap + bounds invariants, min-width guard, unknown-preset ValueError. panel_height=297 (formula authoritative over spec table 296). Plain class over dataclass (avoids pyright reportConstantRedefinition).*
-- [ ] `panel.py` — header vertical rhythm (title -> metrics -> message), array region, state overlays
+- [x] `panel.py` — header vertical rhythm (title → metrics → message), state overlays. *31 tests: Desktop/Tablet spacing tokens, anchor positions, header budget (≤35% panel height), color constants, pixel-check background variants, draw no-crash (running/completed/failed), truncate_text. 125/125 cumulative. Pyright 0 errors. Ruff clean. 2026-04-30, Sonnet 4.6.*
 - [ ] `tree_layout.py` — binary tree positioning for Heap Sort, edge rendering, sorted row (doc 04 Section 4.3.2)
 - [ ] `pointer.py` — Selection Sort `i`/`j`/`min` arrows with coalescing (D-068)
 - [ ] `limitline.py` — Bubble Sort vertical dashed boundary

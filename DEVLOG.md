@@ -20,6 +20,65 @@
 
 ---
 
+## 2026-04-30 09:08 — Phase 5c closed: panel.py (post-action)
+
+### Worked on
+
+Created `src/visualizer/views/panel.py` (`PanelState` enum, `PanelRenderer` class, module-level helpers `compute_header_inset_x`, `compute_header_inset_y`, `compute_header_total`, `truncate_text`) and `tests/unit/test_panel.py` (31 tests covering header spacing tokens, anchor positions, header height budget, color constants, pixel-check background variants, draw no-crash, and metrics truncation).
+
+### Results
+
+- `uv run pytest tests/unit/test_panel.py -v`: **31/31 PASSED** (first run)
+- `uv run pytest tests/unit/ -v`: **125/125 PASSED** (cumulative)
+- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright src/visualizer/views/panel.py tests/unit/test_panel.py`: **0 errors, 0 warnings, 0 informations**
+- `uv run ruff check` + `uv run ruff format --check`: **clean** (both files reformatted once, then clean)
+
+### Corrections
+
+1. **Ruff format** — reformatted both files on first pass (long lines in fixture signatures, blank-line after function signatures). Tests still passed during the unformatted state. Applied `uv run ruff format` and re-confirmed 125/125.
+
+### Decisions
+
+- **Module-level helpers (`compute_header_inset_x`, `compute_header_inset_y`, `compute_header_total`)** — exposed as public module-level functions so tests can verify spacing-token math directly without constructing a `PanelRenderer`. Same pattern as `GridLayout` in `window.py`.
+- **`truncate_text` public** — tests need to assert truncation behavior directly. Naming mirrors `truncate_text` (not `_truncate`) to avoid pyright `reportPrivateUsage` and give tests clean import access.
+- **`PANEL_BG` imported from `sprite.py` as `PANEL_BG_COLOR`** — single source of truth for panel background color (45, 45, 53); panel.py aliases it as `PANEL_BG`.
+- **Pixel-check tests use center of DESKTOP_RECT** — the rounded-rect interior is guaranteed solid color at the center, so `surface.get_at((cx, cy))` reliably reflects the fill color for both RUNNING and COMPLETED states.
+
+### Open questions
+
+- None.
+
+### Next
+
+Phase 5d: `tree_layout.py` (Heap Sort binary tree positioning, edge rendering, sorted row).
+
+---
+
+## 2026-04-30 09:08 — Phase 5c start: panel.py plan (pre-action)
+
+### Model / session
+Sonnet 4.6. View layer — PanelRenderer: background, header vertical rhythm, state overlays.
+
+### Plan
+Create `src/visualizer/views/panel.py` (PanelRenderer class + spacing-token helpers) and `tests/unit/test_panel.py` (coordinate math + color constant + pixel-check tests). ~26 tests targeting header spacing tokens, anchor positions, header budget, color constants, background state variants, and metrics truncation.
+
+### Critical context
+- Header spacing tokens computed from panel dimensions: `HEADER_INSET_X = max(int(w * 0.03), 12)`, `HEADER_INSET_Y = max(int(h * 0.04), 10)`. Fixed gaps: `METRICS_GAP=4`, `MESSAGE_GAP=6`.
+- Three-line header stack: Title (Inter-Bold 24, primary text `(240,240,245)`) → Metrics (Inter-Regular 16, secondary `(190,190,200)`) → Message (same font; error color `(255,120,120)` in failed state).
+- Header height must not exceed 35% of panel height. Message is the first element dropped if over budget.
+- Panel BG `(45,45,53)` imported from sprite.py as `PANEL_BG_COLOR`. Completion BG `(35,55,42)` (D-078). Error adds `(235,80,80)` border, 3px, same border_radius.
+- Draw directly to main display surface — no subsurface (doc 04 §4.4).
+- Panel does NOT own sprites, tree layout, pointers, limitline, or HUD.
+- Truncate with `…` (U+2026) when metrics or message exceeds `panel_width - inset_x*2`.
+
+### Exit criteria
+- `uv run pytest tests/unit/test_panel.py -v` all green
+- `uv run pytest tests/unit/ -v` cumulative green (94 + new tests)
+- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright src/visualizer/views/panel.py tests/unit/test_panel.py` 0 errors
+- `uv run ruff check` + `uv run ruff format --check` clean on both files
+
+---
+
 ## 2026-04-24 16:52 — Phase 5b closed: sprite.py (post-action)
 
 ### Worked on
