@@ -3,6 +3,7 @@
 **Archived from DEVLOG.md.** Seven sub-phases (5a–5g), 185 view-layer tests (235 cumulative). Delivered 2026-04-23 through 2026-05-01.
 
 **Sub-phases:**
+
 - 5a: window.py — GridLayout, load_preset, init_display (25 tests)
 - 5b: sprite.py — NumberSprite, ColorState, COLOR_MAP (19 tests)
 - 5c: panel.py — PanelRenderer, header rhythm, state overlays (31 tests)
@@ -54,12 +55,15 @@ Phase 6: `orchestrator.py` — Controller / Orchestrator (independent queues, op
 ## 2026-05-01 09:25 — Phase 5g start: hud.py plan (pre-action)
 
 ### Model / session
+
 Sonnet 4.6. View layer — HUD overlays: BubbleHUD counters + HeapPhaseLabel + HeapBoundaryLabel.
 
 ### Plan
+
 Create `src/visualizer/views/hud.py` (three classes: BubbleHUD counter overlay at panel bottom-left, HeapPhaseLabel centered-horizontal phase label, HeapBoundaryLabel "heap boundary" marker below sorted row) and `tests/unit/test_hud.py` (~20+ tests: position formulas, color constants, draw no-crash, bounds checks).
 
 ### Critical context
+
 - `LINE_COLOR = (150, 150, 160)` imported from `limitline.py` — single source of truth for boundary marker color.
 - `COLOR_MAP[ColorState.ACTIVE] = (255, 140, 0)` imported from `sprite.py` — phase label orange.
 - `compute_header_inset_x(panel_width)` from `panel.py` → `max(int(w * 0.03), 12)` = 18 for Desktop.
@@ -107,12 +111,15 @@ Phase 5g: `hud.py` (Bubble Sort HUD overlay counters + Heap Sort phase label).
 ## 2026-04-30 10:12 — Phase 5f start: limitline.py plan (pre-action)
 
 ### Model / session
+
 Sonnet 4.6. View layer — LimitLine: Bubble Sort vertical dashed boundary line.
 
 ### Plan
+
 Create `src/visualizer/views/limitline.py` (LimitLine class — boundary_index, x_position, is_visible, advance, reset, draw) and `tests/unit/test_limitline.py` (~20 tests: position formula, visibility states, advance/reset, draw no-crash, slot-center bounds check, line span invariant).
 
 ### Critical context
+
 - Line sits at `x = panel_rect.x + array_x_padding + (boundary_index * slot_width)` — left edge of the boundary slot, i.e. midpoint between slot [boundary_index-1] and slot [boundary_index].
 - Initial: `boundary_index = array_size` → is_visible=False (no boundary before first pass).
 - Visible when `0 < boundary_index < array_size`.
@@ -122,11 +129,13 @@ Create `src/visualizer/views/limitline.py` (LimitLine class — boundary_index, 
 - Line vertical extent: `home_y ± ring_radius ± LINE_MARGIN` (keeps line contained to array region).
 
 ### Pre-computed Desktop values (array_size=7, ring_radius=25, home_y=167)
+
 - Initial x = 19 + 30 + 7*(551/7) = 600.0 (past last slot)
 - After advance: x = 49 + 6*(551/7) ≈ 521.29; between slot 5 center (481.93) and slot 6 center (560.64) ✓
 - Line top = 167 - 25 - 12 = 130; line bottom = 167 + 25 + 12 = 204
 
 ### Exit criteria
+
 - `uv run pytest tests/unit/test_limitline.py -v` all green
 - `uv run pytest tests/unit/ -v` cumulative (188 + new tests)
 - `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright src/visualizer/views/limitline.py tests/unit/test_limitline.py` 0 errors
@@ -170,12 +179,15 @@ Phase 5f: `limitline.py` (Bubble Sort vertical dashed boundary line).
 ## 2026-04-30 09:51 — Phase 5e start: pointer.py plan (pre-action)
 
 ### Model / session
+
 Sonnet 4.6. View layer — PointerSet: Selection Sort i/j/min labeled arrow geometry and rendering.
 
 ### Plan
+
 Create `src/visualizer/views/pointer.py` (PointerSet class — slot_center_x, i_arrow_y, jmin_arrow_y, coalesced_pointers, draw) and `tests/unit/test_pointer.py` (~25 tests: arrow positions, slot center formula, coalescing D-068, color constants, draw no-crash).
 
 ### Critical context
+
 - Three arrows: `i` (downward, above baseline), `j` and `min` (upward, below baseline).
 - Coalescing rule (D-068): when `j_index == min_index` both not None, only `min` is shown. `j` is hidden.
 - `i_arrow_y() = home_y - ring_radius - ARROW_GAP` (above ring, tip points toward ring).
@@ -185,10 +197,12 @@ Create `src/visualizer/views/pointer.py` (PointerSet class — slot_center_x, i_
 - Expose `coalesced_pointers(i,j,min)` method so tests can verify coalescing logic directly.
 
 ### Pre-computed Desktop values (panel_rect=Rect(19,19,611,297))
+
 - ARRAY_X_PADDING=30, slot_width=551/7≈78.714, ring_radius=25, home_y=167
 - i_arrow_y=137 (above baseline), jmin_arrow_y=197 (below baseline)
 
 ### Exit criteria
+
 - `uv run pytest tests/unit/test_pointer.py -v` all green
 - `uv run pytest tests/unit/ -v` cumulative (163 + new tests)
 - `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright src/visualizer/views/pointer.py tests/unit/test_pointer.py` 0 errors
@@ -235,12 +249,15 @@ Phase 5e: `pointer.py` (Selection Sort i/j/min arrows with coalescing, D-068, TC
 ## 2026-04-30 09:23 — Phase 5d start: tree_layout.py plan (pre-action)
 
 ### Model / session
+
 Sonnet 4.6. Pure geometry module — Heap Sort binary tree node positions, edges, sorted row.
 
 ### Plan
+
 Create `src/visualizer/views/tree_layout.py` (TreeLayout class, pure coordinates, no rendering) and `tests/unit/test_tree_layout.py` (~24 tests covering TC-A20 node positioning, TC-A21 edge connectivity, TC-A22 tree shrinking, plus additional geometry invariants).
 
 ### Critical context
+
 - PURE GEOMETRY — no `pygame.draw` calls anywhere in `tree_layout.py`. Coordinates only.
 - Authoritative horizontal formula (doc 04 §4.3.2 code block):
   `x = panel_rect.x + ARRAY_X_PADDING + (position_in_level + 0.5) * (panel_width - 2*ARRAY_X_PADDING) / total_at_level`
@@ -254,12 +271,14 @@ Create `src/visualizer/views/tree_layout.py` (TreeLayout class, pure coordinates
 - Public attributes for `tree_top`, `sorted_row_y`, `tree_area_height`, `tree_node_diameter` so tests can verify geometry without exposing private state.
 
 ### Pre-computed Desktop values (header_total=78)
+
 - tree_top=107, sorted_row_y=263, tree_area_height=136, tree_node_diameter=34.0, radius=17
 - Root x=324.5 (panel centerx=324, diff=0.5 ≤ 1px ✓)
 - Level 1 dist from center: 137.75px each side
 - Level 2 min adjacent gap: 137.75px >> 34.0px (no overlap)
 
 ### Exit criteria
+
 - `uv run pytest tests/unit/test_tree_layout.py -v` all green
 - `uv run pytest tests/unit/ -v` cumulative green (125 + new tests)
 - `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright src/visualizer/views/tree_layout.py tests/unit/test_tree_layout.py` 0 errors
@@ -304,12 +323,15 @@ Phase 5d: `tree_layout.py` (Heap Sort binary tree positioning, edge rendering, s
 ## 2026-04-30 09:08 — Phase 5c start: panel.py plan (pre-action)
 
 ### Model / session
+
 Sonnet 4.6. View layer — PanelRenderer: background, header vertical rhythm, state overlays.
 
 ### Plan
+
 Create `src/visualizer/views/panel.py` (PanelRenderer class + spacing-token helpers) and `tests/unit/test_panel.py` (coordinate math + color constant + pixel-check tests). ~26 tests targeting header spacing tokens, anchor positions, header budget, color constants, background state variants, and metrics truncation.
 
 ### Critical context
+
 - Header spacing tokens computed from panel dimensions: `HEADER_INSET_X = max(int(w * 0.03), 12)`, `HEADER_INSET_Y = max(int(h * 0.04), 10)`. Fixed gaps: `METRICS_GAP=4`, `MESSAGE_GAP=6`.
 - Three-line header stack: Title (Inter-Bold 24, primary text `(240,240,245)`) → Metrics (Inter-Regular 16, secondary `(190,190,200)`) → Message (same font; error color `(255,120,120)` in failed state).
 - Header height must not exceed 35% of panel height. Message is the first element dropped if over budget.
@@ -319,6 +341,7 @@ Create `src/visualizer/views/panel.py` (PanelRenderer class + spacing-token help
 - Truncate with `…` (U+2026) when metrics or message exceeds `panel_width - inset_x*2`.
 
 ### Exit criteria
+
 - `uv run pytest tests/unit/test_panel.py -v` all green
 - `uv run pytest tests/unit/ -v` cumulative green (94 + new tests)
 - `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright src/visualizer/views/panel.py tests/unit/test_panel.py` 0 errors
@@ -366,12 +389,15 @@ Phase 5c: `panel.py` (per-algorithm panel rendering — header vertical rhythm, 
 ## 2026-04-24 16:47 — Phase 5b start: sprite.py plan (pre-action)
 
 ### Model / session
+
 Sonnet 4.6. Core View layer class — NumberSprite with ring rendering, font caching, color states.
 
 ### Plan
+
 Create `src/visualizer/views/sprite.py` (NumberSprite class) and `tests/unit/test_sprite.py` (coordinate math + color state tests). Fix doc 12 §4.3 color discrepancy.
 
 ### Critical context
+
 - Doc 04 §5.1 says default array blue is `(100, 150, 255)` — this is authoritative (WCAG contrast calculated against it).
 - Doc 12 §4.3 says `(100, 149, 237)` — this is wrong. Fix doc 12 to match doc 04.
 - Ring: 3px stroke, diameter = int(slot_width * 0.65), interior fill = panel background (45, 45, 53).
@@ -382,6 +408,7 @@ Create `src/visualizer/views/sprite.py` (NumberSprite class) and `tests/unit/tes
 - The sprite does NOT own animation, color-state decisions, or slot mapping — those are Controller responsibilities.
 
 ### Exit criteria
+
 - `uv run pytest tests/unit/test_sprite.py -v` all green
 - `uv run pytest tests/unit/ -v` all green (cumulative, 76+ tests)
 - `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright src/visualizer/views/sprite.py tests/unit/test_sprite.py` clean
@@ -427,12 +454,15 @@ Phase 5b: `sprite.py` (NumberSprite — circular ring, float coords, easing inte
 ## 2026-04-23 09:58 — Phase 5a start: window.py plan (pre-action)
 
 ### Model / session
+
 Sonnet 4.6. First View layer brick — pure layout math, no rendering logic.
 
 ### Plan
+
 Create `src/visualizer/views/window.py` (display init, 2x2 grid math, config.toml preset loading) and `tests/unit/test_window.py` (coordinate-math verification against doc 04 §2.6 reference table).
 
 ### Exit criteria
+
 - `uv run pytest tests/unit/test_window.py -v` all green
 - `uv run pytest tests/unit/ -v` all green (cumulative, should be 51+ tests)
 - `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright src/visualizer/views/window.py tests/unit/test_window.py` clean
