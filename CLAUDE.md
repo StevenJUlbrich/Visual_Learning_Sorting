@@ -138,5 +138,6 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 - Phase 5e: `pointer.py` — Selection Sort i/j/min arrows, coalescing (25 tests, TC-A23); cumulative 188/188
 - Phase 5f: `limitline.py` — Bubble Sort dashed boundary, advance/reset (21 tests); cumulative 209/209
 - Phase 5g: `hud.py` — BubbleHUD counters + HeapPhaseLabel + HeapBoundaryLabel (26 tests); cumulative 235/235
+- Phase 6a: `orchestrator.py` (partial) — PanelState enum, duration constants, PanelContext, get_duration (28 tests); cumulative 263/263
 
-**Next:** Phase 6 — Controller/Orchestrator (orchestrator.py).
+**Next:** Phase 6b — Core loop: update(dt) + tick dispatch.

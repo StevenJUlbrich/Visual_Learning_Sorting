@@ -192,10 +192,10 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 **Depends on:** Phase 1, Phase 2, Phase 5
 **Output:** `src/visualizer/controllers/orchestrator.py`
 
-- [ ] Independent queue per algorithm panel
-- [ ] Panel state machine: idle_paused -> waiting_for_next_tick -> animating_operation -> completed/failed
-- [ ] Operation timing: T1=150ms, T2=400ms, T3=200ms (integer milliseconds)
-- [ ] Sift-down cadence override: T1=100ms, T2=250ms, T3=130ms (set after extraction swap, reset on boundary T3)
+- [~] Independent queue per algorithm panel — PanelContext container delivered (6a); queue wiring in 6b
+- [x] Panel state machine: idle_paused -> waiting_for_next_tick -> animating_operation -> completed/failed — PanelState enum (5 members) delivered (6a); transitions in 6b
+- [x] Operation timing: T1=150ms, T2=400ms, T3=200ms (integer milliseconds) — duration constants + get_duration() delivered (6a)
+- [x] Sift-down cadence override: T1=100ms, T2=250ms, T3=130ms (set after extraction swap, reset on boundary T3) — cadence constants + get_duration() delivered (6a); cadence flag management in 6b
 - [ ] Sprite identity delta computation (ID-based, never value-matching)
 - [ ] `update(dt)` — subtract dt from remaining, fetch next SortResult when <= 0
 - [ ] `elapsed_time_ms` — integer accumulator per panel, freezes on completion/failure
