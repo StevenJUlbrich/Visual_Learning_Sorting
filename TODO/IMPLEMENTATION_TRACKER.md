@@ -284,16 +284,3 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 - [ ] AT-27 No algorithm title dots
 
 ---
-
-## Dependency Graph (Quick Reference)
-
-```plaintext
-Phase 0 (spec gaps)
-  |
-Phase 1 (contracts)
-  |
-  +---> Phase 2 (algorithms) ---> Phase 3 (unit tests)
-  |         |
-  +---> Phase 4 (easing) --------+
-  |                               |
-  +---> Phase
