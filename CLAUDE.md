@@ -123,9 +123,9 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 
 ## Build Status
 
-**Active phase: Phase 5 (View Layer).** Phases 0–4, 5a–5f are complete. See `TODO/IMPLEMENTATION_TRACKER.md` for the full breakdown.
+**Active phase: Phase 6 (Controller/Orchestrator).** Phases 0–4, 5a–5g are complete. See `TODO/IMPLEMENTATION_TRACKER.md` for the full breakdown.
 
-**Completed (2026-04-23 / 2026-04-24 / 2026-04-30):**
+**Completed (2026-04-23 / 2026-04-24 / 2026-04-30 / 2026-05-01):**
 - Phase 0: Spec gaps (pyproject.toml, config.toml, pseudocode, fonts helper, implementation order)
 - Phase 1: `contracts.py` — SortResult, OpType, BaseSortAlgorithm
 - Phase 2: All four generators — Bubble (20/26), Selection (21/10), Insertion (17/19), Heap (20/30/35)
@@ -137,5 +137,6 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 - Phase 5d: `tree_layout.py` — binary tree node positions, edges, sorted row (38 tests, TC-A20/A21/A22); cumulative 163/163
 - Phase 5e: `pointer.py` — Selection Sort i/j/min arrows, coalescing (25 tests, TC-A23); cumulative 188/188
 - Phase 5f: `limitline.py` — Bubble Sort dashed boundary, advance/reset (21 tests); cumulative 209/209
+- Phase 5g: `hud.py` — BubbleHUD counters + HeapPhaseLabel + HeapBoundaryLabel (26 tests); cumulative 235/235
 
-**Next:** Phase 5g — `hud.py` (Bubble Sort comparison/exchange counters overlay + Heap Sort phase label + heap boundary label). Then Phase 6 (Controller/Orchestrator).
+**Next:** Phase 6 — Controller/Orchestrator (`orchestrator.py`).

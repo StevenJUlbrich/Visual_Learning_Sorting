@@ -10,6 +10,64 @@
 
 ---
 
+## 2026-05-01 09:35 — Phase 5g closed: hud.py (post-action)
+
+### Worked on
+
+Created `src/visualizer/views/hud.py` (BubbleHUD: comparisons/exchanges counters at panel bottom-left, exchanges_y = panel.bottom − 22, comparisons_y one font-height + 4px above; HeapPhaseLabel: orange phase label centered on panel.centerx, caller passes label_y; HeapBoundaryLabel: "heap boundary" text centered on boundary_x, LINE_COLOR imported from limitline.py as single source of truth) and `tests/unit/test_hud.py` (26 tests: color constant values, position formulas, bounds checks, draw no-crash for all three classes).
+
+### Results
+
+- `uv run pytest tests/unit/test_hud.py -v`: **26/26 PASSED** (first run, zero corrections)
+- `uv run pytest tests/unit/ -v`: **235/235 PASSED** (cumulative)
+- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright src/visualizer/views/hud.py tests/unit/test_hud.py`: **0 errors, 0 warnings**
+- `uv run ruff check` + `uv run ruff format --check`: **clean** (test_hud.py reformatted once — multiline argument list in two draw no-crash tests collapsed by ruff)
+
+### Corrections
+
+1. **Ruff format** — two draw-test function calls reformatted from multiline to single-line. Tests still passed throughout.
+
+### Decisions
+
+- **`BOTTOM_MARGIN = 22`, `LINE_SPACING = 4`** — keeps both counter lines well within panel bounds on the Desktop preset (comparisons_y ≈ 270, exchanges_y ≈ 294, panel.bottom = 316). Exported as constants so tests can verify the formula without hardcoding magic numbers.
+- **`PHASE_LABEL_COLOR = COLOR_MAP[ColorState.ACTIVE]`** — expression, not a literal, evaluated at import time. Guarantees that phase label color stays in sync with the universal active highlight (D-067) if the color ever changes.
+- **`BOUNDARY_LABEL_COLOR = LINE_COLOR`** — alias, not a copy. Single source of truth: limitline.py owns the value; hud.py just references it. Consistent with the decision recorded in Phase 5f closeout.
+- **Three classes, zero cross-dependencies** — BubbleHUD, HeapPhaseLabel, HeapBoundaryLabel share no state. Each can be instantiated and tested independently. The Controller will own all three and call draw() each frame.
+
+### Open questions
+
+- None.
+
+### Phase 5 (View Layer) status
+
+Phase 5 is complete as a standalone unit (all seven sub-phases 5a–5g pass). The remaining view behaviors (Z-ordering, highlight state transitions, compare lane, sorted-sweep animation) are Controller-driven and will be integrated in Phase 6 (orchestrator.py). No view module requires changes before Phase 6 begins.
+
+### Next
+
+Phase 6: `orchestrator.py` — Controller / Orchestrator (independent queues, operation timing, event dispatch, sprite state management).
+
+---
+
+## 2026-05-01 09:25 — Phase 5g start: hud.py plan (pre-action)
+
+### Model / session
+Sonnet 4.6. View layer — HUD overlays: BubbleHUD counters + HeapPhaseLabel + HeapBoundaryLabel.
+
+### Plan
+Create `src/visualizer/views/hud.py` (three classes: BubbleHUD counter overlay at panel bottom-left, HeapPhaseLabel centered-horizontal phase label, HeapBoundaryLabel "heap boundary" marker below sorted row) and `tests/unit/test_hud.py` (~20+ tests: position formulas, color constants, draw no-crash, bounds checks).
+
+### Critical context
+- `LINE_COLOR = (150, 150, 160)` imported from `limitline.py` — single source of truth for boundary marker color.
+- `COLOR_MAP[ColorState.ACTIVE] = (255, 140, 0)` imported from `sprite.py` — phase label orange.
+- `compute_header_inset_x(panel_width)` from `panel.py` → `max(int(w * 0.03), 12)` = 18 for Desktop.
+- BubbleHUD anchors: `counter_x = panel_rect.x + inset_x`, `exchanges_y = panel_rect.bottom - BOTTOM_MARGIN`, `comparisons_y = exchanges_y - font_height - LINE_SPACING`.
+- HeapPhaseLabel: center_x = panel_rect.centerx; caller passes label_y.
+- HeapBoundaryLabel: caller passes boundary_x and label_y; text centered on boundary_x.
+- BOTTOM_MARGIN = 22px, LINE_SPACING = 4px.
+- This is the last Phase 5 sub-phase.
+
+---
+
 ## Archived Phases
 
 | Phase | Archive file | Summary |
