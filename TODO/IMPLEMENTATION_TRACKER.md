@@ -296,15 +296,4 @@ Phase 1 (contracts)
   |         |
   +---> Phase 4 (easing) --------+
   |                               |
-  +---> Phase 5 (view layer) -----+---> Phase 6 (controller)
-                                          |
-                                    Phase 7 (main.py)
-                                          |
-                                    Phase 8 (integration tests)
-                                          |
-                                    Phase 9 (CI)
-                                          |
-                                    Phase 10 (manual acceptance)
-```
-
-Phases 2 and 4 can run in parallel. Phases 3 can begin as soon as each algorithm in Phase 2 is complete.
+  +---> Phase

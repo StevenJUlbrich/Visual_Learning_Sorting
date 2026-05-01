@@ -459,11 +459,4 @@ Sonnet 4.6. First View layer brick — pure layout math, no rendering logic.
 
 ### Plan
 
-Create `src/visualizer/views/window.py` (display init, 2x2 grid math, config.toml preset loading) and `tests/unit/test_window.py` (coordinate-math verification against doc 04 §2.6 reference table).
-
-### Exit criteria
-
-- `uv run pytest tests/unit/test_window.py -v` all green
-- `uv run pytest tests/unit/ -v` all green (cumulative, should be 51+ tests)
-- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright src/visualizer/views/window.py tests/unit/test_window.py` clean
-- `uv run ruff check src/visualizer/views/window.py tests/unit/test_window.py` + format check clean
+Create `src/visualizer/views/window.py` (display init, 2x2 grid math, config.

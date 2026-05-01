@@ -25,64 +25,19 @@
 
 ### Worked on
 
-Created `src/visualizer/controllers/orchestrator.py` (Phase 6a scope: `PanelState` enum with 5 members, standard duration constants T1=150/T2=400/T3=200/TERMINAL=0/FAILURE=0, sift-down cadence override constants T1=100/T2=250/T3=130, `get_duration(op_type, sift_down_cadence)` pure function, `PanelContext` plain class with `reset()`) and `tests/unit/test_orchestrator.py` (28 tests: enum membership and uniqueness, all 8 duration constants, 9 get_duration cases including SHIFT-always-standard, 8 PanelContext construction/reset tests).
+Created `src/visualizer/controllers/orchestrator.py` (Phase 6a scope: `PanelState` enum with 5 members, standard duration constants T1=150/T2=400/T3=200/TERMINAL=0/FAILURE=0, sift-down cadence override constants T1=100/T2=250/T3=130, `get_duration(op_type, sift_down_cadence)` pure function with match dispatch, `PanelContext` plain class with reset() preserving algorithm_name and complexity) and `tests/unit/test_orchestrator.py` (28 tests: enum membership, standard constants, sift-down constants, all 9 get_duration cases including SHIFT-always-standard invariant, 8 PanelContext construction/reset assertions).
 
 ### Results
 
-- `uv run pytest tests/unit/test_orchestrator.py -v`: **28/28 PASSED** (first run)
+- `uv run pytest tests/unit/test_orchestrator.py -v`: **28/28 PASSED** (first run after one I001 import-sort fix)
 - `uv run pytest tests/unit/ -v`: **263/263 PASSED** (cumulative)
-- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright src/visualizer/controllers/orchestrator.py tests/unit/test_orchestrator.py`: **0 errors, 0 warnings**
-- `uv run ruff check` + `uv run ruff format --check`: **clean** (one correction: I001 import sort)
+- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright`: **0 errors, 0 warnings**
+- `uv run ruff check` + `uv run ruff format --check`: **clean**
 
 ### Corrections
 
-1. **Ruff I001** — `from enum import auto, Enum` → `from enum import Enum, auto` (alphabetical). One-line fix before re-check.
-
-### Decisions
-
-- **Plain class for `PanelContext`** — consistent with `GridLayout` in window.py. No `@dataclass` avoids the `reportConstantRedefinition` trap (D-feedback from Phase 5a). `__init__` makes the first assignment, so pyright is happy.
-- **`get_duration` as standalone function, not a method** — callers (Orchestrator 6b) need it before a `PanelContext` exists (e.g., when pre-computing budgets). A free function is simpler to test in isolation.
-- **`SHIFT` ignores sift-down cadence** — Heap Sort uses `SWAP` for tree operations; `SHIFT` is Insertion Sort only. Cadence flag on `SHIFT` is a no-op by design, documented in the function docstring.
-
-### Open questions
-
-- None.
+One I001 import-sort fix in test_orchestrator.py (ruff auto-formatted).
 
 ### Next
 
-Phase 6b: Core loop — `update(dt)` + tick dispatch.
-
----
-
-## 2026-05-01 11:06 — Phase 6a pre-action: PanelState + duration constants
-
-### Plan
-Create the pure-data foundation for orchestrator.py: PanelState enum (5 states from doc 02 §Panel Runtime State Machine), standard + sift-down cadence duration constants (doc 12 §2.2/§2.3), a PanelContext container class holding per-panel runtime state, and a get_duration() function mapping (OpType, cadence_flag) → int milliseconds. No Pygame imports in this sub-phase.
-
-### Exit criteria
-1. `uv run pytest tests/unit/test_orchestrator.py -v` — all pass
-2. `uv run pytest tests/unit/ -v` — cumulative pass (235 + new)
-3. `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright src/visualizer/controllers/orchestrator.py tests/unit/test_orchestrator.py` — 0 errors, 0 warnings
-4. `uv run ruff check` + `uv run ruff format --check` — clean
-
----
-
-## Entry Template (for future use)
-
-```markdown
-## YYYY-MM-DD HH:MM — One-line session summary
-
-### Worked on
-Prose. What was touched, what was produced.
-
-### Decisions
-- What was decided.
-- Why this path rather than alternatives.
-- Decision-ID link if it was locked into DECISIONS.md.
-
-### Open questions
-- Unresolved items. Where they will be answered.
-
-### Next
-The single most concrete next action.
-```
+Phase 6b: Core loop — update(dt) + tick dispatch.
