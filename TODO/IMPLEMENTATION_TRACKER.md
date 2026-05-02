@@ -196,14 +196,14 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 - [x] Panel state machine: idle_paused -> waiting_for_next_tick -> animating_operation -> completed/failed — full transitions delivered (6b)
 - [x] Operation timing: T1=150ms, T2=400ms, T3=200ms (integer milliseconds) — duration constants + get_duration() delivered (6a)
 - [x] Sift-down cadence override: T1=100ms, T2=250ms, T3=130ms (set after extraction swap, reset on boundary T3) — cadence lifecycle (_update_heap_cadence) delivered (6b)
-- [ ] Sprite identity delta computation (ID-based, never value-matching)
+- [x] Sprite identity delta computation (ID-based, never value-matching) — compute_sprite_moves(), slot_to_sprite_id, sprite_moves on PanelContext (6c)
 - [x] `update(dt)` — subtract dt from remaining, fetch next SortResult when <= 0 (6b)
 - [x] `elapsed_time_ms` — integer accumulator per panel, freezes on completion/failure (6b)
 - [x] Step counter: increment on success=True, is_complete=False, op_type != RANGE (6b)
 - [x] Failure isolation: one panel fails, others continue (6b)
-- [ ] Play/Pause: freeze/resume all time accumulators and sprite positions
-- [ ] Step: advance one tick per active panel, animate to completion, re-pause
-- [ ] Restart: snap all sprites to initial, reset all state, re-pause
+- [x] Play/Pause: freeze/resume all time accumulators and sprite positions — _running guard, play() transitions IDLE→WAITING, pause() preserves panel states (6d)
+- [x] Step: advance one tick per active panel, animate to completion, re-pause — _stepping flag, ANIMATING drains to IDLE_PAUSED, step completion check (6d)
+- [x] Restart: snap all sprites to initial, reset all state, re-pause — re-instantiates algorithms from _algorithm_classes, PanelContext.reset(), re-seeds generators (6d)
 
 ---
 

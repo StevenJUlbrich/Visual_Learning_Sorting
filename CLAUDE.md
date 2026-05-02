@@ -140,5 +140,7 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 - Phase 5g: `hud.py` — BubbleHUD counters + HeapPhaseLabel + HeapBoundaryLabel (26 tests); cumulative 235/235
 - Phase 6a: `orchestrator.py` (partial) — PanelState enum, duration constants, PanelContext, get_duration (28 tests); cumulative 263/263
 - Phase 6b: `orchestrator.py` — Orchestrator class, update(dt) core loop, state machine, cadence lifecycle (27 tests); cumulative 290/290
+- Phase 6c: `orchestrator.py` — compute_sprite_moves() pure function, slot_to_sprite_id mapping, sprite_moves dict, PanelContext.array_size (16 tests); cumulative 306/306
+- Phase 6d: `orchestrator.py` — play(), pause(), step(), restart(), is_running/is_stepping properties, _running/_stepping guards, _algorithm_classes for restart re-instantiation (26 tests); cumulative 332/332
 
-**Next:** Phase 6c — Sprite identity delta computation.
+**Next:** Phase 6e — Integration tests (TC-A4, A6, A15, A16, A17, A18).
