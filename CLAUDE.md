@@ -88,7 +88,7 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 
 | File | What it locks |
 |------|--------------|
-| `docs/design_docs/DECISIONS.md` | 79 locked decisions (D-001 through D-079). Canonical authority. |
+| `docs/design_docs/DECISIONS.md` | 81 locked decisions (D-001 through D-081). Canonical authority. |
 | `docs/design_docs/02_ARCHITECTURE.md` | MVC structure, module boundaries, independent queue semantics |
 | `docs/design_docs/03_DATA_CONTRACTS.md` | SortResult, OpType, tick taxonomy, highlight rules |
 | `TODO/IMPLEMENTATION_TRACKER.md` | Current build status, phase dependencies, what's done/blocked |
@@ -123,10 +123,22 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 
 ## Build Status
 
-**All phases are not started.** Phase 0 (spec gaps: pseudocode, pyproject.toml, config.toml, fonts, implementation order doc) must complete before coding begins. See `TODO/IMPLEMENTATION_TRACKER.md` for the full phase breakdown and dependency graph.
+**Active phase: Phase 6 (Controller/Orchestrator).** Phases 0–4, 5a–5g are complete. See `TODO/IMPLEMENTATION_TRACKER.md` for the full breakdown.
 
-Build order: Phase 0 (spec gaps) → Phase 1 (contracts.py) → Phase 2 (algorithm generators) + Phase 4 (easing, parallel) → Phase 3 (unit tests) → Phase 5 (view layer) → Phase 6 (controller) → Phase 7 (main.py integration) → Phase 8 (integration tests) → Phase 9 (CI) → Phase 10 (manual acceptance).
+**Completed (2026-04-23 / 2026-04-24 / 2026-04-30 / 2026-05-01):**
+- Phase 0: Spec gaps (pyproject.toml, config.toml, pseudocode, fonts helper, implementation order)
+- Phase 1: `contracts.py` — SortResult, OpType, BaseSortAlgorithm
+- Phase 2: All four generators — Bubble (20/26), Selection (21/10), Insertion (17/19), Heap (20/30/35)
+- Phase 3: Model unit tests — 29 tests, TC-A1/A2/A3/A7/A8/A9/A10/A11/A12/A13/A14/A19
+- Phase 4: `easing.py` — ease_in_out_quad, ease_out_cubic, sine_arc (21 tests, TC-A5)
+- Phase 5a: `window.py` — GridLayout, load_preset, init_display (25 tests); cumulative 75/75
+- Phase 5b: `sprite.py` — NumberSprite, ColorState, COLOR_MAP (19 tests); cumulative 94/94
+- Phase 5c: `panel.py` — PanelRenderer, header rhythm, state overlays (31 tests); cumulative 125/125
+- Phase 5d: `tree_layout.py` — binary tree node positions, edges, sorted row (38 tests, TC-A20/A21/A22); cumulative 163/163
+- Phase 5e: `pointer.py` — Selection Sort i/j/min arrows, coalescing (25 tests, TC-A23); cumulative 188/188
+- Phase 5f: `limitline.py` — Bubble Sort dashed boundary, advance/reset (21 tests); cumulative 209/209
+- Phase 5g: `hud.py` — BubbleHUD counters + HeapPhaseLabel + HeapBoundaryLabel (26 tests); cumulative 235/235
+- Phase 6a: `orchestrator.py` (partial) — PanelState enum, duration constants, PanelContext, get_duration (28 tests); cumulative 263/263
+- Phase 6b: `orchestrator.py` — Orchestrator class, update(dt) core loop, state machine, cadence lifecycle (27 tests); cumulative 290/290
 
-## Initial Array
-
-`[4, 7, 2, 6, 1, 5, 3]` — chosen because it is not a valid max-heap (3 violations), has 13 inversions, and produces meaningful visual activity across all four algorithms (D-006).
+**Next:** Phase 6c — Sprite identity delta computation.

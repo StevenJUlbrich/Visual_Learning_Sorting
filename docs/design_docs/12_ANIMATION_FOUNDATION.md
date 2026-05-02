@@ -184,7 +184,7 @@ Heap Sort boundary T3 ticks use a staggered left-to-right sweep (see Heap Sort A
 
 | State | Color | When |
 | ----- | ----- | ---- |
-| Default (at rest) | Blue `(100, 149, 237)` | No active highlight on this sprite |
+| Default (at rest) | Blue `(100, 150, 255)` | No active highlight on this sprite |
 | Active (highlighted) | Orange `(255, 140, 0)` | Sprite's index is in current tick's `highlight_indices` |
 | Settled/Sorted | Steel-blue `(130, 150, 190)` | Heap Sort extracted elements |
 | Completion | Green `(80, 220, 120)` | After T4 completion tick — full array |

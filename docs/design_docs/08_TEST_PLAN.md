@@ -215,8 +215,8 @@ All simulated elapsed time accumulation must use **integer milliseconds** intern
 
 - Consume Heap Sort generator for `default_7` fixture.
 - Assert T3 ticks are emitted in both phases:
-  - **Phase 1 (Build Max-Heap):** Assert Logical Tree Highlight T3 ticks (non-contiguous `highlight_indices`) are emitted during sift-down. Assert Phase 1 produces at least one T2 swap tick (verifying the input has heap violations).
-  - **Phase 2 (Extraction):** Assert Boundary Emphasis T3 ticks (contiguous `highlight_indices` matching `tuple(range(0, k))`) are emitted at the start of each extraction step, with strictly decreasing `k` values. Assert Logical Tree Highlight T3 ticks are emitted during post-extraction sift-down repairs.
+  - **Phase 1 (Build Max-Heap):** Assert Logical Tree Highlight T3 ticks (message starts with `"Evaluating tree level"`, per D-081) are emitted during sift-down. Assert Phase 1 produces at least one T2 swap tick (verifying the input has heap violations).
+  - **Phase 2 (Extraction):** Assert Boundary Emphasis T3 ticks (message starts with `"Active heap"`, per D-081) are emitted at the start of each extraction step, with strictly decreasing `k` values. Assert Logical Tree Highlight T3 ticks are emitted during post-extraction sift-down repairs.
 - Assert sorted region grows by exactly one element between each pair of consecutive boundary T3 ticks.
 - Marker: `@pytest.mark.unit`
 
@@ -266,8 +266,9 @@ All simulated elapsed time accumulation must use **integer milliseconds** intern
 
 - Consume Heap Sort generator for `default_7` fixture.
 - Count all ticks where `success=True`, `is_complete=False`, `operation_type != RANGE`.
-- Assert this count equals 35 (the expected step count).
-- Count all T3 (RANGE) ticks separately and assert count equals 6.
+- Assert this count equals 35 (the expected step count: 20 T1 + 15 T2).
+- Count all T3 (RANGE) ticks separately and assert total count equals 17 (6 boundary + 11 logical tree).
+- Classify T3 ticks by message prefix (D-081): assert 6 boundary (`"Active heap"`) and 11 logical tree (`"Evaluating tree level"`).
 - Marker: `@pytest.mark.unit`
 
 ### TC-A14 Insertion Sort Terminating Comparison
@@ -325,7 +326,7 @@ All simulated elapsed time accumulation must use **integer milliseconds** intern
 
 - Instantiate HeapSort with `default_7` fixture (`[4, 7, 2, 6, 1, 5, 3]`).
 - Consume the full generator, collecting every tick's `op_type` into an ordered trace list.
-- Identify sift-down regions in the trace: contiguous subsequences bounded by `RANGE` (T3 Logical Tree Highlight) ticks that are **not** boundary emphasis ticks. Boundary T3 ticks are distinguished by having contiguous `highlight_indices` (`tuple(range(0, k))`); Logical Tree T3 ticks have non-contiguous `highlight_indices`.
+- Identify sift-down regions in the trace: contiguous subsequences bounded by `RANGE` (T3 Logical Tree Highlight) ticks that are **not** boundary emphasis ticks. Boundary T3 ticks are distinguished by `tick.message.startswith("Active heap")`; Logical Tree T3 ticks are distinguished by `tick.message.startswith("Evaluating tree level")` (D-081). **Do not use contiguity** — Logical Tree T3 at parent=0 produces contiguous tuples that collide with Boundary T3 shape.
 - For **each** sift-down level (each Logical Tree T3 tick), assert the following sequence contract:
 
 ```text
@@ -334,7 +335,7 @@ RANGE (T3)  →  COMPARE (T1) [1 or 2]  →  WRITE (T2) [0 or 1]
 
 Specifically:
 
-1. The sift-down level **must** begin with exactly one `OpType.RANGE` tick whose `highlight_indices` is non-contiguous (the parent-child triangle).
+1. The sift-down level **must** begin with exactly one `OpType.RANGE` tick whose message starts with `"Evaluating tree level"` (the parent-child triangle, per D-081).
 2. The `RANGE` tick **must** be immediately followed by 1 or 2 `OpType.COMPARE` ticks (left child comparison, optionally right child comparison).
 3. No `COMPARE` tick may appear at a sift-down level without a preceding `RANGE` tick at that same level.
 4. If a swap occurs, exactly one `OpType.WRITE` tick follows the comparisons. If no swap occurs (heap property satisfied), no `WRITE` tick is emitted and the sift-down terminates.
@@ -352,21 +353,34 @@ Specifically:
 - Multiple T3 ticks emitted at the same sift-down level (visual stutter).
 - T1 compare tick emitted for the right child without a preceding T3 tick at that level.
 
-**Implementation guidance:** The test should build a structured trace, not just a flat `OpType` list. A helper function can segment the trace into sift-down levels by detecting Logical Tree T3 ticks (non-contiguous `highlight_indices`) and validating each segment independently. Example:
+**Implementation guidance:** The test should build a structured trace, not just a flat `OpType` list. A helper function can segment the trace into sift-down levels by detecting Logical Tree T3 ticks via message prefix (D-081) and validating each segment independently. Example:
 
 ```python
+def _is_logical_tree_t3(tick) -> bool:
+    """Classify a T3 tick as Logical Tree (True) or Boundary (False).
+
+    Uses message prefix per D-081.  Do NOT use highlight_indices contiguity —
+    Logical Tree T3 at parent=0 produces contiguous tuples (0, 1, 2) or (0, 1)
+    that collide with Boundary T3 shape.
+    """
+    return (
+        tick.operation_type == OpType.RANGE
+        and tick.message.startswith("Evaluating tree level")
+    )
+
+
 def extract_sift_down_levels(ticks):
     """Group ticks into sift-down levels, each starting with a Logical Tree T3."""
     levels = []
     current_level = []
     for tick in ticks:
-        if tick.op_type == OpType.RANGE and not _is_contiguous(tick.highlight_indices):
+        if _is_logical_tree_t3(tick):
             if current_level:
                 levels.append(current_level)
             current_level = [tick]
         elif current_level:  # Only collect if inside a sift-down level
             current_level.append(tick)
-            if tick.op_type == OpType.WRITE:
+            if tick.operation_type == OpType.SWAP:
                 levels.append(current_level)
                 current_level = []
     if current_level:
@@ -376,16 +390,16 @@ def extract_sift_down_levels(ticks):
 
 def assert_sift_down_level_contract(level_ticks):
     """Assert T3 -> T1{1,2} -> T2{0,1} ordering for a single sift-down level."""
-    assert level_ticks[0].op_type == OpType.RANGE, "Level must start with T3"
-    assert not _is_contiguous(level_ticks[0].highlight_indices), "Must be tree highlight, not boundary"
+    assert level_ticks[0].operation_type == OpType.RANGE, "Level must start with T3"
+    assert _is_logical_tree_t3(level_ticks[0]), "Must be tree highlight, not boundary"
 
     compare_count = 0
     write_count = 0
     for tick in level_ticks[1:]:
-        if tick.op_type == OpType.COMPARE:
+        if tick.operation_type == OpType.COMPARE:
             assert write_count == 0, "T1 compare must not follow T2 write within same level"
             compare_count += 1
-        elif tick.op_type == OpType.WRITE:
+        elif tick.operation_type == OpType.SWAP:
             assert compare_count >= 1, "T2 write must follow at least one T1 compare"
             write_count += 1
 

@@ -58,50 +58,56 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 **Depends on:** Phase 1
 **Output:** `src/visualizer/models/{bubble,selection,insertion,heap}.py`
 **Testable without Pygame:** Yes
+**Status:** All four generators delivered and signed off (2026-04-20). Counter accuracy verified against CLAUDE.md binding table. Ruff + format clean on all files. Pyright clean after libatomic1 install. See `docs/devlog/phase_02.md` for full details.
 
-### 2.1 Bubble Sort
+### 2.1 Bubble Sort *(closed 2026-04-20)*
 
-- [ ] Generator yields T1 compare on `(j, j+1)` before swap decision
-- [ ] Early-exit optimization (swapped flag per pass)
-- [ ] LimitLine boundary: inner loop stops at `n - pass - 1`
-- [ ] Completion tick with full-array highlight
-- [ ] Empty-input T0 failure tick guard
-- [ ] Counter accuracy: comparisons=20, writes=26 for default array
+- [x] Generator yields T1 compare on `(j, j+1)` before swap decision
+- [x] Early-exit optimization (swapped flag per pass)
+- [x] LimitLine boundary: inner loop stops at `n - pass - 1`
+- [x] Completion tick with full-array highlight
+- [x] Empty-input T0 failure tick guard
+- [x] Counter accuracy: comparisons=20, writes=26 for default array
+- [x] Correction C1: compare message updated to doc 03 §Tick Taxonomy format
 
-### 2.2 Selection Sort
+### 2.2 Selection Sort *(closed 2026-04-20)*
 
-- [ ] Scan phase: T1 on `(min_idx, j)` with min tracking
-- [ ] Message includes current minimum on every scan tick
-- [ ] T2 swap on `(i, min_idx)` — skip when `i == min_idx`
-- [ ] Completion tick with full-array highlight
-- [ ] Empty-input T0 failure tick guard
-- [ ] Counter accuracy: comparisons=21, writes=10 for default array
+- [x] Scan phase: T1 on `(min_idx, j)` with min tracking
+- [x] Message includes current minimum on every scan tick
+- [x] T2 swap on `(i, min_idx)` — skip when `i == min_idx`
+- [x] Completion tick with full-array highlight
+- [x] Empty-input T0 failure tick guard
+- [x] Counter accuracy: comparisons=21, writes=10 for default array
+- [x] Correction C1: yield-before-update pattern adopted per pseudocode §2 (single message format, no prev_min)
 
-### 2.3 Insertion Sort
+### 2.3 Insertion Sort *(closed 2026-04-20)*
 
-- [ ] T1 key-selection on `(i,)` — single-index highlight, does NOT increment comparisons
-- [ ] T1 compare on `(j, j+1)` during shift loop — increments comparisons
-- [ ] T2 shift on `(j, j+1)` — one element at a time, never batch (D-060, D-064)
-- [ ] Terminating T1 compare when loop exits by condition (not by `j < 0`)
-- [ ] T2 placement tick as final tick of each pass
-- [ ] Completion tick with full-array highlight
-- [ ] Empty-input T0 failure tick guard
-- [ ] Counter accuracy: comparisons=17, writes=19 for default array
+- [x] T1 key-selection on `(i,)` — single-index highlight, does NOT increment comparisons
+- [x] T1 compare on `(j, j+1)` during shift loop — increments comparisons
+- [x] T2 shift on `(j, j+1)` — one element at a time, never batch (D-060, D-064)
+- [x] Terminating T1 compare when loop exits by condition (not by `j < 0`)
+- [x] T2 placement tick as final tick of each pass
+- [x] Completion tick with full-array highlight
+- [x] Empty-input T0 failure tick guard
+- [x] Counter accuracy: comparisons=17, writes=19 for default array
+- [x] Zero corrections needed — pre-flight trace caught all edge cases
 
-### 2.4 Heap Sort
+### 2.4 Heap Sort *(closed 2026-04-20)*
 
-- [ ] Phase 1 (Build Max-Heap): process nodes floor(n/2)-1 down to 0
-- [ ] Sift-down tick sequence per level: T3 Logical Tree -> T1 compare(s) -> T2 swap (if needed)
-- [ ] T3 Logical Tree Highlight: non-contiguous `(parent, left_child, right_child)`, parent always first
-- [ ] Phase 2 (Extraction): T3 Boundary Emphasis (contiguous range, strictly decreasing k) before each extraction
-- [ ] Extraction T2 swap on `(0, end)`
-- [ ] Post-extraction sift-down repair with same tick sequence contract
-- [ ] Settled elements: indices >= heap_size after extraction
-- [ ] Completion tick with full-array highlight
-- [ ] Empty-input T0 failure tick guard
-- [ ] Counter accuracy: comparisons=20, writes=30 for default array
-- [ ] Step count = 35 (T3 ticks excluded)
-- [ ] T3 tick count = 6 boundary emphasis ticks for n=7
+- [x] Phase 1 (Build Max-Heap): process nodes floor(n/2)-1 down to 0
+- [x] Sift-down tick sequence per level: T3 Logical Tree -> T1 compare(s) -> T2 swap (if needed)
+- [x] T3 Logical Tree Highlight: non-contiguous `(parent, left_child, right_child)`, parent always first (D-058 verified)
+- [x] Phase 2 (Extraction): T3 Boundary Emphasis (contiguous range, strictly decreasing k) before each extraction
+- [x] Extraction T2 swap on `(0, end)`
+- [x] Post-extraction sift-down repair with same tick sequence contract
+- [x] Settled elements: indices >= heap_size after extraction
+- [x] Completion tick with full-array highlight
+- [x] Empty-input T0 failure tick guard
+- [x] Counter accuracy: comparisons=20, writes=30 for default array
+- [x] Step count = 35 (T3 ticks excluded)
+- [x] T3 tick count = 6 boundary emphasis ticks for n=7
+- [x] Bonus: Logical Tree T3 count = 11 (4 Phase 1 + 7 Phase 2); T3 monotonicity verified
+- [x] **Resolved (D-081):** T3 contiguity distinction breaks at parent=0 sift-downs (6 of 11 Logical Tree T3 ticks for default_7). Resolved by message-prefix classification: `"Active heap"` = Boundary, `"Evaluating tree level"` = Logical Tree. Six spec docs amended. No production code change. TC-A19 unblocked for Phase 3.
 
 ---
 
@@ -110,22 +116,26 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 **Depends on:** Phase 1, Phase 2
 **Output:** `tests/conftest.py`, `tests/unit/test_*.py`
 **Testable without Pygame:** Yes (model tests only)
+**Phase 3a status:** conftest + test_bubble.py delivered and signed off (2026-04-20, Sonnet 4.6). 6/6 tests pass. Pyright 0 errors. Ruff clean. Two minor corrections: generator return type annotation, spurious noqa directive.
+**Phase 3b status:** test_selection.py delivered and signed off (2026-04-20, Sonnet 4.6). 6/6 tests pass. 12/12 cumulative. Pyright 0 errors. Ruff clean. Zero corrections.
+**Phase 3c status:** test_insertion.py delivered and signed off (2026-04-20, Sonnet 4.6). 8/8 tests pass. 20/20 cumulative. Pyright 0 errors (requires `PYRIGHT_PYTHON_GLOBAL_NODE=false` — system Node v12 crashes pyright; nodeenv v25.9.0 is correct runtime). Ruff clean. Two corrections: unused `exp_sc` → added shift-compare assertion; ruff format alignment. **Pyright Node workaround documented in DEVLOG.**
+**Phase 3d status:** test_heap.py delivered and signed off (2026-04-20, Sonnet 4.6). 9/9 tests pass. 29/29 cumulative (model tests). Pyright 0 errors. Ruff clean. One correction: ruff I001 import block. TC-A19 passed on first attempt — no Opus escalation. *(Phase 4 added 21 easing tests; cumulative now 50/50.)*
 
-- [ ] Root `conftest.py` — verbatim from doc 08 Section 4.2 (SDL_VIDEODRIVER=dummy at module level, fixtures)
-- [ ] `pyproject.toml` markers registered (unit, integration, slow)
-- [ ] **TC-A1** Final sortedness (all algorithms, all fixtures)
-- [ ] **TC-A2** Completion tick contract (exactly one, success=True, is_complete=True, full highlight)
-- [ ] **TC-A3** Empty input contract (exactly one failure tick)
-- [ ] **TC-A5** Easing function math (ease_in_out_quad boundary values)
-- [ ] **TC-A7** Heap Sort phase contract (T3 variants, boundary decreasing k)
-- [ ] **TC-A8** Sift-down correctness (subtree satisfies max-heap after sift-down)
-- [ ] **TC-A9** Insertion Sort tick sequence (per-pass first/last tick, T1/T2 alternation)
-- [ ] **TC-A10** Counter accuracy (all 4 algorithms, exact values)
-- [ ] **TC-A11** Key-selection does not increment comparisons
-- [ ] **TC-A12** Swap writes count (Bubble Sort: writes == swap_count * 2)
-- [ ] **TC-A13** T3 step counter exclusion (steps=35, T3 count=6)
-- [ ] **TC-A14** Insertion Sort terminating comparison (sorted_7 fixture)
-- [ ] **TC-A19** Heap Sort sift-down tick sequence contract (T3->T1->T2 per level)
+- [x] Root `conftest.py` — verbatim from doc 08 Section 4.2 (SDL_VIDEODRIVER=dummy at module level, fixtures). *Note: `Generator[None]` used per PEP 696/UP043; `# noqa: E402` removed (ruff does not flag in this context). `reportUnusedFunction` suppressed with pyright inline comment.*
+- [x] `pyproject.toml` markers registered (unit, integration, slow)
+- [x] **TC-A1** Final sortedness (all algorithms, all fixtures) — *All four algorithms covered.*
+- [x] **TC-A2** Completion tick contract (exactly one, success=True, is_complete=True, full highlight) — *All four algorithms covered.*
+- [x] **TC-A3** Empty input contract (exactly one failure tick) — *All four algorithms covered.*
+- [x] **TC-A5** Easing function math (ease_in_out_quad boundary values) — *21 tests in test_easing.py. Complete (Phase 4).*
+- [x] **TC-A7** Heap Sort phase contract (T3 variants, boundary decreasing k) — *Complete. Phase split verified, 6 boundary T3 with k=7..2, Logical Tree T3 in both phases.*
+- [x] **TC-A8** Sift-down correctness (subtree satisfies max-heap after sift-down) — *Complete. Phase 1 final state verified as valid max-heap via `_is_max_heap`.*
+- [x] **TC-A9** Insertion Sort tick sequence (per-pass first/last tick, T1/T2 alternation) — *Complete. Truth table verified across all 6 passes.*
+- [x] **TC-A10** Counter accuracy (all 4 algorithms, exact values) — *All four covered: Bubble (20/26), Selection (21/10), Insertion (17/19), Heap (20/30).*
+- [x] **TC-A11** Key-selection does not increment comparisons — *Insertion Sort covered. Complete.*
+- [x] **TC-A12** Swap writes count (Bubble Sort: writes == swap_count * 2) — *Bubble Sort only. Complete.*
+- [x] **TC-A13** T3 step counter exclusion (steps=35, T3 count=17) — *Complete. 35 steps, 6 boundary + 11 logical tree T3 = 17 total.*
+- [x] **TC-A14** Insertion Sort terminating comparison (sorted_7 fixture) — *Complete. 6/6 passes verified: 0 shifts, 1 terminating compare, 1 placement each.*
+- [x] **TC-A19** Heap Sort sift-down tick sequence contract (T3->T1->T2 per level) — *Complete. 11 levels verified. D-058 parent-first assertion. First attempt pass.*
 - [ ] **TC-A20** Tree layout node positioning (both presets, no overlap)
 - [ ] **TC-A21** Tree layout edge connectivity
 - [ ] **TC-A22** Tree layout shrinking (heap_size 7 down to 1)
@@ -139,11 +149,15 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 **Depends on:** None (can parallel with Phase 2)
 **Output:** `src/visualizer/views/easing.py`
 **Testable without Pygame:** Yes (pure math, no Pygame imports)
+**Status:** Delivered and signed off (2026-04-23, Sonnet 4.6). 21/21 TC-A5 tests pass. 50/50 cumulative. Pyright 0 errors. Ruff clean. No Pygame dependency. Two minor corrections: unused `import math`, I001 import sort.
 
-- [ ] `ease_in_out_quad(t)` — quadratic ease-in-out
-- [ ] Boundary guarantees: `f(0.0) == 0.0`, `f(1.0) == 1.0`
-- [ ] Non-linear at `t=0.2` and `t=0.8`
-- [ ] Clamp: `t >= 1.0` returns exactly `1.0`
+- [x] `ease_in_out_quad(t)` — quadratic ease-in-out
+- [x] Boundary guarantees: `f(0.0) == 0.0`, `f(1.0) == 1.0`
+- [x] Non-linear at `t=0.2` and `t=0.8`
+- [x] Clamp: `t >= 1.0` returns exactly `1.0`
+- [x] `ease_out_cubic(t)` — cubic ease-out (fast start, decelerates)
+- [x] `sine_arc(t)` — sine arc lift (peaks at t=0.5, returns to 0; not monotonic)
+- [x] **TC-A5** Easing function math (boundary, clamp, linearity, symmetry, monotonicity) — *21 tests. Complete.*
 
 ---
 
@@ -152,14 +166,15 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 **Depends on:** Phase 1, Phase 4
 **Output:** `src/visualizer/views/{window,panel,sprite,tree_layout,pointer,limitline,hud}.py`
 **Requires Pygame:** Yes (headless OK for coordinate math)
+**Phase 5a status:** window.py delivered and signed off (2026-04-23, Sonnet 4.6). 25/25 tests pass. 75/75 cumulative. Pyright 0 errors. Ruff clean. Three corrections: reportConstantRedefinition (switched dataclass→plain class), RUF002/RUF003 ambiguous × char, ruff format wrap.
 
-- [ ] `NumberSprite` — circular outlined ring, float `(exact_x, exact_y)`, font surface caching per color state (D-034, D-069)
-- [ ] `window.py` — display init, 2x2 grid layout with proportional tokens (doc 04 Section 2)
-- [ ] `panel.py` — header vertical rhythm (title -> metrics -> message), array region, state overlays
-- [ ] `tree_layout.py` — binary tree positioning for Heap Sort, edge rendering, sorted row (doc 04 Section 4.3.2)
-- [ ] `pointer.py` — Selection Sort `i`/`j`/`min` arrows with coalescing (D-068)
-- [ ] `limitline.py` — Bubble Sort vertical dashed boundary
-- [ ] `hud.py` — Bubble Sort comparison/exchange counters overlay
+- [x] `NumberSprite` — circular outlined ring, float `(exact_x, exact_y)`, font surface caching per color state (D-034, D-069). *19 tests: home_x/home_y slot math, ring_radius, ColorState cycling, is_lifted, surface_cache completeness, update_home preserves exact coords, draw no-error, identity. surface_cache public (pyright reportPrivateUsage). 94/94 cumulative. Pyright 0 errors. Ruff clean. Doc 12 §4.3 color fixed: (100, 149, 237) → (100, 150, 255). 2026-04-24, Sonnet 4.6.*
+- [x] `window.py` — display init, 2x2 grid layout with proportional tokens (doc 04 Section 2). *25 tests: desktop/tablet dimensions, all 4 panel rects, non-overlap + bounds invariants, min-width guard, unknown-preset ValueError. panel_height=297 (formula authoritative over spec table 296). Plain class over dataclass (avoids pyright reportConstantRedefinition).*
+- [x] `panel.py` — header vertical rhythm (title → metrics → message), state overlays. *31 tests: Desktop/Tablet spacing tokens, anchor positions, header budget (≤35% panel height), color constants, pixel-check background variants, draw no-crash (running/completed/failed), truncate_text. 125/125 cumulative. Pyright 0 errors. Ruff clean. 2026-04-30, Sonnet 4.6.*
+- [x] `tree_layout.py` — binary tree node positions, edges, sorted row geometry (TC-A20/A21/A22). *38 tests: node bounds, root centering, level symmetry, no-overlap, edge connectivity, tree shrinking heap_size 7→0, sorted row formula. 163/163 cumulative. Pyright 0 errors. Ruff clean. 2026-04-30, Sonnet 4.6.*
+- [x] `pointer.py` — Selection Sort i/j/min pointer arrows with coalescing (D-068, TC-A23). *25 tests: arrow positions, slot_center_x formula, coalescing all cases (j==min, j≠min, j/min None), color constants, draw no-crash (all states, edge slots 0+6). 188/188 cumulative. Pyright 0 errors. Ruff clean. Zero corrections. 2026-04-30, Sonnet 4.6.*
+- [x] `limitline.py` — Bubble Sort vertical dashed boundary. *21 tests: position formula, visibility states, advance/reset, slot-center bounds, line-span invariant, color constant, draw no-crash. LINE_COLOR exported for hud.py reuse. 209/209 cumulative. Pyright 0 errors. Ruff clean. Zero first-run corrections. 2026-04-30, Sonnet 4.6.*
+- [x] `hud.py` — Bubble Sort comparison/exchange counters overlay + Heap Sort phase label + Heap Sort boundary label. *26 tests: color constant values/cross-module aliasing, BubbleHUD position formula (counter_x, comparisons_y, exchanges_y) and bounds, draw no-crash (zero/nonzero/large counts), HeapPhaseLabel center_x + draw no-crash (BUILD MAX-HEAP/EXTRACTION/fractional y), HeapBoundaryLabel LABEL_TEXT constant + draw no-crash (normal/origin/fractional coords). 235/235 cumulative. Pyright 0 errors. Ruff clean. One correction: ruff format on test file. 2026-05-01, Sonnet 4.6.*
 - [ ] Z-ordering: lifted sprites on top of baseline (doc 12 Section 3)
 - [ ] Highlight behavior: instant apply/replace, no fade (doc 12 Section 4)
 - [ ] Compare lane: Bubble 50px transient, Insertion proportional sustained (doc 12 Section 5)
@@ -177,15 +192,15 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 **Depends on:** Phase 1, Phase 2, Phase 5
 **Output:** `src/visualizer/controllers/orchestrator.py`
 
-- [ ] Independent queue per algorithm panel
-- [ ] Panel state machine: idle_paused -> waiting_for_next_tick -> animating_operation -> completed/failed
-- [ ] Operation timing: T1=150ms, T2=400ms, T3=200ms (integer milliseconds)
-- [ ] Sift-down cadence override: T1=100ms, T2=250ms, T3=130ms (set after extraction swap, reset on boundary T3)
+- [x] Independent queue per algorithm panel — Orchestrator._panels + _generators + _algorithms lists (6b)
+- [x] Panel state machine: idle_paused -> waiting_for_next_tick -> animating_operation -> completed/failed — full transitions delivered (6b)
+- [x] Operation timing: T1=150ms, T2=400ms, T3=200ms (integer milliseconds) — duration constants + get_duration() delivered (6a)
+- [x] Sift-down cadence override: T1=100ms, T2=250ms, T3=130ms (set after extraction swap, reset on boundary T3) — cadence lifecycle (_update_heap_cadence) delivered (6b)
 - [ ] Sprite identity delta computation (ID-based, never value-matching)
-- [ ] `update(dt)` — subtract dt from remaining, fetch next SortResult when <= 0
-- [ ] `elapsed_time_ms` — integer accumulator per panel, freezes on completion/failure
-- [ ] Step counter: increment on success=True, is_complete=False, op_type != RANGE
-- [ ] Failure isolation: one panel fails, others continue
+- [x] `update(dt)` — subtract dt from remaining, fetch next SortResult when <= 0 (6b)
+- [x] `elapsed_time_ms` — integer accumulator per panel, freezes on completion/failure (6b)
+- [x] Step counter: increment on success=True, is_complete=False, op_type != RANGE (6b)
+- [x] Failure isolation: one panel fails, others continue (6b)
 - [ ] Play/Pause: freeze/resume all time accumulators and sprite positions
 - [ ] Step: advance one tick per active panel, animate to completion, re-pause
 - [ ] Restart: snap all sprites to initial, reset all state, re-pause
@@ -269,27 +284,3 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 - [ ] AT-27 No algorithm title dots
 
 ---
-
-## Dependency Graph (Quick Reference)
-
-```plaintext
-Phase 0 (spec gaps)
-  |
-Phase 1 (contracts)
-  |
-  +---> Phase 2 (algorithms) ---> Phase 3 (unit tests)
-  |         |
-  +---> Phase 4 (easing) --------+
-  |                               |
-  +---> Phase 5 (view layer) -----+---> Phase 6 (controller)
-                                          |
-                                    Phase 7 (main.py)
-                                          |
-                                    Phase 8 (integration tests)
-                                          |
-                                    Phase 9 (CI)
-                                          |
-                                    Phase 10 (manual acceptance)
-```
-
-Phases 2 and 4 can run in parallel. Phases 3 can begin as soon as each algorithm in Phase 2 is complete.

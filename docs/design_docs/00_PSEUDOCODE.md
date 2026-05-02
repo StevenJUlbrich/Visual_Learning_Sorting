@@ -251,8 +251,9 @@ function heap_sort_generator(arr):
     while heap_size > 1:
         end = heap_size - 1
 
-        # Boundary T3 — CONTIGUOUS range(0, heap_size). TC-A19 uses contiguity
-        # to distinguish boundary T3 from Logical Tree T3. Does NOT increment steps.
+        # Boundary T3 — CONTIGUOUS range(0, heap_size). TC-A19 uses message prefix
+        # ("Active heap" vs "Evaluating tree level") to distinguish from Logical Tree T3
+        # (D-081). Does NOT increment steps.
         yield T3(tuple(range(0, heap_size)), f"Active heap: indices 0..{end}")
 
         # Extraction swap: root with end
@@ -268,8 +269,8 @@ function heap_sort_generator(arr):
 
 ### Invariants verified by TC-A19
 
-- Every non-terminal sift-down level begins with exactly one T3 whose `highlight_indices` is non-contiguous (the triangle). TC-A19's `extract_sift_down_levels` uses this contiguity check.
-- Boundary T3 ticks (Phase 2 pre-swap) are contiguous `tuple(range(0, k))` — distinguishable from Logical Tree T3.
+- Every non-terminal sift-down level begins with exactly one T3 whose message starts with `"Evaluating tree level"` (the Logical Tree variant). TC-A19's `extract_sift_down_levels` uses this message-prefix check (D-081). **Note:** contiguity alone is insufficient — Logical Tree T3 at parent=0 produces contiguous tuples `(0, 1, 2)` or `(0, 1)` that collide with Boundary T3 shape.
+- Boundary T3 ticks (Phase 2 pre-swap) have messages starting with `"Active heap"` — distinguishable from Logical Tree T3 by prefix, not by tuple contiguity.
 - Each sift-down level emits 1 or 2 T1s (left always, right conditionally).
 - T2 within a sift-down level is emitted at most once, and only when a child exceeds the parent.
 - Phase 1 for `default_7` processes indices 2, 1, 0 → 3 sift-downs. Phase 2 executes 6 extractions. The 6 boundary T3s are the ones excluded from `step_count` (35 steps vs. 41 total ticks).

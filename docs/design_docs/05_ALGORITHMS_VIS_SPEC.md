@@ -525,7 +525,7 @@ v1 renders a binary tree layout for Heap Sort (see Section 4.4, Tree Visualizati
 
 **Visual effect:** The learner sees 2–3 tree nodes and their connecting edges flash orange together, drawing attention to the specific parent-child relationship being evaluated. The combination of persistent tree edges (structural context) and transient T3 highlights (operational focus) gives the learner both the global tree shape and the local sift-down action simultaneously.
 
-**Distinction from boundary T3 ticks:** Boundary T3 ticks highlight a contiguous range (`0..heap_size-1`) and appear once per extraction step. Logical Tree Highlight T3 ticks highlight a non-contiguous parent-child group and appear before each sift-down level's comparisons. Both use the same T3 tick type and accent color; the viewer distinguishes them by the highlight pattern (contiguous = boundary, scattered = tree relationship).
+**Distinction from boundary T3 ticks:** Boundary T3 ticks highlight the active heap range (`0..heap_size-1`) and appear once per extraction step. Logical Tree Highlight T3 ticks highlight a parent-child group and appear before each sift-down level's comparisons. Both use the same T3 tick type and accent color; the viewer distinguishes them by **message prefix** (D-081): `"Active heap"` = boundary (sweep), `"Evaluating tree level"` = logical tree (flash). Note: highlight-set contiguity is **not** a reliable discriminator because Logical Tree T3 at parent=0 produces contiguous tuples that match boundary shape.
 
 ### 6.2 Extraction Swap Visual Distinction (v1 Required)
 

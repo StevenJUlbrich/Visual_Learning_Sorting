@@ -166,7 +166,7 @@ Every pack entry is **deterministic**: file paths are explicit, decision IDs are
 **Notes:**
 - **The tests must reproduce the CLAUDE.md counter table exactly.** Any deviation is a Phase 2 bug, not a test bug.
 - **TC-A14** is the Insertion Sort terminating-compare truth-table test. Uses the per-pass expectations from `00_PSEUDOCODE.md §3`.
-- **TC-A19** requires a helper that segments the Heap trace into sift-down levels by T3 contiguity. The helper skeleton is given in the test plan; do not reinvent it.
+- **TC-A19** requires a helper that segments the Heap trace into sift-down levels by T3 **message prefix** (D-081). Do not use contiguity — it fails for parent=0 sift-downs. The helper skeleton is given in the test plan; do not reinvent it.
 - Runs headlessly — no `pygame.display` required for model tests.
 
 ---
@@ -437,9 +437,4 @@ This section exists because the mempalace experiment failed partly from the abse
 
 This document is living. When to amend:
 
-1. **New phase added to `13_IMPLEMENTATION_ORDER.md`** → new pack here.
-2. **New locked decision in `DECISIONS.md`** → cite it in the relevant pack's Decision IDs section.
-3. **Superseded decision** → remove the old ID from all packs; add to Supersession Index in `DECISIONS.md`.
-4. **Coverage miss** → adjust the affected pack; record the mismatch and the fix in DEVLOG.
-
-Amendments follow the same rule as all other spec changes: they must be entered deliberately and dated in DEVLOG, not drifted in.
+1. **New phase added to `13_IMPLEMENTATION_ORDER.md`** → new pack here
