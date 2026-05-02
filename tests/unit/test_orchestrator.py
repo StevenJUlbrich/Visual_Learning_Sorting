@@ -18,6 +18,7 @@ from visualizer.controllers.orchestrator import (
     Orchestrator,
     PanelContext,
     PanelState,
+    compute_sprite_moves,
     get_duration,
 )
 from visualizer.models.contracts import BaseSortAlgorithm, OpType, SortResult
@@ -149,7 +150,7 @@ def test_get_duration_failure() -> None:
 
 @pytest.fixture
 def ctx() -> PanelContext:
-    return PanelContext("Bubble Sort", "O(n²)")
+    return PanelContext("Bubble Sort", "O(n²)", 7)
 
 
 @pytest.mark.unit
@@ -640,3 +641,205 @@ def test_failure_isolation_other_panels_continue() -> None:
     orch.update(1)  # ok fetches terminal → COMPLETED
     assert ctx_fail.state == PanelState.FAILED
     assert ctx_ok.state == PanelState.COMPLETED
+
+
+# ---------------------------------------------------------------------------
+# Group 13 — compute_sprite_moves unit tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_no_change_returns_empty_dict() -> None:
+    slot_mapping = [0, 1, 2]
+    result = compute_sprite_moves([1, 2, 3], [1, 2, 3], slot_mapping)
+    assert result == {}
+    assert slot_mapping == [0, 1, 2]
+
+
+@pytest.mark.unit
+def test_swap_two_adjacent_indices() -> None:
+    # Swap indices 1 and 2: [4,7,2] → [4,2,7]
+    old_state = [4, 7, 2, 6, 1, 5, 3]
+    new_state = [4, 2, 7, 6, 1, 5, 3]
+    slot_mapping = list(range(7))
+    result = compute_sprite_moves(old_state, new_state, slot_mapping)
+    assert result == {1: 2, 2: 1}
+    assert slot_mapping == [0, 2, 1, 3, 4, 5, 6]
+
+
+@pytest.mark.unit
+def test_swap_non_adjacent_indices() -> None:
+    # Swap indices 0 and 5: [4,...,5,...] → [5,...,4,...]
+    old_state = [4, 7, 2, 6, 1, 5, 3]
+    new_state = [5, 7, 2, 6, 1, 4, 3]
+    slot_mapping = list(range(7))
+    result = compute_sprite_moves(old_state, new_state, slot_mapping)
+    assert result == {0: 5, 5: 0}
+    assert slot_mapping == [5, 1, 2, 3, 4, 0, 6]
+
+
+@pytest.mark.unit
+def test_shift_single_element_rightward() -> None:
+    # Rightward shift: arr[3] = arr[2] (value 5 at index 2 copied to index 3)
+    old_state = [1, 2, 5, 3, 4]
+    new_state = [1, 2, 5, 5, 4]  # only index 3 changed: 3 → 5
+    slot_mapping = list(range(5))
+    result = compute_sprite_moves(old_state, new_state, slot_mapping)
+    assert result == {2: 3, 3: 2}
+    assert slot_mapping == [0, 1, 3, 2, 4]
+
+
+@pytest.mark.unit
+def test_sequential_swaps_cumulative_mapping() -> None:
+    # First swap: indices 0,1 → [2,1,3]
+    slot_mapping = [0, 1, 2]
+    compute_sprite_moves([1, 2, 3], [2, 1, 3], slot_mapping)
+    assert slot_mapping == [1, 0, 2]
+    # Second swap: indices 1,2 → [2,3,1]
+    compute_sprite_moves([2, 1, 3], [2, 3, 1], slot_mapping)
+    assert slot_mapping == [1, 2, 0]
+
+
+@pytest.mark.unit
+def test_full_sort_identity_preserved() -> None:
+    from visualizer.models.bubble import BubbleSort
+
+    algo = BubbleSort([4, 7, 2, 6, 1, 5, 3])
+    slot_mapping = list(range(7))
+    prev = [4, 7, 2, 6, 1, 5, 3]
+    for tick in algo.sort_generator():
+        if tick.array_state is not None:
+            compute_sprite_moves(prev, tick.array_state, slot_mapping)
+            prev = tick.array_state
+    assert sorted(slot_mapping) == list(range(7))
+    assert len(set(slot_mapping)) == 7
+
+
+@pytest.mark.unit
+def test_slot_to_sprite_id_mutated_in_place() -> None:
+    slot_mapping = [0, 1, 2]
+    original_id = id(slot_mapping)
+    compute_sprite_moves([1, 2, 3], [2, 1, 3], slot_mapping)
+    assert id(slot_mapping) == original_id
+
+
+# ---------------------------------------------------------------------------
+# Group 14 — PanelContext new fields
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_context_has_slot_mapping() -> None:
+    ctx = PanelContext("Test", "O(n)", 7)
+    assert ctx.slot_to_sprite_id == list(range(7))
+
+
+@pytest.mark.unit
+def test_context_has_sprite_moves() -> None:
+    ctx = PanelContext("Test", "O(n)", 7)
+    assert ctx.sprite_moves == {}
+
+
+@pytest.mark.unit
+def test_context_reset_restores_slot_mapping() -> None:
+    ctx = PanelContext("Test", "O(n)", 3)
+    ctx.slot_to_sprite_id = [2, 0, 1]
+    ctx.reset()
+    assert ctx.slot_to_sprite_id == [0, 1, 2]
+
+
+@pytest.mark.unit
+def test_context_reset_clears_sprite_moves() -> None:
+    ctx = PanelContext("Test", "O(n)", 3)
+    ctx.sprite_moves = {0: 2, 2: 0}
+    ctx.reset()
+    assert ctx.sprite_moves == {}
+
+
+# ---------------------------------------------------------------------------
+# Group 15 — Integration with update(dt)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_swap_tick_populates_sprite_moves() -> None:
+    # SWAP: indices 0 and 1 exchange in a 3-element array
+    swap_tick = SortResult(
+        success=True,
+        message="swap",
+        operation_type=OpType.SWAP,
+        array_state=[2, 1, 3],
+        highlight_indices=(0, 1),
+    )
+    mock = MockAlgorithm([swap_tick, _terminal_tick()], data=[1, 2, 3])
+    orch = Orchestrator([mock], [1, 2, 3])
+    ctx = orch.panels[0]
+    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.update(1)
+    assert len(ctx.sprite_moves) == 2
+    assert ctx.sprite_moves[0] == 1
+    assert ctx.sprite_moves[1] == 0
+
+
+@pytest.mark.unit
+def test_range_tick_empty_sprite_moves() -> None:
+    # RANGE tick has same array_state as previous → no delta
+    range_tick = _progress_tick(OpType.RANGE, array_state=[1, 2, 3])
+    mock = MockAlgorithm([range_tick, _terminal_tick()], data=[1, 2, 3])
+    orch = Orchestrator([mock], [1, 2, 3])
+    ctx = orch.panels[0]
+    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.update(1)
+    assert ctx.sprite_moves == {}
+
+
+@pytest.mark.unit
+def test_terminal_tick_no_sprite_moves() -> None:
+    mock = MockAlgorithm([_terminal_tick()], data=[1, 2, 3])
+    orch = Orchestrator([mock], [1, 2, 3])
+    ctx = orch.panels[0]
+    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.update(1)
+    assert ctx.sprite_moves == {}
+
+
+@pytest.mark.unit
+def test_failure_tick_no_sprite_moves() -> None:
+    mock = MockAlgorithm([_failure_tick()], data=[1, 2, 3])
+    orch = Orchestrator([mock], [1, 2, 3])
+    ctx = orch.panels[0]
+    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.update(1)
+    assert ctx.sprite_moves == {}
+
+
+@pytest.mark.unit
+def test_sprite_moves_reflects_only_current_tick() -> None:
+    # Two SWAP ticks: second tick's moves should not accumulate first tick's moves
+    tick1 = SortResult(
+        success=True,
+        message="swap1",
+        operation_type=OpType.SWAP,
+        array_state=[2, 1, 3],
+        highlight_indices=(0, 1),
+    )
+    tick2 = SortResult(
+        success=True,
+        message="swap2",
+        operation_type=OpType.SWAP,
+        array_state=[2, 3, 1],
+        highlight_indices=(1, 2),
+    )
+    mock = MockAlgorithm([tick1, tick2, _terminal_tick()], data=[1, 2, 3])
+    orch = Orchestrator([mock], [1, 2, 3])
+    ctx = orch.panels[0]
+    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.update(1)  # fetch tick1 → sprite_moves for indices 0,1
+    orch.update(500)  # drain
+    orch.update(1)  # fetch tick2 → sprite_moves for indices 1,2 only
+    # After tick2: slot_mapping is [1, 2, 0] (cumulative)
+    # tick2 delta: old=[2,1,3] new=[2,3,1] → changed indices 1,2
+    # sprite at slot 1 in current mapping = slot_mapping[1] = 2 (sprite 2 from tick1 exchange)
+    # sprite at slot 2 in current mapping = slot_mapping[2] = 0 (sprite 0, unchanged from tick1)
+    # So sprite_moves = {2: 2, 0: 1}  ← only 2 entries, not 4
+    assert len(ctx.sprite_moves) == 2

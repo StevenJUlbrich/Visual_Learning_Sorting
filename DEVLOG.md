@@ -44,6 +44,48 @@ Phase 6c: Sprite identity delta computation.
 
 ---
 
+## 2026-05-02 14:57 — Phase 6c closed: Sprite identity delta computation (post-action)
+
+### Worked on
+
+Added `compute_sprite_moves()` pure function to `orchestrator.py`: compares old/new array snapshots index-by-index, finds changed indices, exchanges sprite IDs in `slot_to_sprite_id` (mutated in place), returns `{sprite_id: new_slot}`. Handles 0 changes (RANGE/COMPARE, no-op), 2 changes (SWAP — exchange at the two slots), and 1 change (Insertion Sort rightward shift — infer source from idx-1 via value equality, exchange; placement ticks at idx=0 or non-inferrable return `{}`). Never matches by value (Trap A). Added three new `PanelContext` fields: `array_size` (preserved across reset), `slot_to_sprite_id` (reset to `range(array_size)`), `sprite_moves` (reset to `{}`). Updated `Orchestrator.__init__` to pass `len(algo.data)`. Wired delta call into `update(dt)` immediately after `ctx.current_tick = tick`, before `previous_array_state` is advanced. Added 16 new tests: Groups 13 (7 pure-function), 14 (4 context fields), 15 (5 integration).
+
+### Corrections
+
+One ruff `format` correction in `test_orchestrator.py` (whitespace). Zero logic corrections.
+
+### Note on spec deviation
+
+The spec plan stated "SHIFT tick always changes exactly 2 adjacent indices." Actual `InsertionSort` generator yields `list(arr)` *after* `arr[j+1] = arr[j]`, producing exactly 1 changed index (only `j+1` mutates; `j` retains its old value). The 1-change path uses a rightward-shift inference (`new_state[idx] == old_state[idx-1]`) to correctly exchange sprite IDs at `(idx-1, idx)`. Placement ticks (key drop to final slot) return `{}` because the key sprite was already tracked at the target slot via prior shift exchanges.
+
+### Results
+
+- `uv run pytest tests/unit/test_orchestrator.py -v`: **71/71 PASSED** (first run, zero logic corrections)
+- `uv run pytest tests/unit/ -v`: **306/306 PASSED** (cumulative)
+- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright`: **0 errors, 0 warnings** (31 pre-existing `pytest.approx` warnings in other test files, unchanged)
+- `uv run ruff check` + `uv run ruff format --check` on changed files: **clean**
+
+### Next
+
+Phase 6d — Play/Pause/Step/Restart.
+
+---
+
+## 2026-05-02 14:48 — Phase 6c pre-action: Sprite identity delta computation
+
+### Plan
+
+Add sprite identity delta computation to orchestrator.py. Pure function compute_sprite_moves(old_state, new_state, slot_to_sprite_id) compares consecutive array snapshots, identifies changed indices, looks up sprite IDs from slot_to_sprite_id mapping, exchanges them, and returns {sprite_id: new_slot} dict. Never matches by value (doc 12 §1, Trap A). New PanelContext fields: slot_to_sprite_id (list[int]), sprite_moves (dict[int,int]), array_size (int). Integration into update(dt) between tick fetch and previous_array_state update. D-060 guarantees every SHIFT tick changes exactly 2 indices, so delta logic is structurally identical for SWAP and SHIFT. Tests: ~16-20 new tests across Groups 13-15 (pure function, context fields, update integration).
+
+### Exit criteria
+
+1. pytest test_orchestrator.py — all pass
+2. pytest tests/unit/ — cumulative pass
+3. pyright — 0 errors, 0 warnings
+4. ruff — clean
+
+---
+
 ## 2026-05-01 11:20 — Phase 6b pre-action: update(dt) core loop
 
 ### Plan

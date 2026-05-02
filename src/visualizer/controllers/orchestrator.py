@@ -3,7 +3,7 @@
 This module is built in sub-phases:
   6a — PanelState enum, duration constants, PanelContext container, get_duration()
   6b — Orchestrator class: update(dt) core loop, state machine, cadence lifecycle
-  6c — Sprite identity delta computation
+  6c — Sprite identity delta: compute_sprite_moves(), slot_to_sprite_id, sprite_moves
   6d — Play/Pause/Step/Restart
 
 References:
@@ -80,6 +80,49 @@ def get_duration(op_type: OpType, sift_down_cadence: bool = False) -> int:
 
 
 # ---------------------------------------------------------------------------
+# Sprite identity delta computation
+# ---------------------------------------------------------------------------
+
+
+def compute_sprite_moves(
+    old_state: list[int],
+    new_state: list[int],
+    slot_to_sprite_id: list[int],
+) -> dict[int, int]:
+    """Return {sprite_id: new_slot} for moved sprites; mutate slot_to_sprite_id in place.
+
+    Never identifies sprites by value — uses slot-position delta (doc 12 §1, Trap A).
+    """
+    changed = [i for i in range(len(old_state)) if old_state[i] != new_state[i]]
+
+    if len(changed) == 0:
+        return {}
+
+    if len(changed) == 2:
+        i, j = changed[0], changed[1]
+        sprite_a = slot_to_sprite_id[i]
+        sprite_b = slot_to_sprite_id[j]
+        slot_to_sprite_id[i] = sprite_b
+        slot_to_sprite_id[j] = sprite_a
+        return {sprite_a: j, sprite_b: i}
+
+    if len(changed) == 1:
+        idx = changed[0]
+        # Insertion Sort rightward shift: arr[idx] = arr[idx-1].
+        # Value from idx-1 moved to idx; sprite at idx goes to the gap slot idx-1.
+        if idx > 0 and new_state[idx] == old_state[idx - 1]:
+            sprite_a = slot_to_sprite_id[idx - 1]
+            sprite_b = slot_to_sprite_id[idx]
+            slot_to_sprite_id[idx - 1] = sprite_b
+            slot_to_sprite_id[idx] = sprite_a
+            return {sprite_a: idx, sprite_b: idx - 1}
+        # Placement tick (key drops to slot already tracked) — no reassignment needed.
+        return {}
+
+    return {}
+
+
+# ---------------------------------------------------------------------------
 # Per-panel state container
 # ---------------------------------------------------------------------------
 
@@ -92,9 +135,10 @@ class PanelContext:
     algorithm_name and complexity are preserved across reset().
     """
 
-    def __init__(self, algorithm_name: str, complexity: str) -> None:
+    def __init__(self, algorithm_name: str, complexity: str, array_size: int) -> None:
         self.algorithm_name: str = algorithm_name
         self.complexity: str = complexity
+        self.array_size: int = array_size
         self.state: PanelState = PanelState.IDLE_PAUSED
         self.current_operation_remaining_ms: int = 0
         self.elapsed_time_ms: int = 0
@@ -106,6 +150,8 @@ class PanelContext:
         self.current_tick: SortResult | None = None
         self.previous_array_state: list[int] | None = None
         self.extraction_pending: bool = False
+        self.slot_to_sprite_id: list[int] = list(range(array_size))
+        self.sprite_moves: dict[int, int] = {}
 
     def reset(self) -> None:
         """Restore all runtime fields to initial defaults; preserve identity."""
@@ -120,6 +166,8 @@ class PanelContext:
         self.current_tick = None
         self.previous_array_state = None
         self.extraction_pending = False
+        self.slot_to_sprite_id = list(range(self.array_size))
+        self.sprite_moves = {}
 
 
 # ---------------------------------------------------------------------------
@@ -133,8 +181,8 @@ class Orchestrator:
     Each panel has its own PanelContext, generator, and timing state.
     update(dt) is called once per frame by the event loop.
 
-    Phase 6b scope: core loop only. Play/Pause/Step/Restart (6d) and
-    sprite identity delta (6c) are added in subsequent sub-phases.
+    Phase 6b/6c scope: core loop + sprite identity delta.
+    Play/Pause/Step/Restart (6d) is added in the next sub-phase.
 
     Spec: doc 02 (state machine), doc 06 (timing), doc 12 §2 (durations).
     """
@@ -150,7 +198,7 @@ class Orchestrator:
         self._algorithms: list[BaseSortAlgorithm] = list(algorithms)
 
         for algo in algorithms:
-            ctx = PanelContext(algo.name, algo.complexity)
+            ctx = PanelContext(algo.name, algo.complexity, len(algo.data))
             ctx.previous_array_state = algo.data.copy()
             self._panels.append(ctx)
             self._generators.append(algo.sort_generator())
@@ -192,6 +240,14 @@ class Orchestrator:
                     continue
 
                 ctx.current_tick = tick
+
+                # Sprite identity delta (6c)
+                if tick.array_state is not None and ctx.previous_array_state is not None:
+                    ctx.sprite_moves = compute_sprite_moves(
+                        ctx.previous_array_state, tick.array_state, ctx.slot_to_sprite_id
+                    )
+                else:
+                    ctx.sprite_moves = {}
 
                 if tick.operation_type == OpType.TERMINAL:
                     ctx.state = PanelState.COMPLETED
