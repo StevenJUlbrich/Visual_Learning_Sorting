@@ -96,6 +96,44 @@ Phase 6e — Integration tests (TC-A4, A6, A15, A16, A17, A18).
 
 ---
 
+## 2026-05-02 18:15 — Phase 6e closed: Controller integration tests (post-action)
+
+### Worked on
+
+Created `tests/integration/` package (`__init__.py` + `test_orchestrator_integration.py`). Seven `@pytest.mark.integration` tests using real algorithm generators: TC-A4 (independent queues — `elapsed_time_ms == 8_200` for Bubble Sort with default_7: 20 COMPARE×150ms + 13 SWAP×400ms; no RANGE ticks in Bubble Sort); TC-A6 (fairness — all 4 panels COMPLETED, `comparisons > 0`, `step_count > 0`); TC-A15 (state machine happy path — IDLE_PAUSED → play → WAITING → ANIMATING(150ms) → drain → WAITING → ANIMATING(400ms) → drain → WAITING → TERMINAL → COMPLETED; elapsed frozen at 550ms); TC-A16 (failure isolation — `FailingAlgorithm` helper yields FAILURE, healthy BubbleSort panel reaches COMPLETED independently); TC-A17 (pause freezes state — 100 updates while paused leave `remaining_ms` and `elapsed_time_ms` unchanged, resume drains correctly); TC-A18 (restart resets all — counters/state zeroed, re-run yields `comparisons==20, writes==26` for Bubble Sort); counter accuracy (all 4 algorithms match CLAUDE.md table: Bubble 20/26, Selection 21/10, Insertion 17/19, Heap 20/30/35 + `step_count==35`).
+
+### Corrections
+
+Two ruff corrections: RUF002 (Unicode multiplication sign `×` in docstring, replaced with `x`), I001 (import sort). Zero logic fixes.
+
+### Results
+
+- `uv run pytest tests/integration/ -v`: **7/7 PASSED** (first run after ruff corrections)
+- `uv run pytest tests/ -q`: **339/339 PASSED** (cumulative)
+- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright`: **0 errors, 0 warnings** (31 pre-existing `pytest.approx` warnings unchanged)
+- `uv run ruff check` + `uv run ruff format --check` on changed files: **clean**
+
+### Next
+
+Phase 7 — Main event loop and Pygame rendering integration.
+
+---
+
+## 2026-05-02 17:30 — Phase 6e pre-action: Controller integration tests
+
+### Plan
+
+Create `tests/integration/` package and `test_orchestrator_integration.py` with 7 `@pytest.mark.integration` tests using real algorithm generators (no mocks). Tests cover: TC-A4 (independent queues — Bubble Sort `elapsed_time_ms == 8200` exact; 20 compares x 150ms + 13 swaps x 400ms = 8200ms), TC-A6 (fairness — all 4 panels reach COMPLETED, no starvation, `comparisons > 0`, `step_count > 0`), TC-A15 (state machine happy path — IDLE_PAUSED → play() → WAITING → update → ANIMATING → drain → WAITING → ... → COMPLETED; elapsed frozen after COMPLETED), TC-A16 (failure isolation — `FailingAlgorithm` helper yields FAILURE immediately; healthy panel still reaches COMPLETED), TC-A17 (pause freezes state — `remaining_ms` and `elapsed_time_ms` unchanged across 100 update calls while paused), TC-A18 (restart resets all — advance some ticks, restart(), counters/state zeroed, runs to completion again; Bubble `comparisons==20`, `writes==26`), and counter accuracy (all 4 algorithms match CLAUDE.md table: Bubble 20/26, Selection 21/10, Insertion 17/19, Heap 20/30/35). No mock generators — tests use real sort generators, so timing assertions use exact integer ms arithmetic (no `pytest.approx`). Integration marker `@pytest.mark.integration` applied to all tests.
+
+### Exit criteria
+
+1. pytest tests/integration/ — all 7 pass
+2. pytest tests/ — cumulative ~339 pass
+3. pyright — 0 errors, 0 warnings
+4. ruff — clean
+
+---
+
 ## 2026-05-02 15:30 — Phase 6d pre-action: Play/Pause/Step/Restart
 
 ### Plan

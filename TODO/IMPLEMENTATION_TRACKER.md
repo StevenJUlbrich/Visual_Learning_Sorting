@@ -228,12 +228,12 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 **Depends on:** Phase 6, Phase 7
 **Output:** `tests/integration/test_{controller,panel_state,timer}.py`
 
-- [ ] **TC-A4** Controller independent queues and timers (integer ms arithmetic)
-- [ ] **TC-A6** Controller fairness (no starvation across 4 generators)
-- [ ] **TC-A15** Panel state machine transitions (happy path)
-- [ ] **TC-A16** Panel state machine failure isolation
-- [ ] **TC-A17** Pause freezes interpolation state
-- [ ] **TC-A18** Restart resets all state
+- [x] **TC-A4** Controller independent queues and timers (integer ms arithmetic) — (Delivered as Phase 6e — controller integration tests do not require Phase 7)
+- [x] **TC-A6** Controller fairness (no starvation across 4 generators) — (Delivered as Phase 6e)
+- [x] **TC-A15** Panel state machine transitions (happy path) — (Delivered as Phase 6e)
+- [x] **TC-A16** Panel state machine failure isolation — (Delivered as Phase 6e)
+- [x] **TC-A17** Pause freezes interpolation state — (Delivered as Phase 6e)
+- [x] **TC-A18** Restart resets all state — (Delivered as Phase 6e)
 
 ---
 

@@ -142,5 +142,6 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 - Phase 6b: `orchestrator.py` — Orchestrator class, update(dt) core loop, state machine, cadence lifecycle (27 tests); cumulative 290/290
 - Phase 6c: `orchestrator.py` — compute_sprite_moves() pure function, slot_to_sprite_id mapping, sprite_moves dict, PanelContext.array_size (16 tests); cumulative 306/306
 - Phase 6d: `orchestrator.py` — play(), pause(), step(), restart(), is_running/is_stepping properties, _running/_stepping guards, _algorithm_classes for restart re-instantiation (26 tests); cumulative 332/332
+- Phase 6e: `tests/integration/test_orchestrator_integration.py` — TC-A4/A6/A15/A16/A17/A18 + counter accuracy, FailingAlgorithm helper (7 tests); cumulative 339/339
 
-**Next:** Phase 6e — Integration tests (TC-A4, A6, A15, A16, A17, A18).
+**Next:** Phase 7 — Main event loop and Pygame rendering integration.
