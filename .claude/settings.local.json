@@ -46,7 +46,9 @@
       "Bash(gh pr *)",
       "Bash(git rebase *)",
       "Bash(git stash *)",
-      "Bash(xargs ls *)"
+      "Bash(xargs ls *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
     ]
   },
   "outputStyle": "default"
