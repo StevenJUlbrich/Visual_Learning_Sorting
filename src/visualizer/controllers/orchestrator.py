@@ -1,4 +1,4 @@
-"""Controller / Orchestrator -- Phases 6a-6b.
+"""Controller / Orchestrator -- Phases 6a-6d.
 
 This module is built in sub-phases:
   6a — PanelState enum, duration constants, PanelContext container, get_duration()
@@ -196,6 +196,9 @@ class Orchestrator:
         self._panels: list[PanelContext] = []
         self._generators: list[Iterator[SortResult] | None] = []
         self._algorithms: list[BaseSortAlgorithm] = list(algorithms)
+        self._running: bool = False
+        self._stepping: bool = False
+        self._algorithm_classes: list[type[BaseSortAlgorithm]] = [type(a) for a in algorithms]
 
         for algo in algorithms:
             ctx = PanelContext(algo.name, algo.complexity, len(algo.data))
@@ -215,6 +218,9 @@ class Orchestrator:
         ANIMATING counts down; WAITING fetches the next tick. Never both in
         the same frame (the `continue` after ANIMATING enforces this).
         """
+        if not self._running and not self._stepping:
+            return
+
         for i, ctx in enumerate(self._panels):
             if not ctx.is_active:
                 continue
@@ -224,7 +230,11 @@ class Orchestrator:
             if ctx.state == PanelState.ANIMATING_OPERATION:
                 ctx.current_operation_remaining_ms -= dt
                 if ctx.current_operation_remaining_ms <= 0:
-                    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+                    ctx.state = (
+                        PanelState.IDLE_PAUSED
+                        if self._stepping
+                        else PanelState.WAITING_FOR_NEXT_TICK
+                    )
                 continue  # Don't also fetch in the same frame
 
             if ctx.state == PanelState.WAITING_FOR_NEXT_TICK:
@@ -283,6 +293,62 @@ class Orchestrator:
                 # Sift-down cadence lifecycle (Heap Sort only)
                 if ctx.algorithm_name == "Heap Sort":
                     self._update_heap_cadence(ctx, tick)
+
+        # Step completion: clear _stepping once every active panel is IDLE_PAUSED
+        if self._stepping:
+            still_mid_step = any(
+                ctx.is_active and ctx.state != PanelState.IDLE_PAUSED for ctx in self._panels
+            )
+            if not still_mid_step:
+                self._stepping = False
+
+    # ---------------------------------------------------------------------------
+    # Playback controls (6d)
+    # ---------------------------------------------------------------------------
+
+    @property
+    def is_running(self) -> bool:
+        """True while play mode is active."""
+        return self._running
+
+    @property
+    def is_stepping(self) -> bool:
+        """True while a single-step is in progress."""
+        return self._stepping
+
+    def play(self) -> None:
+        """Start continuous playback; ignored while a step is in progress."""
+        if self._stepping:
+            return
+        self._running = True
+        for ctx in self._panels:
+            if ctx.is_active and ctx.state == PanelState.IDLE_PAUSED:
+                ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+
+    def pause(self) -> None:
+        """Freeze all panels; preserves mid-animation positions and timers."""
+        self._running = False
+
+    def step(self) -> None:
+        """Advance each active panel one tick; ignored while running or mid-step."""
+        if self._running or self._stepping:
+            return
+        self._stepping = True
+        for ctx in self._panels:
+            if ctx.is_active and ctx.state == PanelState.IDLE_PAUSED:
+                ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+
+    def restart(self) -> None:
+        """Reset all panels and generators to initial state; enter IDLE_PAUSED."""
+        self._running = False
+        self._stepping = False
+        for i in range(len(self._panels)):
+            cls = self._algorithm_classes[i]
+            algo = cls(self._initial_array)  # type: ignore[call-arg]
+            self._algorithms[i] = algo
+            self._panels[i].reset()
+            self._panels[i].previous_array_state = algo.data.copy()
+            self._generators[i] = algo.sort_generator()
 
     def _update_heap_cadence(self, ctx: PanelContext, tick: SortResult) -> None:
         """Update sift-down cadence flag based on Heap Sort tick type.

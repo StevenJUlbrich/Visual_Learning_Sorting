@@ -71,6 +71,46 @@ Phase 6d — Play/Pause/Step/Restart.
 
 ---
 
+## 2026-05-02 16:45 — Phase 6d closed: Play/Pause/Step/Restart (post-action)
+
+### Worked on
+
+Added playback controls to `src/visualizer/controllers/orchestrator.py`: three new `Orchestrator.__init__` fields (`_running`, `_stepping`, `_algorithm_classes`); guard at top of `update(dt)` (`if not _running and not _stepping: return`); modified ANIMATING drain to go `IDLE_PAUSED` instead of `WAITING_FOR_NEXT_TICK` when `_stepping`; step completion check after the panel loop (clears `_stepping` once all active panels are `IDLE_PAUSED`); four new public methods: `play()` (sets `_running=True`, transitions `IDLE_PAUSED→WAITING`; ignored while stepping), `pause()` (clears `_running`), `step()` (sets `_stepping=True`, transitions `IDLE_PAUSED→WAITING`; ignored while running or mid-step), `restart()` (re-instantiates algorithms from stored classes + `_initial_array`, resets all `PanelContext`s, re-seeds generators); `is_running` and `is_stepping` read-only properties.
+
+Updated `tests/unit/test_orchestrator.py`: added `SimpleAlgorithm` concrete helper (takes only `data`; used for restart tests since `MockAlgorithm.__init__` takes extra params); added 26 new tests across Groups 16-20 (play, pause, step, restart, initial-state/guard); retrofitted all pre-6d tests that called `update()` to use `orch.play()` instead of `orch._running = True` (eliminates `reportPrivateUsage` errors).
+
+### Corrections
+
+One ruff format correction in both files. Zero logic fixes. Pre-6d tests retrofitted to use `play()` to eliminate 27 pyright `reportPrivateUsage` errors — no semantic change to those tests.
+
+### Results
+
+- `uv run pytest tests/unit/test_orchestrator.py -v`: **97/97 PASSED** (first run after ruff format; zero logic corrections)
+- `uv run pytest tests/unit/ -v`: **332/332 PASSED** (cumulative)
+- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright`: **0 errors, 0 warnings** (31 pre-existing `pytest.approx` warnings in other test files, unchanged)
+- `uv run ruff check` + `uv run ruff format --check` on changed files: **clean**
+
+### Next
+
+Phase 6e — Integration tests (TC-A4, A6, A15, A16, A17, A18).
+
+---
+
+## 2026-05-02 15:30 — Phase 6d pre-action: Play/Pause/Step/Restart
+
+### Plan
+
+Add play/pause/step/restart controls to Orchestrator. Global `_running` bool gates update(dt) processing — pause simply sets it False, preserving panel states (ANIMATING timers, WAITING) exactly as-is. Play sets True and transitions IDLE_PAUSED → WAITING. Step uses a `_stepping` flag: transitions active IDLE_PAUSED → WAITING, lets update(dt) process normally, but ANIMATING drain goes to IDLE_PAUSED instead of WAITING. When no active panel is still mid-step (all IDLE_PAUSED, COMPLETED, or FAILED), _stepping clears. Step input rejected while _running or _stepping. Restart re-instantiates algorithms from stored classes + initial_array, resets PanelContexts (including slot_to_sprite_id and sprite_moves from 6c), re-seeds generators and previous_array_state. Tests: ~15-20 new tests across Groups 16-19 (play, pause, step, restart).
+
+### Exit criteria
+
+1. pytest test_orchestrator.py — all pass
+2. pytest tests/unit/ — cumulative pass
+3. pyright — 0 errors, 0 warnings
+4. ruff — clean
+
+---
+
 ## 2026-05-02 14:48 — Phase 6c pre-action: Sprite identity delta computation
 
 ### Plan

@@ -307,7 +307,7 @@ def test_update_skips_idle_paused() -> None:
 def test_waiting_fetches_tick_transitions_to_animating() -> None:
     mock = MockAlgorithm([_progress_tick(OpType.COMPARE), _terminal_tick()])
     orch = Orchestrator([mock], [1, 2, 3])
-    orch.panels[0].state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)
     assert orch.panels[0].state == PanelState.ANIMATING_OPERATION
 
@@ -316,6 +316,7 @@ def test_waiting_fetches_tick_transitions_to_animating() -> None:
 def test_animating_decrements_remaining() -> None:
     mock = MockAlgorithm([_progress_tick(OpType.COMPARE), _terminal_tick()])
     orch = Orchestrator([mock], [1, 2, 3])
+    orch.play()
     ctx = orch.panels[0]
     ctx.state = PanelState.ANIMATING_OPERATION
     ctx.current_operation_remaining_ms = 150
@@ -327,6 +328,7 @@ def test_animating_decrements_remaining() -> None:
 def test_animating_to_waiting_when_remaining_zero() -> None:
     mock = MockAlgorithm([_progress_tick(OpType.COMPARE), _terminal_tick()])
     orch = Orchestrator([mock], [1, 2, 3])
+    orch.play()
     ctx = orch.panels[0]
     ctx.state = PanelState.ANIMATING_OPERATION
     ctx.current_operation_remaining_ms = 33
@@ -338,6 +340,7 @@ def test_animating_to_waiting_when_remaining_zero() -> None:
 def test_animating_to_waiting_on_overshoot() -> None:
     mock = MockAlgorithm([_progress_tick(OpType.COMPARE), _terminal_tick()])
     orch = Orchestrator([mock], [1, 2, 3])
+    orch.play()
     ctx = orch.panels[0]
     ctx.state = PanelState.ANIMATING_OPERATION
     ctx.current_operation_remaining_ms = 33
@@ -350,7 +353,7 @@ def test_terminal_tick_transitions_to_completed() -> None:
     mock = MockAlgorithm([_terminal_tick()])
     orch = Orchestrator([mock], [1, 2, 3])
     ctx = orch.panels[0]
-    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)
     assert ctx.state == PanelState.COMPLETED
     assert ctx.is_active is False
@@ -361,7 +364,7 @@ def test_failure_tick_transitions_to_failed() -> None:
     mock = MockAlgorithm([_failure_tick()])
     orch = Orchestrator([mock], [1, 2, 3])
     ctx = orch.panels[0]
-    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)
     assert ctx.state == PanelState.FAILED
     assert ctx.is_active is False
@@ -388,7 +391,7 @@ def test_elapsed_time_accumulates_compare_duration() -> None:
     mock = MockAlgorithm([_progress_tick(OpType.COMPARE), _terminal_tick()])
     orch = Orchestrator([mock], [1, 2, 3])
     ctx = orch.panels[0]
-    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)  # fetch compare → elapsed += 150
     assert ctx.elapsed_time_ms == 150
 
@@ -404,7 +407,7 @@ def test_elapsed_time_accumulates_multiple_ticks() -> None:
     mock = MockAlgorithm(ticks)
     orch = Orchestrator([mock], [1, 2, 3])
     ctx = orch.panels[0]
-    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)  # fetch compare → elapsed=150
     assert ctx.elapsed_time_ms == 150
     orch.update(200)  # drain → WAITING
@@ -420,7 +423,7 @@ def test_elapsed_time_freezes_on_completion() -> None:
     mock = MockAlgorithm([_progress_tick(OpType.COMPARE), _terminal_tick()])
     orch = Orchestrator([mock], [1, 2, 3])
     ctx = orch.panels[0]
-    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)  # fetch compare → elapsed=150
     orch.update(200)  # drain → WAITING
     orch.update(1)  # fetch terminal → COMPLETED
@@ -434,7 +437,7 @@ def test_elapsed_time_freezes_on_failure() -> None:
     mock = MockAlgorithm([_progress_tick(OpType.COMPARE), _failure_tick()])
     orch = Orchestrator([mock], [1, 2, 3])
     ctx = orch.panels[0]
-    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)  # fetch compare → elapsed=150
     orch.update(200)  # drain → WAITING
     orch.update(1)  # fetch failure → FAILED
@@ -453,7 +456,7 @@ def test_step_increments_on_compare() -> None:
     mock = MockAlgorithm([_progress_tick(OpType.COMPARE), _terminal_tick()])
     orch = Orchestrator([mock], [1, 2, 3])
     ctx = orch.panels[0]
-    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)
     assert ctx.step_count == 1
 
@@ -463,7 +466,7 @@ def test_step_increments_on_swap() -> None:
     mock = MockAlgorithm([_progress_tick(OpType.SWAP), _terminal_tick()])
     orch = Orchestrator([mock], [1, 2, 3])
     ctx = orch.panels[0]
-    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)
     assert ctx.step_count == 1
 
@@ -473,7 +476,7 @@ def test_step_excludes_range() -> None:
     mock = MockAlgorithm([_progress_tick(OpType.RANGE), _terminal_tick()])
     orch = Orchestrator([mock], [1, 2, 3])
     ctx = orch.panels[0]
-    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)
     assert ctx.step_count == 0
 
@@ -483,7 +486,7 @@ def test_step_excludes_terminal() -> None:
     mock = MockAlgorithm([_terminal_tick()])
     orch = Orchestrator([mock], [1, 2, 3])
     ctx = orch.panels[0]
-    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)
     assert ctx.step_count == 0
 
@@ -499,7 +502,7 @@ def test_comparisons_synced_from_algorithm() -> None:
     mock.comparisons = 5
     orch = Orchestrator([mock], [1, 2, 3])
     ctx = orch.panels[0]
-    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)
     assert ctx.comparisons == 5
 
@@ -510,7 +513,7 @@ def test_writes_synced_from_algorithm() -> None:
     mock.writes = 7
     orch = Orchestrator([mock], [1, 2, 3])
     ctx = orch.panels[0]
-    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)
     assert ctx.writes == 7
 
@@ -533,7 +536,7 @@ def test_boundary_t3_sets_extraction_pending() -> None:
     mock = MockAlgorithm([boundary, _terminal_tick()], name="Heap Sort")
     orch = Orchestrator([mock], [1, 2, 3])
     ctx = orch.panels[0]
-    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)  # fetch boundary T3
     assert ctx.extraction_pending is True
     assert ctx.sift_down_cadence is False
@@ -549,7 +552,7 @@ def test_swap_after_boundary_sets_cadence() -> None:
     mock = MockAlgorithm(ticks, name="Heap Sort")
     orch = Orchestrator([mock], [1, 2, 3])
     ctx = orch.panels[0]
-    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)  # fetch boundary T3 → extraction_pending=True
     orch.update(500)  # drain → WAITING
     orch.update(1)  # fetch swap → cadence=True, extraction_pending=False
@@ -569,7 +572,7 @@ def test_next_boundary_resets_cadence() -> None:
     mock = MockAlgorithm(ticks, name="Heap Sort")
     orch = Orchestrator([mock], [1, 2, 3])
     ctx = orch.panels[0]
-    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)  # fetch boundary T3 → extraction_pending=True
     orch.update(500)  # drain
     orch.update(1)  # fetch swap → cadence=True
@@ -591,7 +594,7 @@ def test_cadence_not_set_during_phase1() -> None:
     mock = MockAlgorithm(ticks, name="Heap Sort")
     orch = Orchestrator([mock], [1, 2, 3])
     ctx = orch.panels[0]
-    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)  # fetch logical-tree T3 (no extraction_pending set)
     orch.update(500)  # drain
     orch.update(1)  # fetch compare
@@ -611,7 +614,7 @@ def test_cadence_affects_duration_of_subsequent_ticks() -> None:
     mock = MockAlgorithm(ticks, name="Heap Sort")
     orch = Orchestrator([mock], [1, 2, 3])
     ctx = orch.panels[0]
-    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)  # fetch boundary T3 → 200ms, extraction_pending=True
     orch.update(500)  # drain → WAITING
     orch.update(1)  # fetch swap → 400ms (cadence False at call), cadence=True
@@ -632,8 +635,7 @@ def test_failure_isolation_other_panels_continue() -> None:
     orch = Orchestrator([mock_fail, mock_ok], [1, 2, 3])
     ctx_fail = orch.panels[0]
     ctx_ok = orch.panels[1]
-    ctx_fail.state = PanelState.WAITING_FOR_NEXT_TICK
-    ctx_ok.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)  # fail→FAILED, ok→ANIMATING
     assert ctx_fail.state == PanelState.FAILED
     assert ctx_ok.state == PanelState.ANIMATING_OPERATION
@@ -774,7 +776,7 @@ def test_swap_tick_populates_sprite_moves() -> None:
     mock = MockAlgorithm([swap_tick, _terminal_tick()], data=[1, 2, 3])
     orch = Orchestrator([mock], [1, 2, 3])
     ctx = orch.panels[0]
-    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)
     assert len(ctx.sprite_moves) == 2
     assert ctx.sprite_moves[0] == 1
@@ -788,7 +790,7 @@ def test_range_tick_empty_sprite_moves() -> None:
     mock = MockAlgorithm([range_tick, _terminal_tick()], data=[1, 2, 3])
     orch = Orchestrator([mock], [1, 2, 3])
     ctx = orch.panels[0]
-    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)
     assert ctx.sprite_moves == {}
 
@@ -798,7 +800,7 @@ def test_terminal_tick_no_sprite_moves() -> None:
     mock = MockAlgorithm([_terminal_tick()], data=[1, 2, 3])
     orch = Orchestrator([mock], [1, 2, 3])
     ctx = orch.panels[0]
-    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)
     assert ctx.sprite_moves == {}
 
@@ -808,7 +810,7 @@ def test_failure_tick_no_sprite_moves() -> None:
     mock = MockAlgorithm([_failure_tick()], data=[1, 2, 3])
     orch = Orchestrator([mock], [1, 2, 3])
     ctx = orch.panels[0]
-    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)
     assert ctx.sprite_moves == {}
 
@@ -833,7 +835,7 @@ def test_sprite_moves_reflects_only_current_tick() -> None:
     mock = MockAlgorithm([tick1, tick2, _terminal_tick()], data=[1, 2, 3])
     orch = Orchestrator([mock], [1, 2, 3])
     ctx = orch.panels[0]
-    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.play()
     orch.update(1)  # fetch tick1 → sprite_moves for indices 0,1
     orch.update(500)  # drain
     orch.update(1)  # fetch tick2 → sprite_moves for indices 1,2 only
@@ -843,3 +845,322 @@ def test_sprite_moves_reflects_only_current_tick() -> None:
     # sprite at slot 2 in current mapping = slot_mapping[2] = 0 (sprite 0, unchanged from tick1)
     # So sprite_moves = {2: 2, 0: 1}  ← only 2 entries, not 4
     assert len(ctx.sprite_moves) == 2
+
+
+# ---------------------------------------------------------------------------
+# Phase 6d helpers
+# ---------------------------------------------------------------------------
+
+
+class SimpleAlgorithm(BaseSortAlgorithm):
+    """Minimal concrete algorithm for restart tests — takes only data."""
+
+    def __init__(self, data: list[int]) -> None:
+        super().__init__(data, "Simple Sort", "O(n)")
+
+    def sort_generator(self) -> Generator[SortResult]:
+        yield SortResult(
+            success=True,
+            message="compare",
+            operation_type=OpType.COMPARE,
+            array_state=list(self.data),
+        )
+        yield SortResult(
+            success=True,
+            message="done",
+            operation_type=OpType.TERMINAL,
+            is_complete=True,
+            array_state=list(self.data),
+        )
+
+
+# ---------------------------------------------------------------------------
+# Group 16 — play()
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_play_sets_running_true() -> None:
+    mock = MockAlgorithm([_progress_tick(OpType.COMPARE), _terminal_tick()])
+    orch = Orchestrator([mock], [1, 2, 3])
+    orch.play()
+    assert orch.is_running is True
+
+
+@pytest.mark.unit
+def test_play_transitions_idle_panels_to_waiting() -> None:
+    mock = MockAlgorithm([_progress_tick(OpType.COMPARE), _terminal_tick()])
+    orch = Orchestrator([mock], [1, 2, 3])
+    orch.play()
+    assert orch.panels[0].state == PanelState.WAITING_FOR_NEXT_TICK
+
+
+@pytest.mark.unit
+def test_play_does_not_affect_completed_panel() -> None:
+    mock = MockAlgorithm([_terminal_tick()])
+    orch = Orchestrator([mock], [1, 2, 3])
+    ctx = orch.panels[0]
+    ctx.state = PanelState.COMPLETED
+    ctx.is_active = False
+    orch.play()
+    assert ctx.state == PanelState.COMPLETED
+
+
+@pytest.mark.unit
+def test_play_ignored_while_stepping() -> None:
+    mock = MockAlgorithm([_progress_tick(OpType.COMPARE), _terminal_tick()])
+    orch = Orchestrator([mock], [1, 2, 3])
+    orch.step()  # enter stepping mode
+    orch.play()
+    assert orch.is_running is False
+    assert orch.is_stepping is True
+
+
+# ---------------------------------------------------------------------------
+# Group 17 — pause()
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_pause_clears_running() -> None:
+    mock = MockAlgorithm([_progress_tick(OpType.COMPARE), _terminal_tick()])
+    orch = Orchestrator([mock], [1, 2, 3])
+    orch.play()
+    orch.pause()
+    assert orch.is_running is False
+
+
+@pytest.mark.unit
+def test_pause_preserves_animating_state() -> None:
+    mock = MockAlgorithm([_progress_tick(OpType.COMPARE), _terminal_tick()])
+    orch = Orchestrator([mock], [1, 2, 3])
+    orch.play()
+    orch.update(1)  # fetch tick → ANIMATING
+    orch.pause()
+    assert orch.panels[0].state == PanelState.ANIMATING_OPERATION
+
+
+@pytest.mark.unit
+def test_paused_update_does_not_advance() -> None:
+    mock = MockAlgorithm([_progress_tick(OpType.COMPARE), _terminal_tick()])
+    orch = Orchestrator([mock], [1, 2, 3])
+    orch.play()
+    orch.update(1)  # fetch tick → ANIMATING, 149ms remaining
+    orch.pause()
+    remaining_before = orch.panels[0].current_operation_remaining_ms
+    orch.update(100)  # should be a no-op
+    assert orch.panels[0].current_operation_remaining_ms == remaining_before
+
+
+@pytest.mark.unit
+def test_pause_then_play_resumes() -> None:
+    mock = MockAlgorithm([_progress_tick(OpType.COMPARE), _terminal_tick()])
+    orch = Orchestrator([mock], [1, 2, 3])
+    orch.play()
+    orch.update(1)
+    orch.pause()
+    orch.play()
+    assert orch.is_running is True
+
+
+# ---------------------------------------------------------------------------
+# Group 18 — step()
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_step_sets_stepping_true() -> None:
+    mock = MockAlgorithm([_progress_tick(OpType.COMPARE), _terminal_tick()])
+    orch = Orchestrator([mock], [1, 2, 3])
+    orch.step()
+    assert orch.is_stepping is True
+
+
+@pytest.mark.unit
+def test_step_transitions_idle_to_waiting() -> None:
+    mock = MockAlgorithm([_progress_tick(OpType.COMPARE), _terminal_tick()])
+    orch = Orchestrator([mock], [1, 2, 3])
+    orch.step()
+    assert orch.panels[0].state == PanelState.WAITING_FOR_NEXT_TICK
+
+
+@pytest.mark.unit
+def test_step_ignored_while_running() -> None:
+    mock = MockAlgorithm([_progress_tick(OpType.COMPARE), _terminal_tick()])
+    orch = Orchestrator([mock], [1, 2, 3])
+    orch.play()
+    orch.step()
+    assert orch.is_stepping is False
+    assert orch.is_running is True
+
+
+@pytest.mark.unit
+def test_step_ignored_while_already_stepping() -> None:
+    mock = MockAlgorithm([_progress_tick(OpType.COMPARE), _terminal_tick()])
+    orch = Orchestrator([mock], [1, 2, 3])
+    orch.step()
+    orch.step()  # second call ignored
+    assert orch.is_stepping is True
+
+
+@pytest.mark.unit
+def test_step_animating_drains_to_idle_paused() -> None:
+    mock = MockAlgorithm([_progress_tick(OpType.COMPARE), _terminal_tick()])
+    orch = Orchestrator([mock], [1, 2, 3])
+    orch.step()
+    orch.update(1)  # fetch tick → ANIMATING
+    assert orch.panels[0].state == PanelState.ANIMATING_OPERATION
+    orch.update(200)  # drain → should go to IDLE_PAUSED (not WAITING)
+    assert orch.panels[0].state == PanelState.IDLE_PAUSED
+
+
+@pytest.mark.unit
+def test_step_clears_stepping_after_animation_drains() -> None:
+    mock = MockAlgorithm([_progress_tick(OpType.COMPARE), _terminal_tick()])
+    orch = Orchestrator([mock], [1, 2, 3])
+    orch.step()
+    orch.update(1)  # fetch tick
+    orch.update(200)  # drain → IDLE_PAUSED → stepping clears
+    assert orch.is_stepping is False
+
+
+@pytest.mark.unit
+def test_step_two_panels_both_drain_before_stepping_clears() -> None:
+    m1 = MockAlgorithm([_progress_tick(OpType.COMPARE), _terminal_tick()], name="A")
+    m2 = MockAlgorithm([_progress_tick(OpType.SWAP), _terminal_tick()], name="B")
+    orch = Orchestrator([m1, m2], [1, 2, 3])
+    orch.step()
+    orch.update(1)  # both fetch their ticks
+    orch.update(50)  # partial drain — COMPARE(150ms) has 99ms left, SWAP(400ms) has 349ms left
+    assert orch.is_stepping is True  # still animating
+    orch.update(500)  # fully drain both
+    assert orch.is_stepping is False
+
+
+@pytest.mark.unit
+def test_step_multiple_calls_advance_one_tick_each() -> None:
+    tick1 = _progress_tick(OpType.COMPARE)
+    tick2 = _progress_tick(OpType.COMPARE)
+    mock = MockAlgorithm([tick1, tick2, _terminal_tick()])
+    orch = Orchestrator([mock], [1, 2, 3])
+    # First step
+    orch.step()
+    orch.update(1)
+    orch.update(200)
+    assert orch.is_stepping is False
+    assert orch.panels[0].state == PanelState.IDLE_PAUSED
+    # Second step
+    orch.step()
+    orch.update(1)
+    orch.update(200)
+    assert orch.is_stepping is False
+    assert orch.panels[0].step_count == 2
+
+
+# ---------------------------------------------------------------------------
+# Group 19 — restart()
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_restart_clears_running() -> None:
+    algo = SimpleAlgorithm([1, 2, 3])
+    orch = Orchestrator([algo], [1, 2, 3])
+    orch.play()
+    orch.restart()
+    assert orch.is_running is False
+
+
+@pytest.mark.unit
+def test_restart_clears_stepping() -> None:
+    algo = SimpleAlgorithm([1, 2, 3])
+    orch = Orchestrator([algo], [1, 2, 3])
+    orch.step()
+    orch.restart()
+    assert orch.is_stepping is False
+
+
+@pytest.mark.unit
+def test_restart_resets_panel_state_to_idle_paused() -> None:
+    algo = SimpleAlgorithm([1, 2, 3])
+    orch = Orchestrator([algo], [1, 2, 3])
+    orch.play()
+    orch.update(1)
+    orch.restart()
+    assert orch.panels[0].state == PanelState.IDLE_PAUSED
+
+
+@pytest.mark.unit
+def test_restart_resets_elapsed_time() -> None:
+    algo = SimpleAlgorithm([1, 2, 3])
+    orch = Orchestrator([algo], [1, 2, 3])
+    orch.play()
+    orch.update(1)
+    orch.update(200)
+    orch.restart()
+    assert orch.panels[0].elapsed_time_ms == 0
+
+
+@pytest.mark.unit
+def test_restart_restores_fresh_generator() -> None:
+    algo = SimpleAlgorithm([1, 2, 3])
+    orch = Orchestrator([algo], [1, 2, 3])
+    # Run to completion
+    orch.play()
+    orch.update(1)
+    orch.update(200)
+    orch.update(1)
+    assert orch.panels[0].state == PanelState.COMPLETED
+    # Restart and verify panel can run again
+    orch.restart()
+    orch.play()
+    orch.update(1)
+    assert orch.panels[0].state == PanelState.ANIMATING_OPERATION
+
+
+@pytest.mark.unit
+def test_restart_resets_slot_to_sprite_id() -> None:
+    algo = SimpleAlgorithm([3, 1, 2])
+    orch = Orchestrator([algo], [3, 1, 2])
+    orch.play()
+    orch.update(1)
+    orch.update(200)
+    orch.restart()
+    assert orch.panels[0].slot_to_sprite_id == [0, 1, 2]
+
+
+@pytest.mark.unit
+def test_restart_restores_previous_array_state() -> None:
+    algo = SimpleAlgorithm([4, 7, 2])
+    orch = Orchestrator([algo], [4, 7, 2])
+    orch.restart()
+    assert orch.panels[0].previous_array_state == [4, 7, 2]
+
+
+# ---------------------------------------------------------------------------
+# Group 20 — initial state properties
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_initial_is_running_false() -> None:
+    mock = MockAlgorithm([_terminal_tick()])
+    orch = Orchestrator([mock], [1, 2, 3])
+    assert orch.is_running is False
+
+
+@pytest.mark.unit
+def test_initial_is_stepping_false() -> None:
+    mock = MockAlgorithm([_terminal_tick()])
+    orch = Orchestrator([mock], [1, 2, 3])
+    assert orch.is_stepping is False
+
+
+@pytest.mark.unit
+def test_update_noop_when_not_running_or_stepping() -> None:
+    mock = MockAlgorithm([_progress_tick(OpType.COMPARE), _terminal_tick()])
+    orch = Orchestrator([mock], [1, 2, 3])
+    ctx = orch.panels[0]
+    ctx.state = PanelState.WAITING_FOR_NEXT_TICK
+    orch.update(1)  # neither running nor stepping — should not fetch tick
+    assert ctx.current_tick is None
