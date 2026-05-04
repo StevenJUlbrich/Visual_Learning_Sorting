@@ -123,7 +123,7 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 
 ## Build Status
 
-**Active phase: Phase 6 (Controller/Orchestrator).** Phases 0–4, 5a–5g are complete. See `TODO/IMPLEMENTATION_TRACKER.md` for the full breakdown.
+**Active phase: Phase 7 (Main Event Loop).** Phases 0–6 are complete. See `TODO/IMPLEMENTATION_TRACKER.md` for the full breakdown.
 
 **Completed (2026-04-23 / 2026-04-24 / 2026-04-30 / 2026-05-01):**
 - Phase 0: Spec gaps (pyproject.toml, config.toml, pseudocode, fonts helper, implementation order)
