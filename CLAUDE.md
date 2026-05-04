@@ -123,7 +123,7 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 
 ## Build Status
 
-**Active phase: Phase 7 (Main Event Loop).** Phases 0–6 are complete. See `TODO/IMPLEMENTATION_TRACKER.md` for the full breakdown.
+**Active phase: Phase 7b (Sprite Animation Rendering).** Phases 0–7 are complete. See `TODO/IMPLEMENTATION_TRACKER.md` for the full breakdown.
 
 **Completed (2026-04-23 / 2026-04-24 / 2026-04-30 / 2026-05-01):**
 - Phase 0: Spec gaps (pyproject.toml, config.toml, pseudocode, fonts helper, implementation order)
@@ -144,4 +144,6 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 - Phase 6d: `orchestrator.py` — play(), pause(), step(), restart(), is_running/is_stepping properties, _running/_stepping guards, _algorithm_classes for restart re-instantiation (26 tests); cumulative 332/332
 - Phase 6e: `tests/integration/test_orchestrator_integration.py` — TC-A4/A6/A15/A16/A17/A18 + counter accuracy, FailingAlgorithm helper (7 tests); cumulative 339/339
 
-**Next:** Phase 7 — Main event loop and Pygame rendering integration.
+- Phase 7: `main.py` — Pygame event loop, config loading, font loading with fallback, keyboard bindings (Space/Right/R/Escape), orchestrator.update(dt) + panel rendering per frame (211 lines); cumulative 339/339 (no new tests)
+
+**Next:** Phase 7b — Wire NumberSprite instances into the render loop, dispatch sprite_moves from PanelContext, draw sprites with easing each frame.

@@ -212,14 +212,17 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 **Depends on:** Phase 5, Phase 6
 **Output:** `src/visualizer/main.py`
 
-- [ ] Pygame init, clock, display.set_mode (no RESIZABLE flag — D-077)
-- [ ] `config.toml` loading (preset selection)
-- [ ] Window title "Learn Visual - Expand Knowledge"
-- [ ] Event loop: keyboard bindings (Space, Right Arrow, R, Escape — D-022)
-- [ ] On-screen control buttons (Play/Pause, Step, Restart)
-- [ ] dt clamping: `dt = min(clock.tick(60), 33)` (doc 10 Section 1)
-- [ ] Controller.update(dt) -> View.render() per frame
-- [ ] Font loading with fallback (doc 04 Section 3.3)
+- [x] Pygame init, clock, display.set_mode (no RESIZABLE flag — D-077) *(2026-05-04)*
+- [x] `config.toml` loading (preset selection, fallback to desktop on error) *(2026-05-04)*
+- [x] Window title "Learn Visual - Expand Knowledge" *(via init_display in window.py)*
+- [x] Event loop: keyboard bindings (Space, Right Arrow, R, Escape — D-022) *(2026-05-04)*
+- [ ] On-screen control buttons (Play/Pause, Step, Restart) — deferred to later phase
+- [x] dt clamping: `dt = min(clock.tick(60), 33)` (doc 10 Section 1) *(2026-05-04)*
+- [x] Controller.update(dt) -> View.render() per frame *(2026-05-04 — panel background + header; sprite animation in Phase 7b)*
+- [x] Font loading with fallback (doc 04 Section 3.3) *(2026-05-04)*
+- [ ] NumberSprite instances wired into render loop (Phase 7b)
+- [ ] Sprite animation driven by PanelContext.sprite_moves (Phase 7b)
+- [ ] Legacy `/main.py` stub deleted *(2026-05-04)*
 
 ---
 
