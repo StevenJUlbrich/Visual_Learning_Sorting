@@ -123,7 +123,7 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 
 ## Build Status
 
-**Active phase: Phase 7b (Sprite Animation Rendering).** Phases 0–7 are complete. See `TODO/IMPLEMENTATION_TRACKER.md` for the full breakdown.
+**Active phase: Phase 7c (Per-Algorithm Choreography).** Phases 0–7b are complete. See `TODO/IMPLEMENTATION_TRACKER.md` for the full breakdown.
 
 **Completed (2026-04-23 / 2026-04-24 / 2026-04-30 / 2026-05-01):**
 - Phase 0: Spec gaps (pyproject.toml, config.toml, pseudocode, fonts helper, implementation order)
@@ -146,4 +146,6 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 
 - Phase 7: `main.py` — Pygame event loop, config loading, font loading with fallback, keyboard bindings (Space/Right/R/Escape), orchestrator.update(dt) + panel rendering per frame (211 lines); cumulative 339/339 (no new tests)
 
-**Next:** Phase 7b — Wire NumberSprite instances into the render loop, dispatch sprite_moves from PanelContext, draw sprites with easing each frame.
+- Phase 7b: `sprite_manager.py` — SpriteManager class (per-panel sprite lifecycle, animation dispatch via sprite_moves, ease_in_out_quad horizontal + sine_arc swap vertical, highlight colors, z-ordering, restart/pause handling); main.py wired with 4 SpriteManagers (200+207 lines); cumulative 339/339 (no new tests)
+
+**Next:** Phase 7c — Per-algorithm visual choreography (Bubble compare-lift, Insertion key elevation, Heap tree layout, Selection pointers, instructional assets).

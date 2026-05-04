@@ -220,9 +220,9 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 - [x] dt clamping: `dt = min(clock.tick(60), 33)` (doc 10 Section 1) *(2026-05-04)*
 - [x] Controller.update(dt) -> View.render() per frame *(2026-05-04 — panel background + header; sprite animation in Phase 7b)*
 - [x] Font loading with fallback (doc 04 Section 3.3) *(2026-05-04)*
-- [ ] NumberSprite instances wired into render loop (Phase 7b)
-- [ ] Sprite animation driven by PanelContext.sprite_moves (Phase 7b)
-- [ ] Legacy `/main.py` stub deleted *(2026-05-04)*
+- [x] NumberSprite instances wired into render loop — SpriteManager class in sprite_manager.py, 4 instances created in main.py *(2026-05-04, Phase 7b)*
+- [x] Sprite animation driven by PanelContext.sprite_moves — tick detection by identity, ease_in_out_quad horizontal + sine_arc swap vertical, highlight coloring, z-ordering *(2026-05-04, Phase 7b)*
+- [x] Legacy `/main.py` stub deleted *(2026-05-04)*
 
 ---
 
