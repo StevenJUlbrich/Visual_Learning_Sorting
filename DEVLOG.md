@@ -24,4 +24,47 @@
 
 ## Current Phase: 7 — Main Event Loop and Pygame Rendering Integration
 
-*No entries yet. Phase 7 work will appear here when started.*
+## 2026-05-04 — Phase 7 pre-action: Main event loop
+
+### Plan
+
+Create `src/visualizer/main.py` exposing a `main()` function (referenced by `pyproject.toml` entry `visual-sort = "visualizer.main:main"`). Responsibilities: load `config.toml` to select resolution preset (fallback to desktop if missing or invalid), initialize Pygame and display via `init_display()`, load fonts with fallback (doc 04 §3.3), instantiate the four algorithm models with `[4, 7, 2, 6, 1, 5, 3]`, create the Orchestrator, build PanelRenderers for the 2×2 grid, and run the Pygame event loop. Event loop: `clock.tick(60)` with `dt = min(raw_dt, 33)` clamp (CLAUDE.md Critical Rule #7), keyboard bindings (Space → play/pause, Right Arrow → step, R → restart, Escape → quit per D-022), `orchestrator.update(dt)` each frame, then render: clear screen, draw each panel's background + header (title, metrics line, message from current_tick), and `pygame.display.flip()`. On-screen control buttons are deferred — keyboard-only for Phase 7. Sprite animation rendering is deferred to Phase 7b — this phase gets the skeleton loop running with panel frames and header text updating live.
+
+### Exit criteria
+
+1. `uv run python -m visualizer.main` launches a 1280×720 window titled "Learn Visual - Expand Knowledge" with 4 panel rectangles visible (headless/dummy driver: no crash, clean exit on Escape).
+2. pyright — 0 errors, 0 warnings.
+3. ruff check + ruff format — clean.
+4. Existing test suite — 339/339 still passing (no regressions).
+
+## 2026-05-04 — Phase 7 closed: Main event loop (post-action)
+
+### Worked on
+
+Created `src/visualizer/main.py` (211 lines). Key structure:
+
+- `_load_config()` — reads `config.toml` via `load_preset()`; catches `FileNotFoundError`, `KeyError`, `ValueError`, and `TOMLDecodeError` with stderr warnings, falls back to desktop 1280×720.
+- `_load_fonts()` — tries bundled `assets/fonts/{Inter-Bold,Inter-Regular,FiraCode-Regular}.ttf`; falls back to `SysFont` on `OSError`; never crashes.
+- `_elapsed_str()` — integer milliseconds → `"SS.DDs"` format (e.g. 8200 → `"08.20s"`).
+- `_map_panel_state()` — translates orchestrator `PanelState` to view `PanelState` (name collision resolved with `PanelState as ViewPanelState`).
+- `_build_metrics()` / `_build_message()` — construct header strings from `PanelContext`.
+- `main()` — full Pygame event loop: `clock.tick(60)`, `dt = min(raw_dt, 33)` clamp, Space/Right/R/Escape bindings, `orchestrator.update(dt)`, background fill, panel background + header draw, `display.flip()`.
+
+Deleted legacy `main.py` stub at repo root (contained only `print("Hello from visual-learning-sorting!")`).
+
+No sprite animation rendering in this phase — panel frames and live header text are functional. Sprite layer deferred to Phase 7b.
+
+### Corrections
+
+One correction: ruff reformatted `_build_panel_renderers` — collapsed a multi-line list comprehension into a single line. No logic changes.
+
+### Results
+
+- App launch (dummy driver): **PASS**
+- `uv run pyright src/visualizer/main.py`: **0 errors, 0 warnings**
+- `uv run ruff check` + `uv run ruff format --check`: **clean**
+- `uv run pytest tests/ -q`: **339/339 PASSED** (no regressions)
+
+### Next
+
+Phase 7b: sprite animation rendering — wire `NumberSprite` instances into the panel loop, dispatch `sprite_moves` from `PanelContext`, and render sprites each frame with easing.
