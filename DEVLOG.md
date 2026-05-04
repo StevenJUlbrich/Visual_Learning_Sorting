@@ -68,3 +68,45 @@ One correction: ruff reformatted `_build_panel_renderers` — collapsed a multi-
 ### Next
 
 Phase 7b: sprite animation rendering — wire `NumberSprite` instances into the panel loop, dispatch `sprite_moves` from `PanelContext`, and render sprites each frame with easing.
+
+## 2026-05-04 — Phase 7b pre-action: Sprite animation rendering
+
+### Plan
+
+Create `src/visualizer/views/sprite_manager.py` with a `SpriteManager` class that owns 7 `NumberSprite` instances per panel. Each frame: detect new ticks by comparing `ctx.current_tick` identity, dispatch `sprite_moves` to update sprite home positions, advance interpolation elapsed time by `dt` (only when `ctx.state == ANIMATING_OPERATION`), compute eased positions (`ease_in_out_quad` for horizontal, `sine_arc` for swap vertical offset), apply highlight colors from `highlight_indices`, handle completion/failure color states, and draw sprites with z-ordering (lifted sprites on top). Modify `main.py` to create 4 SpriteManagers and wire them into the render loop after panel headers. All four algorithms use a flat baseline row with standard arc swaps — per-algorithm choreography (compare-lift, key elevation, tree layout) is deferred.
+
+### Exit criteria
+
+1. pyright — 0 errors, 0 warnings
+2. ruff check + ruff format — clean
+3. Existing test suite — 339/339 still passing (no regressions)
+4. Visual: sprites appear at correct home positions in all 4 panels and move on play/step
+
+## 2026-05-04 — Phase 7b closed: Sprite animation rendering (post-action)
+
+### Worked on
+
+Created `src/visualizer/views/sprite_manager.py` (158 lines). Key structure:
+
+- `__init__`: stores panel geometry params for reset; creates 7 `NumberSprite` instances; computes `_arc_height = panel_rect.height * 0.08`; initializes animation state (`_last_tick`, `_animation_elapsed_ms`, `_animation_duration_ms`, `_animating_sprites`, `_swap_left_id`, `_swap_right_id`, `_current_op_type`).
+- `_dispatch_tick`: resets all sprites to DEFAULT, applies `highlight_indices` via `slot_to_sprite_id`, handles TERMINAL (all COMPLETE) and FAILURE (all ERROR) with no motion, records start positions before calling `update_home` for each `sprite_moves` entry, sets `_swap_left_id`/`_swap_right_id` by comparing target slots (lower target → arcs UP), computes duration via `get_duration`.
+- `update`: identity comparison `ctx.current_tick is not self._last_tick` for new-tick detection; advances `_animation_elapsed_ms` only when `ctx.state == ANIMATING_OPERATION`; computes `t = min(elapsed/duration, 1.0)` and `eased_t = ease_in_out_quad(t)`; for SWAP ops applies `sine_arc(t) * arc_height` vertically (left arcs UP, right arcs DOWN); snaps to home when `t >= 1.0`.
+- `draw`: partitions sprites into baseline (`exact_y >= home_y`) and lifted (`exact_y < home_y`); baseline sorted by `home_x`, lifted sorted descending by `exact_y` (smallest draws last = on top).
+- `reset`: recreates all sprites from scratch, clears all animation state.
+
+Modified `main.py`: added `SpriteManager` import; renamed `_number_font` → `number_font`; created 4 `SpriteManager` instances from `layout.panel_rects`; added `sm.reset(INITIAL_ARRAY)` to K_r handler; added `sprite_managers[i].update(dt, ctx)` + `sprite_managers[i].draw(surface)` inside panel render loop after `draw_header`.
+
+### Corrections
+
+Zero corrections — clean on first run.
+
+### Results
+
+- `uv run pyright src/visualizer/views/sprite_manager.py src/visualizer/main.py`: **0 errors, 0 warnings**
+- `uv run ruff check` + `uv run ruff format --check`: **clean**
+- `uv run pytest tests/ -q`: **339/339 PASSED** (no regressions)
+- Import check: **PASS**
+
+### Next
+
+Phase 7c: per-algorithm choreography — Bubble Sort compare-lift (3-phase T1 vertical), Insertion Sort sustained key elevation + KEY label + gap visualization, Heap Sort binary tree layout (tree_layout.py wiring), Selection Sort pointer arrows (pointer.py wiring).

@@ -20,6 +20,7 @@ from visualizer.models.insertion import InsertionSort
 from visualizer.models.selection import SelectionSort
 from visualizer.views.panel import PanelRenderer
 from visualizer.views.panel import PanelState as ViewPanelState
+from visualizer.views.sprite_manager import SpriteManager
 from visualizer.views.window import GridLayout, init_display, load_preset
 
 # ---------------------------------------------------------------------------
@@ -159,9 +160,19 @@ def main() -> None:
 
     width, height = _load_config()
     surface, layout = init_display(width, height)
-    title_font, body_font, _number_font = _load_fonts()
+    title_font, body_font, number_font = _load_fonts()
 
     panel_renderers = _build_panel_renderers(layout, title_font, body_font)
+    sprite_managers = [
+        SpriteManager(
+            panel_rect=layout.panel_rects[i],
+            array_x_padding=layout.ARRAY_X_PADDING,
+            slot_width=layout.slot_width,
+            font=number_font,
+            initial_array=INITIAL_ARRAY,
+        )
+        for i in range(4)
+    ]
     orchestrator = _build_orchestrator()
 
     clock = pygame.time.Clock()
@@ -181,6 +192,8 @@ def main() -> None:
                     orchestrator.step()
                 elif event.key == pygame.K_r:
                     orchestrator.restart()
+                    for sm in sprite_managers:
+                        sm.reset(INITIAL_ARRAY)
                 elif event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     return
@@ -203,6 +216,8 @@ def main() -> None:
                 _build_message(ctx),
                 view_state,
             )
+            sprite_managers[i].update(dt, ctx)
+            sprite_managers[i].draw(surface)
 
         pygame.display.flip()
 
