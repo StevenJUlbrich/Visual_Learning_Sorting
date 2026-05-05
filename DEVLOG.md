@@ -232,3 +232,62 @@ One correction: ruff reformatted `sprite_manager.py` (whitespace/line-length adj
 ### Next
 
 Phase 7c-4: Heap Sort choreography (TreeLayout integration, parent-child edges, extraction arc, boundary sweep, sorted row, phase/boundary labels).
+
+## 2026-05-05 — Phase 7c-4 pre-action: Heap Sort choreography
+
+### Plan
+
+Integrate TreeLayout into SpriteManager for the Heap Sort panel (index 3). Override sprite home positions from flat baseline to binary tree layout + sorted row. Add `_dispatch_heap` for tree-aware tick handling: Boundary T3 with staggered sweep, Logical Tree T3 simultaneous flash, sift-down standard arcs, extraction elevated arcs (1.75×), steel-blue extracted coloring. Create HeapOverlay class for parent-child edges (with active orange highlighting during Logical Tree T3), phase label (BUILD MAX-HEAP / EXTRACTION), sorted-row placeholder outlines, and heap boundary marker. Wire into main.py with split draw order (edges before sprites, labels after).
+
+### Exit criteria
+
+1. pyright — 0 errors, 0 warnings
+2. ruff check + ruff format — clean
+3. Existing test suite — 339/339 still passing (no regressions)
+4. Visual: Heap Sort panel shows binary tree with sifting arcs, extraction arcs to sorted row, edges, phase label, boundary marker
+
+## 2026-05-05 — Phase 7c-4 closed: Heap Sort choreography (post-action)
+
+### Worked on
+
+`SpriteManager` extended with Heap Sort tree-aware choreography:
+
+- New `tree_layout: TreeLayout | None = None` constructor parameter (last). Heap Sort fields: `_tree_layout`, `_heap_size`, `_heap_node_positions`, `_extraction_arc_height` (panel_height * 0.14, 1.75× standard), `_is_extraction_swap`, `_heap_sweep_indices`. Initial position override applies tree node positions and `tree_node_radius` to all sprites for the Heap Sort panel (panel index 3 only).
+- `_dispatch_heap` — branches on op type. RANGE: discriminates Boundary T3 (`message.startswith("Active heap")`) vs Logical Tree T3 by D-081 message prefix. Boundary T3 resets all sprites to DEFAULT, sets `_heap_sweep_indices`, and re-applies SETTLED for sorted-row sprites. Logical Tree T3 leaves shared highlight code's parent+children orange flash intact. SWAP: detects extraction (highlight contains 0), decrements `_heap_size` and recomputes positions BEFORE setting target homes, snaps non-swapping tree sprites to new geometry (handles depth-boundary changes like 4→3), assigns `_swap_left_id`/`_swap_right_id` based on source position for extractions (root → up, end → down) or target slot for sift-down (lower target → up).
+- `_set_heap_home`, `_recompute_heap_positions`, `_apply_sorted_settled` helpers.
+- `_compute_heap_positions` — 2D arc interpolation: eases both x and y from start to home (start_y ≠ home_y in tree), adds `arc_height * sine_arc(t)` vertical offset on top. Selects `_extraction_arc_height` vs `_arc_height` based on `_is_extraction_swap`. On completion, snaps to home, sets SETTLED on extracted sprite, clears swap state.
+- `_apply_heap_sweep` — staggered coloring during Boundary T3. Per-index delay = `(i / end) * 120ms` over the 200ms tick (120ms sweep window + 80ms hold). Each index snaps to ACTIVE at its delay threshold. Single-element fallback: highlight immediately. Cleared on `t >= 1.0`.
+- Sweep call wired in `update()` after position computation, gated on `_heap_sweep_indices is not None and _animation_duration_ms > 0` (fires for Boundary T3 even when `_animating_sprites` is empty).
+- `_draw_heap` — overrides `draw()` for Heap Sort: partitions sprites into sorted-row (home_y >= sorted_row_y - 1), tree (home_y < sorted_row_y), and arcing (id in `_animating_sprites`). Draws sorted row first (left→right by home_x), tree next (deeper-first by home_y desc), arcing last (downward-arcing first, upward-arcing on top by exact_y desc).
+- `heap_size` property exposed for HeapOverlay. `reset()` re-initializes Heap state and re-applies tree positions.
+
+`HeapOverlay` class added to `sprite_manager.py`:
+- Module-level constants: `_BOUNDARY_DASH=6`, `_BOUNDARY_GAP=4`, `_BOUNDARY_LINE_COLOR=(150,150,160)`, `_BOUNDARY_LINE_WIDTH=2`, `_PHASE_LABEL_OFFSET=20`, `_BOUNDARY_LABEL_OFFSET=15`.
+- `update(ctx, heap_size)` — reads heap_size each frame, processes new ticks via identity check.
+- `_process_tick` — Boundary T3 switches `_phase` to "EXTRACTION", clears edge highlight; Logical Tree T3 sets `_active_edge_parent` (hi[0]) and `_active_edge_children` (hi[1:]); COMPARE/SWAP/TERMINAL/FAILURE clear edge highlight.
+- `draw_under` — calls `_draw_edges` (per-edge active check via parent/children indices, since `tree_layout.edges()` returns positions only), `_draw_placeholders` (dim circle outlines in sorted row for active heap slots), `_draw_boundary_line` (vertical dashed line, gated on `_heap_size < _array_size`).
+- `draw_over` — phase label centered above tree top; boundary label below sorted row when active heap < array size.
+
+`main.py` wiring:
+- Added imports: `HeapBoundaryLabel`, `HeapPhaseLabel`, `compute_header_total`, `TreeLayout`, `HeapOverlay`.
+- TreeLayout built before sprite_managers using `compute_header_total(panel_rects[3].height, title_h, body_h, body_h)`.
+- `tree_layout=_heap_tree_layout if i == 3 else None` passed to each SpriteManager.
+- HeapOverlay constructed with HeapPhaseLabel and HeapBoundaryLabel.
+- Render loop split-draw for panel 3: `heap_overlay.update(ctx, sprite_managers[3].heap_size)` + `draw_under(surface)` BEFORE `sprite_managers[i].draw(surface)`; `heap_overlay.draw_over(surface)` AFTER.
+- `heap_overlay.reset()` added to K_r restart handler.
+
+### Corrections
+
+One correction: ruff reformatted `sprite_manager.py` (whitespace/line-length adjustments — same as 7c-3). No logic changes.
+
+### Results
+
+- `uv run pyright src/visualizer/views/sprite_manager.py src/visualizer/main.py`: **0 errors, 0 warnings**
+- `uv run ruff check` + `uv run ruff format --check`: **clean**
+- `uv run pytest tests/ -q`: **339/339 PASSED** (no regressions)
+- Import check: **PASS**
+- Bonus smoke test (headless construct/draw/reset of SpriteManager + HeapOverlay): **PASS**
+
+### Next
+
+Phase 7c complete — all four algorithms have per-panel choreography. Next: visual verification (AT acceptance tests), then CLAUDE.md / IMPLEMENTATION_TRACKER updates.

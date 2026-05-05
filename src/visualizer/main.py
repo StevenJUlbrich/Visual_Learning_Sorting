@@ -18,18 +18,20 @@ from visualizer.models.bubble import BubbleSort
 from visualizer.models.heap import HeapSort
 from visualizer.models.insertion import InsertionSort
 from visualizer.models.selection import SelectionSort
-from visualizer.views.hud import BubbleHUD
+from visualizer.views.hud import BubbleHUD, HeapBoundaryLabel, HeapPhaseLabel
 from visualizer.views.limitline import LimitLine
-from visualizer.views.panel import PanelRenderer
+from visualizer.views.panel import PanelRenderer, compute_header_total
 from visualizer.views.panel import PanelState as ViewPanelState
 from visualizer.views.pointer import PointerSet
 from visualizer.views.sprite import RING_DIAMETER_RATIO
 from visualizer.views.sprite_manager import (
     BubbleOverlay,
+    HeapOverlay,
     InsertionOverlay,
     SelectionOverlay,
     SpriteManager,
 )
+from visualizer.views.tree_layout import TreeLayout
 from visualizer.views.window import GridLayout, init_display, load_preset
 
 # ---------------------------------------------------------------------------
@@ -174,6 +176,23 @@ def main() -> None:
     title_font, body_font, number_font = _load_fonts()
 
     panel_renderers = _build_panel_renderers(layout, title_font, body_font)
+
+    # Heap Sort tree layout (panel index 3)
+    _title_h = title_font.get_height()
+    _body_h = body_font.get_height()
+    _heap_header_total = compute_header_total(
+        layout.panel_rects[3].height,
+        _title_h,
+        _body_h,
+        _body_h,
+    )
+    _heap_tree_layout = TreeLayout(
+        panel_rect=layout.panel_rects[3],
+        header_total=_heap_header_total,
+        array_x_padding=layout.ARRAY_X_PADDING,
+        slot_width=layout.slot_width,
+    )
+
     sprite_managers = [
         SpriteManager(
             algorithm_name=_ALGORITHM_NAMES[i],
@@ -182,6 +201,7 @@ def main() -> None:
             slot_width=layout.slot_width,
             font=number_font,
             initial_array=INITIAL_ARRAY,
+            tree_layout=_heap_tree_layout if i == 3 else None,
         )
         for i in range(4)
     ]
@@ -224,6 +244,19 @@ def main() -> None:
     # Insertion Sort KEY label overlay (panel index 2)
     insertion_overlay = InsertionOverlay(body_font)
 
+    # Heap Sort overlay (panel index 3)
+    _heap_phase_label = HeapPhaseLabel(
+        panel_rect=layout.panel_rects[3],
+        body_font=body_font,
+    )
+    _heap_boundary_label = HeapBoundaryLabel(body_font)
+    heap_overlay = HeapOverlay(
+        tree_layout=_heap_tree_layout,
+        phase_label=_heap_phase_label,
+        boundary_label=_heap_boundary_label,
+        array_size=len(INITIAL_ARRAY),
+    )
+
     orchestrator = _build_orchestrator()
 
     clock = pygame.time.Clock()
@@ -247,6 +280,7 @@ def main() -> None:
                         sm.reset(INITIAL_ARRAY)
                     selection_overlay.reset()
                     bubble_overlay.reset()
+                    heap_overlay.reset()
                 elif event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     return
@@ -270,6 +304,12 @@ def main() -> None:
                 view_state,
             )
             sprite_managers[i].update(dt, ctx)
+
+            # Heap Sort overlay: edges and placeholders BEFORE sprites
+            if i == 3:
+                heap_overlay.update(ctx, sprite_managers[3].heap_size)
+                heap_overlay.draw_under(surface)
+
             sprite_managers[i].draw(surface)
 
             # Bubble Sort overlay (panel index 0)
@@ -285,6 +325,10 @@ def main() -> None:
             # Insertion Sort KEY label (panel index 2)
             if i == 2:
                 insertion_overlay.draw(surface, sprite_managers[i].insertion_key_info)
+
+            # Heap Sort overlay: phase label and boundary label AFTER sprites
+            if i == 3:
+                heap_overlay.draw_over(surface)
 
         pygame.display.flip()
 
