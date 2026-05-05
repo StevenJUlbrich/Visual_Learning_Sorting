@@ -18,11 +18,13 @@ from visualizer.models.bubble import BubbleSort
 from visualizer.models.heap import HeapSort
 from visualizer.models.insertion import InsertionSort
 from visualizer.models.selection import SelectionSort
+from visualizer.views.hud import BubbleHUD
+from visualizer.views.limitline import LimitLine
 from visualizer.views.panel import PanelRenderer
 from visualizer.views.panel import PanelState as ViewPanelState
 from visualizer.views.pointer import PointerSet
 from visualizer.views.sprite import RING_DIAMETER_RATIO
-from visualizer.views.sprite_manager import SelectionOverlay, SpriteManager
+from visualizer.views.sprite_manager import BubbleOverlay, SelectionOverlay, SpriteManager
 from visualizer.views.window import GridLayout, init_display, load_preset
 
 # ---------------------------------------------------------------------------
@@ -190,6 +192,30 @@ def main() -> None:
     )
     selection_overlay = SelectionOverlay(_pointer_set)
 
+    # Bubble Sort overlay (panel index 0)
+    _home_y_bubble = layout.panel_rects[0].y + layout.panel_rects[0].height // 2
+    _limit_line = LimitLine(
+        panel_rect=layout.panel_rects[0],
+        array_x_padding=layout.ARRAY_X_PADDING,
+        slot_width=layout.slot_width,
+        home_y=_home_y_bubble,
+        ring_radius=_ring_radius,
+        array_size=len(INITIAL_ARRAY),
+    )
+    _bubble_hud = BubbleHUD(
+        panel_rect=layout.panel_rects[0],
+        body_font=body_font,
+        inset_x=layout.ARRAY_X_PADDING,
+    )
+    bubble_overlay = BubbleOverlay(
+        limit_line=_limit_line,
+        bubble_hud=_bubble_hud,
+        panel_rect=layout.panel_rects[0],
+        array_x_padding=layout.ARRAY_X_PADDING,
+        slot_width=layout.slot_width,
+        ring_radius=_ring_radius,
+    )
+
     orchestrator = _build_orchestrator()
 
     clock = pygame.time.Clock()
@@ -212,6 +238,7 @@ def main() -> None:
                     for sm in sprite_managers:
                         sm.reset(INITIAL_ARRAY)
                     selection_overlay.reset()
+                    bubble_overlay.reset()
                 elif event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     return
@@ -236,6 +263,11 @@ def main() -> None:
             )
             sprite_managers[i].update(dt, ctx)
             sprite_managers[i].draw(surface)
+
+            # Bubble Sort overlay (panel index 0)
+            if i == 0:
+                bubble_overlay.update(ctx)
+                bubble_overlay.draw(surface, ctx.comparisons, ctx.writes)
 
             # Selection Sort pointer overlay (panel index 1)
             if i == 1:

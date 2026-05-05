@@ -146,3 +146,41 @@ Zero corrections — clean on first run.
 ### Next
 
 Phase 7c-2: Bubble Sort choreography (3-phase compare-lift, horizontal swap slide, LimitLine, BubbleHUD, ComparisonPointer).
+
+## 2026-05-05 — Phase 7c-2 pre-action: Bubble Sort choreography
+
+### Plan
+
+Refactor SpriteManager to support algorithm-specific motion dispatch. For Bubble Sort (panel 0): override T1 compare to a 3-phase vertical choreography (ascent 0–67ms, hold 67–100ms, descent 100–150ms at compare_lane_y = home_y - 50px), override T2 swap from arc to horizontal slide at compare_lane_y (0–300ms) then settle to baseline (300–400ms). Create BubbleOverlay class managing LimitLine (advance per pass via j-decrease detection), BubbleHUD (comparisons + exchanges counters), and ComparisonPointer (green arrow below j). Wire into main.py for panel 0. No changes to Selection/Insertion/Heap Sort behavior — they continue using the default motion model.
+
+### Exit criteria
+
+1. pyright — 0 errors, 0 warnings
+2. ruff check + ruff format — clean
+3. Existing test suite — 339/339 still passing (no regressions)
+4. Visual: Bubble Sort sprites lift during compares, slide horizontally during swaps, green arrow tracks j, dashed line shrinks per pass, counters visible
+
+## 2026-05-05 — Phase 7c-2 closed: Bubble Sort choreography (post-action)
+
+### Worked on
+
+Refactored `SpriteManager` dispatch and position computation: split `_dispatch_tick` into shared highlight/terminal/failure handling + algorithm branch (`_dispatch_bubble` for Bubble Sort, `_dispatch_default` for all others). Split inline position computation in `update()` into `_compute_default_positions` (exact extraction of prior logic — horizontal ease_in_out_quad, sine_arc vertical for swaps) and `_compute_bubble_positions` (3-phase compare-lift: ascent 0–67ms, hold 67–100ms, descent 100–150ms; 2-phase swap slide: horizontal exchange 0–300ms at compare_lane_y, settle 300–400ms). Added `_compare_lane_y = (panel_rect.y + panel_rect.height // 2) - 50` to `SpriteManager.__init__`. Added `BubbleHUD` and `LimitLine` imports to `sprite_manager.py`.
+
+Created `BubbleOverlay` class in `sprite_manager.py`: constructor stores LimitLine/BubbleHUD references and arrow geometry constants; `_process_tick` handles T1 COMPARE (pass-boundary detection via `j < self._j`, calls `limit_line.advance()`, sets pointer visible) and TERMINAL/FAILURE (hides pointer); `draw` calls `limit_line.draw()`, `bubble_hud.draw(comparisons, writes // 2)`, and `_draw_comparison_pointer` for the green upward triangle below slot `_j`; `reset` clears state and calls `limit_line.reset()`.
+
+Modified `main.py`: added `BubbleHUD`, `LimitLine`, and `BubbleOverlay` imports (fixed import sort order on first ruff run); created `_home_y_bubble`, `_limit_line`, `_bubble_hud`, and `bubble_overlay` after `selection_overlay`; wired `bubble_overlay.update(ctx)` + `.draw(surface, ctx.comparisons, ctx.writes)` for `i == 0` in render loop; added `bubble_overlay.reset()` to K_r handler.
+
+### Corrections
+
+Two corrections on first run: (1) ruff I001 — import sort order in `main.py` (`BubbleHUD`/`LimitLine` added after `PointerSet`/`RING_DIAMETER_RATIO`, needed to precede them alphabetically); (2) ruff B007 — unused loop variable `start_y` in `_compute_bubble_positions` SWAP branch renamed to `_start_y`.
+
+### Results
+
+- `uv run pyright src/visualizer/views/sprite_manager.py src/visualizer/main.py`: **0 errors, 0 warnings**
+- `uv run ruff check` + `uv run ruff format --check`: **clean**
+- `uv run pytest tests/ -q`: **339/339 PASSED** (no regressions)
+- Import check: **PASS**
+
+### Next
+
+Phase 7c-3: Insertion Sort choreography (cross-tick key elevation, diagonal drop placement, KEY label, gap visualization).
