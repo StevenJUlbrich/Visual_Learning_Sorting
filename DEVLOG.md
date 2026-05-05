@@ -291,3 +291,51 @@ One correction: ruff reformatted `sprite_manager.py` (whitespace/line-length adj
 ### Next
 
 Phase 7c complete — all four algorithms have per-panel choreography. Next: visual verification (AT acceptance tests), then CLAUDE.md / IMPLEMENTATION_TRACKER updates.
+
+## 2026-05-05 — Phase 7c-5 pre-action: Selection Sort settled color + array config
+
+### Plan
+
+Address two acceptance-test gaps:
+
+1. **AT-20 (Selection Sort settled region):** Add `_dispatch_selection` to SpriteManager that tracks the growing sorted prefix. After each T2 swap places the minimum, increment `_selection_sorted_count` and apply `ColorState.SETTLED` to sprites at indices `0..sorted_count-1`. Add `_apply_selection_settled` (same pattern as Heap Sort's `_apply_sorted_settled`) to persist steel-blue across the shared highlight reset in `_dispatch_tick`. Extends D-063 to Selection Sort as required by AT-20.
+
+2. **AT-08 (configurable array):** Add optional `[sort]` section to `config.toml` with `array` key. Add `_load_array()` to `main.py` that parses the config or falls back to the default `[4, 7, 2, 6, 1, 5, 3]`. This allows testing with duplicate values `[3, 1, 3, 2, 1, 2, 3]` by editing config.toml instead of Python code.
+
+### Exit criteria
+
+1. pyright — 0 errors, 0 warnings
+2. ruff check + ruff format — clean
+3. Existing test suite — 339/339 still passing (no regressions)
+4. Visual: Selection Sort settled prefix grows steel-blue after each swap
+5. Config: changing `config.toml` array changes the visualized dataset
+
+## 2026-05-05 — Phase 7c-5 post-action: Selection Sort settled color + array config
+
+### What was built
+
+1. **Selection Sort settled region (AT-20):**
+   - `_selection_sorted_count: int = 0` field added to `SpriteManager.__init__` (after Heap Sort state block)
+   - `_dispatch_selection` method: standard arc-swap motion (same as `_dispatch_default`) plus settled-region tracking. On T2 SWAP, increments `_selection_sorted_count`. On T1 COMPARE, no-swap pass detection catches up `_selection_sorted_count` using the `while sorted_count < min_idx` guard (handles passes where min is already in place and no swap is emitted). Calls `_apply_selection_settled` at the end of every tick to re-apply steel-blue after shared highlight reset.
+   - `_apply_selection_settled` method: forces `ColorState.SETTLED` for slots `0..sorted_count-1`. Exact parallel of Heap Sort's `_apply_sorted_settled` but on the left prefix instead of right suffix.
+   - Dispatch routing updated: `elif self._algorithm_name == "Selection Sort": self._dispatch_selection(...)` added before Insertion Sort branch.
+   - `reset()` clears `_selection_sorted_count = 0`.
+   - TERMINAL behavior is correct by design: shared TERMINAL handler sets all sprites to COMPLETE (green) and returns before `_dispatch_selection` runs, so settled sprites naturally transition to green on completion.
+
+2. **Configurable initial array (AT-08):**
+   - `config.toml` gains `[sort]` section with commented-out `array` key. Default is `[4, 7, 2, 6, 1, 5, 3]`; uncomment and change to test `[3, 1, 3, 2, 1, 2, 3]` (duplicates) without editing Python.
+   - `_load_array()` added to `main.py` (after `_load_config`): opens config with `tomllib`, reads `config["sort"]["array"]` annotated as `list[Any]`, validates length 2–20, returns `[int(v) for v in raw]`. Falls back silently on `FileNotFoundError`/`KeyError`/`TOMLDecodeError`; warns on `TypeError`/`ValueError`. No `isinstance(raw, list)` check needed — annotation covers pyright; non-list values raise `TypeError` caught by the except clause.
+   - `_build_orchestrator()` parameterized: takes `initial_array: list[int]` parameter, passes it to all four algorithm constructors and the `Orchestrator` constructor.
+   - `main()` calls `initial_array = _load_array()` right after `_load_config()`. All five `INITIAL_ARRAY` references inside `main()` replaced with `initial_array`. Module-level `INITIAL_ARRAY` constant retained as documentation and fallback default.
+   - Added `from typing import Any` import for the `raw: list[Any]` annotation.
+
+### Corrections
+
+One iteration: initial `raw: Any` annotation caused `list[Unknown]` narrowing warnings (4 warnings). Switching to `raw: list[Any]` made the `isinstance(raw, list)` check reportUnnecessaryIsInstance (1 error). Final fix: `raw: list[Any]` without the isinstance check, relying on try/except for runtime non-list values. Clean on final run.
+
+### Verification
+
+- `uv run pyright src/`: **0 errors, 0 warnings**
+- `uv run ruff check` + `uv run ruff format --check`: **clean**
+- `uv run pytest tests/ -q`: **339/339 PASSED** (no regressions)
+- Import check: **OK**

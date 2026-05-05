@@ -10,6 +10,7 @@ from __future__ import annotations
 import sys
 import tomllib
 from pathlib import Path
+from typing import Any
 
 import pygame
 
@@ -69,6 +70,30 @@ def _load_config() -> tuple[int, int]:
             file=sys.stderr,
         )
     return _DEFAULT_WIDTH, _DEFAULT_HEIGHT
+
+
+def _load_array() -> list[int]:
+    """Load initial array from config.toml [sort] section; fall back to default."""
+    default = [4, 7, 2, 6, 1, 5, 3]
+    try:
+        with _CONFIG_PATH.open("rb") as f:
+            config = tomllib.load(f)
+        raw: list[Any] = config["sort"]["array"]
+        if len(raw) < 2 or len(raw) > 20:
+            print(
+                "WARNING: config.toml [sort].array must be a list of 2-20 integers — using default.",
+                file=sys.stderr,
+            )
+            return default
+        return [int(v) for v in raw]
+    except (FileNotFoundError, KeyError, tomllib.TOMLDecodeError):
+        return default
+    except (TypeError, ValueError) as exc:
+        print(
+            f"WARNING: config.toml [sort].array error ({exc}) — using default.",
+            file=sys.stderr,
+        )
+        return default
 
 
 # ---------------------------------------------------------------------------
@@ -142,15 +167,15 @@ def _build_message(ctx: PanelContext) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _build_orchestrator() -> Orchestrator:
+def _build_orchestrator(initial_array: list[int]) -> Orchestrator:
     """Instantiate the four algorithms and return a configured Orchestrator."""
     algorithms = [
-        BubbleSort(INITIAL_ARRAY),
-        SelectionSort(INITIAL_ARRAY),
-        InsertionSort(INITIAL_ARRAY),
-        HeapSort(INITIAL_ARRAY),
+        BubbleSort(initial_array),
+        SelectionSort(initial_array),
+        InsertionSort(initial_array),
+        HeapSort(initial_array),
     ]
-    return Orchestrator(algorithms, INITIAL_ARRAY)
+    return Orchestrator(algorithms, initial_array)
 
 
 def _build_panel_renderers(
@@ -172,6 +197,7 @@ def main() -> None:
     pygame.init()
 
     width, height = _load_config()
+    initial_array = _load_array()
     surface, layout = init_display(width, height)
     title_font, body_font, number_font = _load_fonts()
 
@@ -200,7 +226,7 @@ def main() -> None:
             array_x_padding=layout.ARRAY_X_PADDING,
             slot_width=layout.slot_width,
             font=number_font,
-            initial_array=INITIAL_ARRAY,
+            initial_array=initial_array,
             tree_layout=_heap_tree_layout if i == 3 else None,
         )
         for i in range(4)
@@ -225,7 +251,7 @@ def main() -> None:
         slot_width=layout.slot_width,
         home_y=_home_y_bubble,
         ring_radius=_ring_radius,
-        array_size=len(INITIAL_ARRAY),
+        array_size=len(initial_array),
     )
     _bubble_hud = BubbleHUD(
         panel_rect=layout.panel_rects[0],
@@ -254,10 +280,10 @@ def main() -> None:
         tree_layout=_heap_tree_layout,
         phase_label=_heap_phase_label,
         boundary_label=_heap_boundary_label,
-        array_size=len(INITIAL_ARRAY),
+        array_size=len(initial_array),
     )
 
-    orchestrator = _build_orchestrator()
+    orchestrator = _build_orchestrator(initial_array)
 
     clock = pygame.time.Clock()
 
@@ -277,7 +303,7 @@ def main() -> None:
                 elif event.key == pygame.K_r:
                     orchestrator.restart()
                     for sm in sprite_managers:
-                        sm.reset(INITIAL_ARRAY)
+                        sm.reset(initial_array)
                     selection_overlay.reset()
                     bubble_overlay.reset()
                     heap_overlay.reset()

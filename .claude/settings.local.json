@@ -51,7 +51,8 @@
       "Bash(git commit *)",
       "Bash(git checkout *)",
       "Read(//home/sju/.claude/**)",
-      "Bash(bash /home/sju/.claude/statusline-command.sh)"
+      "Bash(bash /home/sju/.claude/statusline-command.sh)",
+      "Bash(SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy uv run *)"
     ]
   },
   "outputStyle": "default"

@@ -83,6 +83,9 @@ class SpriteManager:
         self._is_extraction_swap: bool = False
         self._heap_sweep_indices: tuple[int, ...] | None = None
 
+        # Selection Sort settled-region state
+        self._selection_sorted_count: int = 0
+
         # Override sprite positions for Heap Sort — tree layout instead of flat baseline
         if algorithm_name == "Heap Sort" and tree_layout is not None:
             self._heap_node_positions = tree_layout.node_positions(len(initial_array))
@@ -139,6 +142,8 @@ class SpriteManager:
         # --- Algorithm-specific motion setup ---
         if self._algorithm_name == "Bubble Sort":
             self._dispatch_bubble(tick, ctx, op)
+        elif self._algorithm_name == "Selection Sort":
+            self._dispatch_selection(tick, ctx, op)
         elif self._algorithm_name == "Insertion Sort":
             self._dispatch_insertion(tick, ctx, op)
         elif self._algorithm_name == "Heap Sort":
@@ -169,6 +174,47 @@ class SpriteManager:
             else:
                 self._swap_left_id = ids[1]
                 self._swap_right_id = ids[0]
+
+    def _dispatch_selection(self, tick: SortResult, ctx: PanelContext, op: OpType) -> None:
+        """Selection Sort motion setup: standard arc swap + settled-region tracking."""
+        self._animating_sprites = {}
+        self._swap_left_id = None
+        self._swap_right_id = None
+
+        for sprite_id, new_slot in ctx.sprite_moves.items():
+            sprite = self._sprites[sprite_id]
+            self._animating_sprites[sprite_id] = (sprite.exact_x, sprite.exact_y)
+            sprite.update_home(new_slot)
+
+        if op == OpType.SWAP and len(self._animating_sprites) == 2:
+            ids = list(ctx.sprite_moves.keys())
+            if ctx.sprite_moves[ids[0]] < ctx.sprite_moves[ids[1]]:
+                self._swap_left_id = ids[0]
+                self._swap_right_id = ids[1]
+            else:
+                self._swap_left_id = ids[1]
+                self._swap_right_id = ids[0]
+
+            # Swap places the pass minimum at index self._selection_sorted_count.
+            self._selection_sorted_count += 1
+
+        elif op == OpType.COMPARE:
+            # No-swap pass detection: when min_idx > sorted_count, the previous pass
+            # placed an element that was already in position (no swap emitted).
+            # Catch up by incrementing for each skipped pass.
+            if tick.highlight_indices is not None and len(tick.highlight_indices) == 2:
+                min_idx = tick.highlight_indices[0]
+                while self._selection_sorted_count < min_idx:
+                    self._selection_sorted_count += 1
+
+        # Re-apply settled color to the sorted prefix
+        self._apply_selection_settled(ctx)
+
+    def _apply_selection_settled(self, ctx: PanelContext) -> None:
+        """Force ColorState.SETTLED for all sprites in the sorted prefix (slot < sorted_count)."""
+        for slot in range(self._selection_sorted_count):
+            sprite_id = ctx.slot_to_sprite_id[slot]
+            self._sprites[sprite_id].set_color_state(ColorState.SETTLED)
 
     def _dispatch_bubble(self, tick: SortResult, ctx: PanelContext, op: OpType) -> None:
         """Bubble Sort motion setup: T1 = compare-lift, T2 = snap-up + horizontal exchange."""
@@ -643,6 +689,8 @@ class SpriteManager:
         self._is_extraction_swap = False
         self._heap_sweep_indices = None
         self._heap_size = len(initial_array)
+        # Selection Sort state
+        self._selection_sorted_count = 0
         if self._algorithm_name == "Heap Sort" and self._tree_layout is not None:
             self._heap_node_positions = self._tree_layout.node_positions(len(initial_array))
             tree_radius = self._tree_layout.tree_node_radius
