@@ -110,16 +110,17 @@ Selection Sort uses `_dispatch_default` with sine_arc vertical offset on swaps. 
 ---
 
 ## AT-08 Duplicate Value Stability
-**Status: ⚠️ GAP — Needs code change to test**
+**Status: ✅ IMPL + 👁️ VISUAL (Phase 7c-5 added config support)**
 
-The architecture supports duplicates by design (Critical Rule #1: sprite identity by unique ID, never by value). However, the app is hardcoded to `INITIAL_ARRAY = [4, 7, 2, 6, 1, 5, 3]` — no duplicates. Testing with `[3, 1, 3, 2, 1, 2, 3]` requires either a config option or a code change to `INITIAL_ARRAY` in main.py.
+The architecture supports duplicates by design (Critical Rule #1: sprite identity by unique ID, never by value). Phase 7c-5 added `[sort].array` to `config.toml` — uncomment and set to `[3, 1, 3, 2, 1, 2, 3]` to test.
 
-**Action needed:**
-- [ ] Temporarily change `INITIAL_ARRAY` to `[3, 1, 3, 2, 1, 2, 3]` in main.py
-- [ ] Verify no sprite disappears or duplicates visually
+**What to check visually:**
+- [ ] Edit `config.toml`: uncomment `array = [3, 1, 3, 2, 1, 2, 3]`
+- [ ] Launch app — verify 7 sprites with duplicate values displayed
+- [ ] Run to completion — verify no sprite disappears or duplicates visually
 - [ ] Verify final sorted array is `[1, 1, 2, 2, 3, 3, 3]`
-- [ ] Verify all sprites animate stably
-- [ ] Revert `INITIAL_ARRAY` after testing
+- [ ] Verify all sprites animate stably across all 4 panels
+- [ ] Re-comment the array line in config.toml after testing
 
 ---
 
@@ -270,21 +271,16 @@ Default config: `preset = "desktop"` → 1280×720. Same layout engine as tablet
 ---
 
 ## AT-20 Selection Sort Sorted Region Stability
-**Status: ⚠️ GAP — Steel-blue for Selection Sort NOT implemented**
+**Status: ✅ IMPL + 👁️ VISUAL (Phase 7c-5)**
 
-Selection Sort uses `_dispatch_default`, which does standard highlight-on/highlight-off. There is no logic to transition placed elements to `ColorState.SETTLED` (steel-blue) after each swap. The settled color behavior was implemented for Heap Sort (`_apply_sorted_settled`) but NOT extended to Selection Sort.
+`_dispatch_selection` replaces `_dispatch_default` for Selection Sort. `_selection_sorted_count` tracks the growing sorted prefix — increments on T2 SWAP, with `while` catch-up on T1 COMPARE for no-swap passes. `_apply_selection_settled` forces `ColorState.SETTLED` (steel-blue) on sprites at indices `0..sorted_count-1`, surviving the shared highlight reset. On TERMINAL, all sprites transition to green via the shared completion handler.
 
-**AT-20 requires:**
-1. After each Selection Sort swap places the minimum at index `i`, that sprite should transition to `ColorState.SETTLED` (steel-blue `(130, 150, 190)`)
-2. Settled elements should never be re-highlighted by the scan cursor
-3. Sorted region grows left-to-right with steel-blue color
-4. On completion tick, settled elements transition to green
-
-**Action needed:**
-- [ ] Implement `_dispatch_selection` method in SpriteManager (analogous to `_dispatch_heap` etc.)
-- [ ] Track sorted-region indices, apply `ColorState.SETTLED` after swaps
-- [ ] Ensure highlight reset in `_dispatch_tick` does NOT re-highlight settled Selection Sort sprites
-- [ ] This is a Phase 7c follow-up — may warrant a 7c-5 prompt
+**What to check visually:**
+- [ ] Step through Selection Sort — after each swap, the element placed at index `i` turns steel-blue
+- [ ] Settled elements (indices `0..i`) remain steel-blue on all subsequent passes
+- [ ] Scan cursor (orange) never highlights settled elements
+- [ ] Sorted region grows from left to right
+- [ ] On completion, all elements (including settled) transition to green
 
 ---
 
@@ -386,24 +382,11 @@ TreeLayout positions nodes in binary tree. `_draw_heap` renders tree sprites wit
 
 | Category | Count | Tests |
 |----------|-------|-------|
-| ✅ Should pass (verify visually) | 24 | AT-01–07, AT-09–19, AT-21–27 |
-| ⚠️ Gap — needs implementation | 1 | AT-20 (Selection Sort settled color) |
-| ⚠️ Gap — needs config change | 1 | AT-08 (duplicate value array) |
+| ✅ Should pass (verify visually) | 26 | AT-01–05, AT-07–27 |
+| ✅ Needs code injection to test | 1 | AT-06 (failure isolation) |
 | 🤖 Automated coverage exists | 8 | AT-04, AT-05, AT-06, AT-10, AT-12, AT-15 (+ visual) |
 
-### Known Gaps Requiring Action
-
-**1. AT-20 — Selection Sort Sorted Region Stability (implementation gap)**
-
-Selection Sort currently uses `_dispatch_default` — it has no mechanism to mark placed elements as `ColorState.SETTLED` (steel-blue). This is the only acceptance test that describes a feature not present in the current code. A Phase 7c-5 sub-task is needed to:
-- Add `_dispatch_selection` to SpriteManager
-- Track the sorted prefix (indices `0..i` after pass `i`)
-- Apply `ColorState.SETTLED` to those sprites
-- Prevent highlight reset from overriding settled state (same pattern as Heap Sort's `_apply_sorted_settled`)
-
-**2. AT-08 — Duplicate Value Stability (test data gap)**
-
-The implementation architecturally supports duplicates (sprite identity by ID, not value). But the app is hardcoded to `[4, 7, 2, 6, 1, 5, 3]`. Testing requires temporarily changing `INITIAL_ARRAY` in main.py to `[3, 1, 3, 2, 1, 2, 3]`. No code changes needed — just a data swap for one test run.
+All 27 acceptance tests are now implementable. Phase 7c-5 closed both gaps (AT-20 settled color, AT-08 configurable array).
 
 ### Recommended Test Order
 
@@ -420,5 +403,5 @@ The implementation architecturally supports duplicates (sprite identity by ID, n
 11. **AT-12** — Counter accuracy (verify exact numbers)
 12. **AT-17** — Tablet preset (requires config change)
 13. **AT-08** — Duplicate values (requires array change)
-14. **AT-06** — Failure isolation (requires code injection)
-15. **AT-20** — ❌ BLOCKED until Selection Sort settled-color is implemented
+14. **AT-20** — Selection Sort settled region (step through to verify steel-blue)
+15. **AT-06** — Failure isolation (requires code injection — optional)

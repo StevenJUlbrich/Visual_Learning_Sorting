@@ -227,6 +227,7 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 - [x] **Phase 7c-2:** Bubble Sort choreography — _dispatch_bubble (compare-lift: 67ms ascent, 33ms hold, 50ms descent), _compute_bubble_positions (horizontal swap at compare_lane_y), BubbleOverlay (LimitLine + BubbleHUD + ComparisonPointer) *(2026-05-05)*
 - [x] **Phase 7c-3:** Insertion Sort choreography — cross-tick key elevation (_insertion_key_id, _insertion_key_elevated), _dispatch_insertion (key-lift, shift exclusion, diagonal drop), key-color force in _dispatch_tick, InsertionOverlay (KEY label) *(2026-05-05)*
 - [x] **Phase 7c-4:** Heap Sort choreography — TreeLayout integration (tree positions + sorted row), _dispatch_heap (Boundary T3 sweep, Logical Tree T3, sift-down arc, extraction arc 1.75×), 2D arc interpolation, steel-blue persistence, _draw_heap z-ordering, HeapOverlay (edges, phase label, placeholders, boundary marker) *(2026-05-05)*
+- [x] **Phase 7c-5:** Selection Sort settled color + configurable array — _dispatch_selection (arc-swap + sorted prefix tracking via _selection_sorted_count), _apply_selection_settled (steel-blue on 0..sorted_count-1), no-swap pass catch-up, config.toml [sort].array + _load_array() in main.py. Addresses AT-20 + AT-08. *(2026-05-05)*
 
 ---
 
