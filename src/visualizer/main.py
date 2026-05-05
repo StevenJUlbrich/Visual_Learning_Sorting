@@ -24,7 +24,12 @@ from visualizer.views.panel import PanelRenderer
 from visualizer.views.panel import PanelState as ViewPanelState
 from visualizer.views.pointer import PointerSet
 from visualizer.views.sprite import RING_DIAMETER_RATIO
-from visualizer.views.sprite_manager import BubbleOverlay, SelectionOverlay, SpriteManager
+from visualizer.views.sprite_manager import (
+    BubbleOverlay,
+    InsertionOverlay,
+    SelectionOverlay,
+    SpriteManager,
+)
 from visualizer.views.window import GridLayout, init_display, load_preset
 
 # ---------------------------------------------------------------------------
@@ -216,6 +221,9 @@ def main() -> None:
         ring_radius=_ring_radius,
     )
 
+    # Insertion Sort KEY label overlay (panel index 2)
+    insertion_overlay = InsertionOverlay(body_font)
+
     orchestrator = _build_orchestrator()
 
     clock = pygame.time.Clock()
@@ -273,6 +281,10 @@ def main() -> None:
             if i == 1:
                 selection_overlay.update(ctx)
                 selection_overlay.draw(surface)
+
+            # Insertion Sort KEY label (panel index 2)
+            if i == 2:
+                insertion_overlay.draw(surface, sprite_managers[i].insertion_key_info)
 
         pygame.display.flip()
 

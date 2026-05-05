@@ -61,6 +61,12 @@ class SpriteManager:
         self._swap_right_id: int | None = None
         self._current_op_type: OpType | None = None
 
+        # Insertion Sort cross-tick state
+        self._insertion_lift_offset: float = panel_rect.height * 0.06
+        self._insertion_key_id: int | None = None
+        self._insertion_key_elevated: bool = False
+        self._insertion_is_placement: bool = False
+
     # ---------------------------------------------------------------------------
     # Internal dispatch
     # ---------------------------------------------------------------------------
@@ -82,6 +88,12 @@ class SpriteManager:
                 sprite_id = ctx.slot_to_sprite_id[slot_idx]
                 self._sprites[sprite_id].set_color_state(ColorState.ACTIVE)
 
+        # Force key sprite to ACTIVE (orange) while elevated — Insertion Sort cross-tick state.
+        # This overrides the default highlight reset so the key stays orange during
+        # compare/shift ticks where it's not in highlight_indices.
+        if self._insertion_key_elevated and self._insertion_key_id is not None:
+            self._sprites[self._insertion_key_id].set_color_state(ColorState.ACTIVE)
+
         # --- Shared: terminal / failure (all algorithms) ---
         if op == OpType.TERMINAL:
             for sprite in self._sprites:
@@ -99,6 +111,8 @@ class SpriteManager:
         # --- Algorithm-specific motion setup ---
         if self._algorithm_name == "Bubble Sort":
             self._dispatch_bubble(tick, ctx, op)
+        elif self._algorithm_name == "Insertion Sort":
+            self._dispatch_insertion(tick, ctx, op)
         else:
             self._dispatch_default(tick, ctx, op)
 
@@ -146,6 +160,53 @@ class SpriteManager:
                 self._animating_sprites[sprite_id] = (sprite.exact_x, self._compare_lane_y)
                 sprite.update_home(new_slot)
 
+    def _dispatch_insertion(self, tick: SortResult, ctx: PanelContext, op: OpType) -> None:
+        """Insertion Sort motion setup: key-lift, shift exclusion, diagonal drop."""
+        self._animating_sprites = {}
+        self._swap_left_id = None
+        self._swap_right_id = None
+        self._insertion_is_placement = False
+
+        hi = tick.highlight_indices
+
+        if op == OpType.COMPARE:
+            if hi is not None and len(hi) == 1:
+                # --- Key Selection: lift the key sprite ---
+                slot_idx = hi[0]
+                sprite_id = ctx.slot_to_sprite_id[slot_idx]
+                sprite = self._sprites[sprite_id]
+                self._insertion_key_id = sprite_id
+                self._insertion_key_elevated = True
+                self._animating_sprites[sprite_id] = (sprite.exact_x, sprite.exact_y)
+                # Target y is home_y - lift_offset (computed in _compute_insertion_positions)
+            # Two-index COMPARE (shift-loop or terminating): highlight only, no motion.
+            # Key stays elevated via cross-tick state. No _animating_sprites needed.
+
+        elif op == OpType.SHIFT:
+            if hi is not None and len(hi) == 2:
+                # --- Shift: animate shifted sprite right, key stays elevated ---
+                for sprite_id, new_slot in ctx.sprite_moves.items():
+                    sprite = self._sprites[sprite_id]
+                    sprite.update_home(new_slot)  # Update home_x for BOTH sprites
+                    # Only animate the NON-key sprite
+                    if sprite_id != self._insertion_key_id:
+                        self._animating_sprites[sprite_id] = (sprite.exact_x, sprite.exact_y)
+                # The key sprite's home_x updated (for eventual drop target)
+                # but its exact_x/exact_y stay at elevated position — not in _animating_sprites.
+
+            elif hi is not None and len(hi) == 1:
+                # --- Placement: diagonal drop for key sprite ---
+                self._insertion_is_placement = True
+                if self._insertion_key_id is not None:
+                    sprite = self._sprites[self._insertion_key_id]
+                    self._animating_sprites[self._insertion_key_id] = (
+                        sprite.exact_x,
+                        sprite.exact_y,
+                    )
+                    # home_x is already at the destination slot (updated during shifts).
+                    # home_y is baseline — the y target for the drop.
+                self._insertion_key_elevated = False
+
     # ---------------------------------------------------------------------------
     # Per-frame update and draw
     # ---------------------------------------------------------------------------
@@ -161,6 +222,8 @@ class SpriteManager:
         if self._animation_duration_ms > 0 and self._animating_sprites:
             if self._algorithm_name == "Bubble Sort":
                 self._compute_bubble_positions()
+            elif self._algorithm_name == "Insertion Sort":
+                self._compute_insertion_positions()
             else:
                 self._compute_default_positions()
 
@@ -241,6 +304,56 @@ class SpriteManager:
                 s.exact_y = s.home_y
             self._animating_sprites = {}
 
+    def _compute_insertion_positions(self) -> None:
+        """Insertion Sort motion: key lift (T1), horizontal shift (T2), diagonal drop (T2)."""
+        elapsed = self._animation_elapsed_ms
+        duration = self._animation_duration_ms
+        t = min(elapsed / duration, 1.0)
+        eased_t = ease_in_out_quad(t)
+
+        if self._current_op_type == OpType.COMPARE:
+            # Key selection lift: ease y from home_y to home_y - lift_offset
+            for sprite_id, (start_x, start_y) in self._animating_sprites.items():
+                sprite = self._sprites[sprite_id]
+                sprite.exact_x = start_x  # No horizontal motion
+                target_y = sprite.home_y - self._insertion_lift_offset
+                sprite.exact_y = start_y + (target_y - start_y) * eased_t
+
+        elif self._current_op_type == OpType.SHIFT:
+            if self._insertion_is_placement:
+                # Diagonal drop: ease BOTH x and y simultaneously
+                for sprite_id, (start_x, start_y) in self._animating_sprites.items():
+                    sprite = self._sprites[sprite_id]
+                    sprite.exact_x = start_x + (sprite.home_x - start_x) * eased_t
+                    sprite.exact_y = start_y + (sprite.home_y - start_y) * eased_t
+            else:
+                # Horizontal shift: baseline sprite slides right at home_y
+                for sprite_id, (start_x, start_y) in self._animating_sprites.items():
+                    sprite = self._sprites[sprite_id]
+                    sprite.exact_x = start_x + (sprite.home_x - start_x) * eased_t
+                    sprite.exact_y = start_y  # Stay at home_y
+
+        # --- Snap on completion ---
+        if t >= 1.0:
+            if self._current_op_type == OpType.COMPARE and self._insertion_key_elevated:
+                # Key selection complete: snap to ELEVATED position, NOT home_y.
+                # The key must stay above baseline until placement.
+                for sprite_id in self._animating_sprites:
+                    sprite = self._sprites[sprite_id]
+                    sprite.exact_x = sprite.home_x
+                    sprite.exact_y = sprite.home_y - self._insertion_lift_offset
+                self._animating_sprites = {}
+            else:
+                # Shift or placement complete: snap to home
+                for sprite_id in self._animating_sprites:
+                    sprite = self._sprites[sprite_id]
+                    sprite.exact_x = sprite.home_x
+                    sprite.exact_y = sprite.home_y
+                self._animating_sprites = {}
+                # Clear key state after placement
+                if self._insertion_is_placement:
+                    self._insertion_key_id = None
+
     def draw(self, surface: pygame.Surface) -> None:
         """Draw sprites: baseline group first (by slot), lifted group on top (highest last)."""
         baseline: list[NumberSprite] = []
@@ -259,6 +372,14 @@ class SpriteManager:
             sprite.draw(surface)
         for sprite in lifted:
             sprite.draw(surface)
+
+    @property
+    def insertion_key_info(self) -> tuple[float, float, int] | None:
+        """Return (exact_x, exact_y, ring_radius) of the elevated key sprite, or None."""
+        if self._insertion_key_elevated and self._insertion_key_id is not None:
+            sprite = self._sprites[self._insertion_key_id]
+            return (sprite.exact_x, sprite.exact_y, sprite.ring_radius)
+        return None
 
     def reset(self, initial_array: list[int]) -> None:
         """Snap all sprites to initial positions and clear all animation state."""
@@ -282,6 +403,9 @@ class SpriteManager:
         self._swap_left_id = None
         self._swap_right_id = None
         self._current_op_type = None
+        self._insertion_key_id = None
+        self._insertion_key_elevated = False
+        self._insertion_is_placement = False
 
 
 class SelectionOverlay:
@@ -421,3 +545,32 @@ class BubbleOverlay:
         self._j = -1
         self._pointer_visible = False
         self._limit_line.reset()
+
+
+class InsertionOverlay:
+    """Draws the 'KEY' label above the elevated key sprite for Insertion Sort."""
+
+    _LABEL_COLOR: tuple[int, int, int] = (255, 140, 0)  # Active orange
+    _LABEL_GAP: int = 6  # pixels between ring top and label bottom
+
+    def __init__(self, body_font: pygame.font.Font) -> None:
+        self._font = body_font
+        self._label_surface: pygame.Surface = body_font.render("KEY", True, self._LABEL_COLOR)
+
+    def draw(
+        self,
+        surface: pygame.Surface,
+        key_info: tuple[float, float, int] | None,
+    ) -> None:
+        """Draw the KEY label above the key sprite if it is elevated.
+
+        key_info: (exact_x, exact_y, ring_radius) from SpriteManager.insertion_key_info.
+        """
+        if key_info is None:
+            return
+        key_x, key_y, ring_radius = key_info
+        label_rect = self._label_surface.get_rect(
+            centerx=round(key_x),
+            bottom=round(key_y) - ring_radius - self._LABEL_GAP,
+        )
+        surface.blit(self._label_surface, label_rect)

@@ -184,3 +184,51 @@ Two corrections on first run: (1) ruff I001 — import sort order in `main.py` (
 ### Next
 
 Phase 7c-3: Insertion Sort choreography (cross-tick key elevation, diagonal drop placement, KEY label, gap visualization).
+
+## 2026-05-05 — Phase 7c-3 pre-action: Insertion Sort choreography
+
+### Plan
+
+Add Insertion Sort's cross-tick key elevation to SpriteManager. Key selection T1 (single-index highlight) lifts the key sprite to home_y - lift_offset (panel_height * 0.06) and holds it there across subsequent compare and shift ticks. Shift T2 (two-index) animates only the baseline sprite horizontally; the key stays elevated and is excluded from _animating_sprites. Placement T2 (single-index) triggers a diagonal drop — both axes eased simultaneously. Force key to ACTIVE (orange) on every tick while elevated. Create InsertionOverlay for the KEY label. Wire into main.py for panel 2.
+
+### Exit criteria
+
+1. pyright — 0 errors, 0 warnings
+2. ruff check + ruff format — clean
+3. Existing test suite — 339/339 still passing (no regressions)
+4. Visual: Insertion Sort key lifts, stays elevated during shifts, drops diagonally, KEY label visible
+
+## 2026-05-05 — Phase 7c-3 closed: Insertion Sort choreography (post-action)
+
+### Worked on
+
+Added Insertion Sort cross-tick key elevation to `SpriteManager`. New `__init__` fields: `_insertion_lift_offset` (panel_height * 0.06), `_insertion_key_id`, `_insertion_key_elevated`, `_insertion_is_placement`.
+
+Added key-color force in `_dispatch_tick`: after highlight application, if key is elevated, forces key sprite to ACTIVE (orange) regardless of whether it appears in `highlight_indices`. Added `_dispatch_insertion` branch in the algorithm dispatch.
+
+Created `_dispatch_insertion`: single-index T1 COMPARE triggers key-lift (records sprite start position, sets `_insertion_key_elevated = True`); two-index T2 SHIFT calls `update_home` for both sprites in `sprite_moves` but only adds the non-key sprite to `_animating_sprites`; single-index T2 SHIFT (placement) sets `_insertion_is_placement = True`, adds key sprite to `_animating_sprites`, clears `_insertion_key_elevated`.
+
+Created `_compute_insertion_positions`: T1 COMPARE eases y from start to `home_y - lift_offset`; T2 SHIFT (horizontal) eases shifted sprite x at fixed y; T2 SHIFT (placement) eases both x and y simultaneously (diagonal drop). Snap-on-completion for key selection snaps to `home_y - lift_offset` (NOT `home_y`) so the elevated position persists until placement.
+
+Added `insertion_key_info` property: returns `(exact_x, exact_y, ring_radius)` when key is elevated, else `None`.
+
+Updated `reset()` to clear all three insertion state fields.
+
+Created `InsertionOverlay` class: pre-renders "KEY" label surface in orange `(255, 140, 0)` in `__init__`; `draw()` positions label above key sprite top (ring_radius + 6px gap) and blits; stateless — purely driven by `key_info` being non-None.
+
+Modified `main.py`: updated import to include `InsertionOverlay`; created `insertion_overlay = InsertionOverlay(body_font)` after BubbleOverlay block; added `insertion_overlay.draw(surface, sprite_managers[i].insertion_key_info)` for `i == 2` in render loop. No `update()` or `reset()` wiring needed (stateless overlay).
+
+### Corrections
+
+One correction: ruff reformatted `sprite_manager.py` (whitespace/line-length adjustments). No logic changes.
+
+### Results
+
+- `uv run pyright src/visualizer/views/sprite_manager.py src/visualizer/main.py`: **0 errors, 0 warnings**
+- `uv run ruff check` + `uv run ruff format --check`: **clean**
+- `uv run pytest tests/ -q`: **339/339 PASSED** (no regressions)
+- Import check: **PASS**
+
+### Next
+
+Phase 7c-4: Heap Sort choreography (TreeLayout integration, parent-child edges, extraction arc, boundary sweep, sorted row, phase/boundary labels).
