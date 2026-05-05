@@ -49,7 +49,9 @@
       "Bash(xargs ls *)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Read(//home/sju/.claude/**)",
+      "Bash(bash /home/sju/.claude/statusline-command.sh)"
     ]
   },
   "outputStyle": "default"
