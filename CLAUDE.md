@@ -148,4 +148,12 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 
 - Phase 7b: `sprite_manager.py` — SpriteManager class (per-panel sprite lifecycle, animation dispatch via sprite_moves, ease_in_out_quad horizontal + sine_arc swap vertical, highlight colors, z-ordering, restart/pause handling); main.py wired with 4 SpriteManagers (200+207 lines); cumulative 339/339 (no new tests)
 
-**Next:** Phase 7c — Per-algorithm visual choreography (Bubble compare-lift, Insertion key elevation, Heap tree layout, Selection pointers, instructional assets).
+- Phase 7c-1: `SelectionOverlay` class in sprite_manager.py — tracks i/j/min pointer indices from Selection Sort ticks, wires PointerSet into panel 1. `algorithm_name` parameter added to SpriteManager.__init__. (2026-05-05, Sonnet 4.6, zero corrections)
+
+- Phase 7c-2: Bubble Sort choreography — SpriteManager refactored: `_dispatch_tick` split into shared + algorithm-specific dispatch (`_dispatch_default`, `_dispatch_bubble`). `_compute_bubble_positions` implements 3-phase compare-lift (ascent 67ms, hold 33ms, descent 50ms) + horizontal swap slide at compare_lane_y. `BubbleOverlay` class manages LimitLine, BubbleHUD, and ComparisonPointer. (2026-05-05, Sonnet 4.6, 2 ruff corrections)
+
+- Phase 7c-3: Insertion Sort choreography — cross-tick key elevation via `_insertion_key_id`/`_insertion_key_elevated` state. `_dispatch_insertion` handles key-lift (single-index T1), shift exclusion (key excluded from `_animating_sprites`), diagonal drop (single-index T2 placement). Key-color force in `_dispatch_tick` keeps elevated key orange across ticks. `InsertionOverlay` class renders stateless KEY label. (2026-05-05, Sonnet 4.6, zero corrections)
+
+- Phase 7c-4: Heap Sort choreography — TreeLayout integration: sprites positioned at binary tree nodes (active heap) + sorted row (extracted). `_dispatch_heap` discriminates Boundary T3 (staggered 120ms sweep + 80ms hold) vs Logical Tree T3 (simultaneous flash) via D-081 message prefix. 2D arc interpolation for sift-down swaps; extraction arc at 1.75× height with reversed direction (root arcs UP). Steel-blue persistence via `_apply_sorted_settled`. `_draw_heap` z-ordering: sorted row → tree (deep-first) → arcing (upward-on-top). `HeapOverlay` class: parent-child edges with active orange highlighting, phase label (BUILD MAX-HEAP/EXTRACTION), sorted-row placeholder outlines, dashed boundary marker. Split draw (draw_under/draw_over) in main.py. sprite_manager.py: 965 lines; main.py: 337 lines. (2026-05-05, Opus 4.6, zero corrections + headless smoke test)
+
+**Next:** Phase 10 — Manual acceptance testing (AT-01 through AT-27). Phase 9 (CI) deferred until after visual verification.

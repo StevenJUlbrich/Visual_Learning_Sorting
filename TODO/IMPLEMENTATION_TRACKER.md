@@ -136,11 +136,11 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 - [x] **TC-A13** T3 step counter exclusion (steps=35, T3 count=17) — *Complete. 35 steps, 6 boundary + 11 logical tree T3 = 17 total.*
 - [x] **TC-A14** Insertion Sort terminating comparison (sorted_7 fixture) — *Complete. 6/6 passes verified: 0 shifts, 1 terminating compare, 1 placement each.*
 - [x] **TC-A19** Heap Sort sift-down tick sequence contract (T3->T1->T2 per level) — *Complete. 11 levels verified. D-058 parent-first assertion. First attempt pass.*
-- [ ] **TC-A20** Tree layout node positioning (both presets, no overlap)
-- [ ] **TC-A21** Tree layout edge connectivity
-- [ ] **TC-A22** Tree layout shrinking (heap_size 7 down to 1)
-- [ ] **TC-A23** Selection Sort pointer tracking
-- [ ] **TC-A24** Insertion Sort KEY label lifecycle
+- [x] **TC-A20** Tree layout node positioning (both presets, no overlap) — *Phase 5d: 38 tests in test_tree_layout.py*
+- [x] **TC-A21** Tree layout edge connectivity — *Phase 5d: edge connectivity tests*
+- [x] **TC-A22** Tree layout shrinking (heap_size 7 down to 1) — *Phase 5d: tree shrinking tests*
+- [x] **TC-A23** Selection Sort pointer tracking — *Phase 5e: 25 tests in test_pointer.py*
+- [ ] **TC-A24** Insertion Sort KEY label lifecycle — *No unit test; visual verification via AT-25*
 
 ---
 
@@ -175,14 +175,14 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 - [x] `pointer.py` — Selection Sort i/j/min pointer arrows with coalescing (D-068, TC-A23). *25 tests: arrow positions, slot_center_x formula, coalescing all cases (j==min, j≠min, j/min None), color constants, draw no-crash (all states, edge slots 0+6). 188/188 cumulative. Pyright 0 errors. Ruff clean. Zero corrections. 2026-04-30, Sonnet 4.6.*
 - [x] `limitline.py` — Bubble Sort vertical dashed boundary. *21 tests: position formula, visibility states, advance/reset, slot-center bounds, line-span invariant, color constant, draw no-crash. LINE_COLOR exported for hud.py reuse. 209/209 cumulative. Pyright 0 errors. Ruff clean. Zero first-run corrections. 2026-04-30, Sonnet 4.6.*
 - [x] `hud.py` — Bubble Sort comparison/exchange counters overlay + Heap Sort phase label + Heap Sort boundary label. *26 tests: color constant values/cross-module aliasing, BubbleHUD position formula (counter_x, comparisons_y, exchanges_y) and bounds, draw no-crash (zero/nonzero/large counts), HeapPhaseLabel center_x + draw no-crash (BUILD MAX-HEAP/EXTRACTION/fractional y), HeapBoundaryLabel LABEL_TEXT constant + draw no-crash (normal/origin/fractional coords). 235/235 cumulative. Pyright 0 errors. Ruff clean. One correction: ruff format on test file. 2026-05-01, Sonnet 4.6.*
-- [ ] Z-ordering: lifted sprites on top of baseline (doc 12 Section 3)
-- [ ] Highlight behavior: instant apply/replace, no fade (doc 12 Section 4)
-- [ ] Compare lane: Bubble 50px transient, Insertion proportional sustained (doc 12 Section 5)
-- [ ] Heap boundary sweep: staggered left-to-right over 120ms + 80ms hold (doc 10 Section 5.4.1)
-- [ ] Insertion Sort KEY label + gap visualization (D-071, D-072)
-- [ ] Heap Sort phase label "BUILD MAX-HEAP" / "EXTRACTION" (D-075)
-- [ ] Heap Sort heap boundary marker dashed line (D-076)
-- [ ] Completion panel green background `(35, 55, 42)` (D-078)
+- [x] Z-ordering: lifted sprites on top of baseline (doc 12 Section 3) — *Phase 7b baseline + 7c per-algorithm overrides (_draw_heap tree z-order, Bubble/Insertion lifted-sprite sorting)*
+- [x] Highlight behavior: instant apply/replace, no fade (doc 12 Section 4) — *Phase 7b shared highlight in _dispatch_tick*
+- [x] Compare lane: Bubble 50px transient, Insertion proportional sustained (doc 12 Section 5) — *Phase 7c-2 (Bubble _compare_lane_y) + 7c-3 (Insertion _insertion_lift_offset)*
+- [x] Heap boundary sweep: staggered left-to-right over 120ms + 80ms hold (doc 10 Section 5.4.1) — *Phase 7c-4 (_apply_heap_sweep)*
+- [x] Insertion Sort KEY label + gap visualization (D-071, D-072) — *Phase 7c-3 (InsertionOverlay)*
+- [x] Heap Sort phase label "BUILD MAX-HEAP" / "EXTRACTION" (D-075) — *Phase 7c-4 (HeapOverlay.draw_over → HeapPhaseLabel)*
+- [x] Heap Sort heap boundary marker dashed line (D-076) — *Phase 7c-4 (HeapOverlay._draw_boundary_line)*
+- [x] Completion panel green background `(35, 55, 42)` (D-078) — *Phase 5c (PanelRenderer.draw_background COMPLETED state)*
 - [ ] Error state border + message styling
 
 ---
@@ -223,6 +223,10 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 - [x] NumberSprite instances wired into render loop — SpriteManager class in sprite_manager.py, 4 instances created in main.py *(2026-05-04, Phase 7b)*
 - [x] Sprite animation driven by PanelContext.sprite_moves — tick detection by identity, ease_in_out_quad horizontal + sine_arc swap vertical, highlight coloring, z-ordering *(2026-05-04, Phase 7b)*
 - [x] Legacy `/main.py` stub deleted *(2026-05-04)*
+- [x] **Phase 7c-1:** SelectionOverlay — i/j/min pointer tracking from tick highlight_indices, PointerSet wired to panel 1, algorithm_name param added to SpriteManager *(2026-05-05)*
+- [x] **Phase 7c-2:** Bubble Sort choreography — _dispatch_bubble (compare-lift: 67ms ascent, 33ms hold, 50ms descent), _compute_bubble_positions (horizontal swap at compare_lane_y), BubbleOverlay (LimitLine + BubbleHUD + ComparisonPointer) *(2026-05-05)*
+- [x] **Phase 7c-3:** Insertion Sort choreography — cross-tick key elevation (_insertion_key_id, _insertion_key_elevated), _dispatch_insertion (key-lift, shift exclusion, diagonal drop), key-color force in _dispatch_tick, InsertionOverlay (KEY label) *(2026-05-05)*
+- [x] **Phase 7c-4:** Heap Sort choreography — TreeLayout integration (tree positions + sorted row), _dispatch_heap (Boundary T3 sweep, Logical Tree T3, sift-down arc, extraction arc 1.75×), 2D arc interpolation, steel-blue persistence, _draw_heap z-ordering, HeapOverlay (edges, phase label, placeholders, boundary marker) *(2026-05-05)*
 
 ---
 
