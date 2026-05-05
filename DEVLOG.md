@@ -110,3 +110,39 @@ Zero corrections — clean on first run.
 ### Next
 
 Phase 7c: per-algorithm choreography — Bubble Sort compare-lift (3-phase T1 vertical), Insertion Sort sustained key elevation + KEY label + gap visualization, Heap Sort binary tree layout (tree_layout.py wiring), Selection Sort pointer arrows (pointer.py wiring).
+
+## 2026-05-05 — Phase 7c-1 pre-action: Selection Sort pointer overlay
+
+### Plan
+
+Create `SelectionOverlay` class in `sprite_manager.py` that tracks the `i` (sorted boundary), `j` (scan cursor), and `min` (minimum tracker) pointer indices by reading `highlight_indices` from Selection Sort ticks. Wire the pre-built `PointerSet` from `pointer.py` to draw labeled arrows in the Selection Sort panel (index 1). Add `algorithm_name` parameter to `SpriteManager.__init__` as a hook for later choreography sub-phases. No changes to sprite motion — Selection Sort uses the existing baseline arc swap model.
+
+### Exit criteria
+
+1. pyright — 0 errors, 0 warnings
+2. ruff check + ruff format — clean
+3. Existing test suite — 339/339 still passing (no regressions)
+4. Visual: Selection Sort panel shows i/j/min arrows that track the algorithm's scan pattern
+
+## 2026-05-05 — Phase 7c-1 closed: Selection Sort pointer overlay (post-action)
+
+### Worked on
+
+Added `algorithm_name: str` as the first parameter to `SpriteManager.__init__` (stored as `self._algorithm_name`; no behavioral change). Added `from visualizer.views.pointer import PointerSet` import to `sprite_manager.py`. Created `SelectionOverlay` class in `sprite_manager.py` after `SpriteManager`: constructor stores a `PointerSet` reference and initializes all tracking state; `update()` uses identity-check new-tick detection; `_process_tick()` handles T1 COMPARE (new-pass detection via `_awaiting_new_pass` or `j < self._j`, extracts `min_idx`/`j` from `highlight_indices`), T2 SWAP (hides i/j, keeps min visible at `highlight_indices[1]`, sets `_awaiting_new_pass = True`), and TERMINAL/FAILURE (hides all); `draw()` delegates to `PointerSet.draw()`; `reset()` clears all state.
+
+Modified `main.py`: added `PointerSet`, `RING_DIAMETER_RATIO`, and `SelectionOverlay` imports; added `_ALGORITHM_NAMES` module-level constant; updated `SpriteManager` list comprehension to pass `algorithm_name=_ALGORITHM_NAMES[i]`; created `_ring_radius`, `_pointer_set`, and `selection_overlay` after `sprite_managers` in `main()`; wired `selection_overlay.update(ctx)` + `.draw(surface)` inside panel render loop for `i == 1`; added `selection_overlay.reset()` to K_r restart handler.
+
+### Corrections
+
+Zero corrections — clean on first run.
+
+### Results
+
+- `uv run pyright src/visualizer/views/sprite_manager.py src/visualizer/main.py`: **0 errors, 0 warnings**
+- `uv run ruff check` + `uv run ruff format --check`: **clean**
+- `uv run pytest tests/ -q`: **339/339 PASSED** (no regressions)
+- Import check: **PASS**
+
+### Next
+
+Phase 7c-2: Bubble Sort choreography (3-phase compare-lift, horizontal swap slide, LimitLine, BubbleHUD, ComparisonPointer).

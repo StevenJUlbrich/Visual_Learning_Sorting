@@ -16,6 +16,7 @@ import pygame
 from visualizer.controllers.orchestrator import PanelContext, PanelState, get_duration
 from visualizer.models.contracts import OpType, SortResult
 from visualizer.views.easing import ease_in_out_quad, sine_arc
+from visualizer.views.pointer import PointerSet
 from visualizer.views.sprite import ColorState, NumberSprite
 
 
@@ -29,12 +30,14 @@ class SpriteManager:
 
     def __init__(
         self,
+        algorithm_name: str,
         panel_rect: pygame.Rect,
         array_x_padding: int,
         slot_width: float,
         font: pygame.font.Font,
         initial_array: list[int],
     ) -> None:
+        self._algorithm_name = algorithm_name
         self._panel_rect = panel_rect
         self._array_x_padding = array_x_padding
         self._slot_width = slot_width
@@ -198,3 +201,66 @@ class SpriteManager:
         self._swap_left_id = None
         self._swap_right_id = None
         self._current_op_type = None
+
+
+class SelectionOverlay:
+    """Tracks i/j/min pointer indices for the Selection Sort panel."""
+
+    def __init__(self, pointer_set: PointerSet) -> None:
+        self._pointer_set = pointer_set
+        self._last_tick: SortResult | None = None
+        self._awaiting_new_pass: bool = True
+        self._i: int = 0
+        self._j: int = 0
+        self._min: int = 0
+        self._draw_i: int | None = None
+        self._draw_j: int | None = None
+        self._draw_min: int | None = None
+
+    def update(self, ctx: PanelContext) -> None:
+        if ctx.current_tick is not None and ctx.current_tick is not self._last_tick:
+            self._process_tick(ctx.current_tick)
+            self._last_tick = ctx.current_tick
+
+    def _process_tick(self, tick: SortResult) -> None:
+        op = tick.operation_type
+
+        if op == OpType.COMPARE:
+            if tick.highlight_indices is None or len(tick.highlight_indices) != 2:
+                return
+            min_idx = tick.highlight_indices[0]
+            j = tick.highlight_indices[1]
+            if self._awaiting_new_pass or j < self._j:
+                self._i = min_idx
+                self._awaiting_new_pass = False
+            self._min = min_idx
+            self._j = j
+            self._draw_i = self._i
+            self._draw_j = j
+            self._draw_min = min_idx
+
+        elif op == OpType.SWAP:
+            if tick.highlight_indices is None or len(tick.highlight_indices) != 2:
+                return
+            self._draw_i = None
+            self._draw_j = None
+            self._draw_min = tick.highlight_indices[1]
+            self._awaiting_new_pass = True
+
+        elif op in (OpType.TERMINAL, OpType.FAILURE):
+            self._draw_i = None
+            self._draw_j = None
+            self._draw_min = None
+
+    def draw(self, surface: pygame.Surface) -> None:
+        self._pointer_set.draw(surface, self._draw_i, self._draw_j, self._draw_min)
+
+    def reset(self) -> None:
+        self._last_tick = None
+        self._awaiting_new_pass = True
+        self._i = 0
+        self._j = 0
+        self._min = 0
+        self._draw_i = None
+        self._draw_j = None
+        self._draw_min = None

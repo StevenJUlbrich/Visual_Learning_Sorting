@@ -20,7 +20,9 @@ from visualizer.models.insertion import InsertionSort
 from visualizer.models.selection import SelectionSort
 from visualizer.views.panel import PanelRenderer
 from visualizer.views.panel import PanelState as ViewPanelState
-from visualizer.views.sprite_manager import SpriteManager
+from visualizer.views.pointer import PointerSet
+from visualizer.views.sprite import RING_DIAMETER_RATIO
+from visualizer.views.sprite_manager import SelectionOverlay, SpriteManager
 from visualizer.views.window import GridLayout, init_display, load_preset
 
 # ---------------------------------------------------------------------------
@@ -28,6 +30,8 @@ from visualizer.views.window import GridLayout, init_display, load_preset
 # ---------------------------------------------------------------------------
 
 INITIAL_ARRAY: list[int] = [4, 7, 2, 6, 1, 5, 3]
+
+_ALGORITHM_NAMES: list[str] = ["Bubble Sort", "Selection Sort", "Insertion Sort", "Heap Sort"]
 
 _DEFAULT_WIDTH: int = 1280
 _DEFAULT_HEIGHT: int = 720
@@ -165,6 +169,7 @@ def main() -> None:
     panel_renderers = _build_panel_renderers(layout, title_font, body_font)
     sprite_managers = [
         SpriteManager(
+            algorithm_name=_ALGORITHM_NAMES[i],
             panel_rect=layout.panel_rects[i],
             array_x_padding=layout.ARRAY_X_PADDING,
             slot_width=layout.slot_width,
@@ -173,6 +178,18 @@ def main() -> None:
         )
         for i in range(4)
     ]
+
+    # Selection Sort pointer overlay (panel index 1)
+    _ring_radius = int(layout.slot_width * RING_DIAMETER_RATIO) // 2
+    _pointer_set = PointerSet(
+        panel_rect=layout.panel_rects[1],
+        array_x_padding=layout.ARRAY_X_PADDING,
+        slot_width=layout.slot_width,
+        ring_radius=_ring_radius,
+        body_font=body_font,
+    )
+    selection_overlay = SelectionOverlay(_pointer_set)
+
     orchestrator = _build_orchestrator()
 
     clock = pygame.time.Clock()
@@ -194,6 +211,7 @@ def main() -> None:
                     orchestrator.restart()
                     for sm in sprite_managers:
                         sm.reset(INITIAL_ARRAY)
+                    selection_overlay.reset()
                 elif event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     return
@@ -218,6 +236,11 @@ def main() -> None:
             )
             sprite_managers[i].update(dt, ctx)
             sprite_managers[i].draw(surface)
+
+            # Selection Sort pointer overlay (panel index 1)
+            if i == 1:
+                selection_overlay.update(ctx)
+                selection_overlay.draw(surface)
 
         pygame.display.flip()
 
