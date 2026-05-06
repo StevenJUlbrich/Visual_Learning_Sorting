@@ -85,6 +85,7 @@ class SpriteManager:
 
         # Selection Sort settled-region state
         self._selection_sorted_count: int = 0
+        self._selection_last_j: int = -1
 
         # Override sprite positions for Heap Sort — tree layout instead of flat baseline
         if algorithm_name == "Heap Sort" and tree_layout is not None:
@@ -199,13 +200,18 @@ class SpriteManager:
             self._selection_sorted_count += 1
 
         elif op == OpType.COMPARE:
-            # No-swap pass detection: when min_idx > sorted_count, the previous pass
-            # placed an element that was already in position (no swap emitted).
-            # Catch up by incrementing for each skipped pass.
+            # No-swap pass detection: when a new outer-loop pass starts without
+            # a preceding swap, the element at the old i was already in position.
+            # Detect new pass by j resetting (j decreased or first tick).
+            # Only then check min_idx — at pass start, min_idx == i.
             if tick.highlight_indices is not None and len(tick.highlight_indices) == 2:
                 min_idx = tick.highlight_indices[0]
-                while self._selection_sorted_count < min_idx:
-                    self._selection_sorted_count += 1
+                j = tick.highlight_indices[1]
+                if j <= self._selection_last_j or self._selection_last_j == -1:
+                    # New pass started — catch up for any skipped no-swap passes
+                    while self._selection_sorted_count < min_idx:
+                        self._selection_sorted_count += 1
+                self._selection_last_j = j
 
         # Re-apply settled color to the sorted prefix
         self._apply_selection_settled(ctx)
@@ -691,6 +697,7 @@ class SpriteManager:
         self._heap_size = len(initial_array)
         # Selection Sort state
         self._selection_sorted_count = 0
+        self._selection_last_j = -1
         if self._algorithm_name == "Heap Sort" and self._tree_layout is not None:
             self._heap_node_positions = self._tree_layout.node_positions(len(initial_array))
             tree_radius = self._tree_layout.tree_node_radius
