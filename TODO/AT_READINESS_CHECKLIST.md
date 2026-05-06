@@ -19,11 +19,11 @@ Generated: 2026-05-05 | Based on: Phase 7c-4 completion (all choreography wired)
 The orchestrator starts in paused state (`_running = False`). All four panels render with `INITIAL_ARRAY = [4, 7, 2, 6, 1, 5, 3]`. Counters initialize to zero, elapsed timers to `00.00s`. Panel renderers draw headers with these values from PanelContext defaults.
 
 **What to check visually:**
-- [ ] 4 panels visible in 2×2 grid
-- [ ] Each shows `4 7 2 6 1 5 3` as circular ring sprites
-- [ ] All timers read `00.00s`
-- [ ] All counters read `Steps: 0 | Cmp: 0 | Wr: 0`
-- [ ] App is paused (no animation)
+- [x] 4 panels visible in 2×2 grid
+- [p] Each shows `4 7 2 6 1 5 3` as circular ring sprites
+- [x] All timers read `00.00s`
+- [x] All counters read `Steps: 0 | Cmp: 0 | Wr: 0`
+- [x] App is paused (no animation)
 
 ---
 
@@ -33,9 +33,9 @@ The orchestrator starts in paused state (`_running = False`). All four panels re
 `orchestrator.step()` advances each panel's independent queue by one tick. `get_duration()` returns per-OpType durations. T3 RANGE ticks do not increment step counters (Critical Rule #3, enforced in orchestrator).
 
 **What to check visually:**
-- [ ] Press Step (Right Arrow) once — each panel animates one operation
-- [ ] Step again — deterministic, no forced sync between panels
-- [ ] Step counter only increments on T1/T2, not on T3 range highlights
+- [x] Press Step (Right Arrow) once — each panel animates one operation
+- [x] Step again — deterministic, no forced sync between panels
+- [x] Step counter only increments on T1/T2, not on T3 range highlights
 
 ---
 
@@ -45,10 +45,10 @@ The orchestrator starts in paused state (`_running = False`). All four panels re
 Different operation costs (T1=150ms, T2=400ms, T3=200ms, with Heap sift-down overrides) create genuine timing differences. Completed panels freeze their elapsed timer via PanelState.COMPLETED in orchestrator.
 
 **What to check visually:**
-- [ ] Press Space to play — all four panels animate independently
-- [ ] Faster algorithms finish first (elapsed timers differ)
-- [ ] Completed panels stop animating, timers frozen
-- [ ] Final arrays all show `1 2 3 4 5 6 7`
+- [x] Press Space to play — all four panels animate independently
+- [x] Faster algorithms finish first (elapsed timers differ)
+- [x] Completed panels stop animating, timers frozen
+- [x] Final arrays all show `1 2 3 4 5 6 7`
 
 ---
 
@@ -58,9 +58,9 @@ Different operation costs (T1=150ms, T2=400ms, T3=200ms, with Heap sift-down ove
 `PanelRenderer.draw_background()` switches to `COMPLETED_BG = (35, 55, 42)` when `ViewPanelState.COMPLETED` is passed. `_map_panel_state()` in main.py translates orchestrator state to view state. Sprites transition to `ColorState.COMPLETE` (green `(80, 220, 120)`) on terminal tick.
 
 **What to check visually:**
-- [ ] Each panel background turns muted green `(35, 55, 42)` on completion
-- [ ] HUD stats (Big-O, elapsed, steps, comparisons, writes) remain visible and frozen
-- [ ] Green panel is distinct from app background `(30, 30, 35)` and standard panel `(45, 45, 53)`
+- [x] Each panel background turns muted green `(35, 55, 42)` on completion
+- [x] HUD stats (Big-O, elapsed, steps, comparisons, writes) remain visible and frozen
+- [x] Green panel is distinct from app background `(30, 30, 35)` and standard panel `(45, 45, 53)`
 
 ---
 
@@ -70,8 +70,8 @@ Different operation costs (T1=150ms, T2=400ms, T3=200ms, with Heap sift-down ove
 Automated tests (TC-A4 in Phase 6e) verify exactly one terminal tick per algorithm. Orchestrator transitions to PanelState.COMPLETED and stops pulling from generator.
 
 **What to check visually:**
-- [ ] Clear terminal state per algorithm (green sprites, frozen timer)
-- [ ] No further progress ticks after completion
+- [x] Clear terminal state per algorithm (green sprites, frozen timer)
+- [x] No further progress ticks after completion
 
 ---
 
@@ -81,7 +81,7 @@ Automated tests (TC-A4 in Phase 6e) verify exactly one terminal tick per algorit
 TC-A6 (Phase 6e integration test) verifies Selection Sort produces fully sorted output. Generator contract ensures no residual inversions.
 
 **What to check visually:**
-- [ ] Selection Sort final array is `1 2 3 4 5 6 7` — no trailing inversions
+- [x] Selection Sort final array is `1 2 3 4 5 6 7` — no trailing inversions
 
 ---
 
@@ -102,10 +102,10 @@ TC-A17/A18 (Phase 6e) test failure isolation with FailingAlgorithm helper. Panel
 Selection Sort uses `_dispatch_default` with sine_arc vertical offset on swaps. Heap Sort uses 2D arc interpolation (`_compute_heap_positions`). Bubble Sort uses compare-lane lift with horizontal slide (no arc at compare lane). All use `ease_in_out_quad` for horizontal motion. dt clamp `min(raw_dt, 33)` prevents overshoot.
 
 **What to check visually:**
-- [ ] Selection Sort swaps: visible y-axis arc separating the two sprites
-- [ ] Heap Sort swaps: visible arc motion in tree layout
-- [ ] Bubble Sort swaps: lift to compare lane, horizontal slide, no arc
-- [ ] No teleporting or abrupt snaps during play (pausing mid-animation is acceptable)
+- [x] Selection Sort swaps: visible y-axis arc separating the two sprites
+- [p] Heap Sort swaps: visible arc motion in tree layout
+- [x] Bubble Sort swaps: lift to compare lane, horizontal slide, no arc
+- [x] No teleporting or abrupt snaps during play (pausing mid-animation is acceptable)
 
 ---
 
@@ -130,11 +130,11 @@ The architecture supports duplicates by design (Critical Rule #1: sprite identit
 HeapOverlay renders phase label ("BUILD MAX-HEAP" / "EXTRACTION"). Boundary T3 ticks show staggered orange sweep of active heap. TreeLayout renders binary tree with parent-child edges. Extracted sprites move to sorted row with steel-blue color.
 
 **What to check visually:**
-- [ ] Phase 1: visible swaps during heap construction (3 violations repaired)
+- [x] Phase 1: visible swaps during heap construction (3 violations repaired)
 - [ ] T3 range emphasis: shrinking active heap highlighted in orange
 - [ ] Binary tree layout with parent-child edges visible
-- [ ] Sorted row below tree grows as extractions proceed
-- [ ] Final: all sprites ascending, green completion color
+- [x] Sorted row below tree grows as extractions proceed
+- [x] Final: all sprites ascending, green completion color
 
 ---
 
@@ -145,8 +145,8 @@ Heap Sort generator (Phase 2) guarantees build phase completes before extraction
 
 **What to check visually:**
 - [ ] Build Max-Heap completes fully before any extraction
-- [ ] After Phase 1, tree represents valid max-heap `[7, 6, 5, 4, 1, 2, 3]`
-- [ ] Sorted region grows by one per extraction step
+- [x] After Phase 1, tree represents valid max-heap `[7, 6, 5, 4, 1, 2, 3]`
+- [x] Sorted region grows by one per extraction step
 
 ---
 
