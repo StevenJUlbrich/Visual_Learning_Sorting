@@ -23,7 +23,8 @@ from visualizer.views.sprite import COLOR_MAP, ColorState
 
 ARROW_HEIGHT: int = 12
 ARROW_HALF_WIDTH: int = 5
-ARROW_GAP: int = 5  # clearance between ring edge and arrow tip
+I_ARROW_GAP: int = 12  # clearance between ring edge and i-pointer tip (above)
+JMIN_ARROW_GAP: int = 5  # clearance between ring edge and j/min-pointer tip (below)
 LABEL_GAP: int = 2  # gap between arrow base and label text
 
 # ---------------------------------------------------------------------------
@@ -71,11 +72,11 @@ class PointerSet:
 
     def i_arrow_y(self) -> float:
         """Tip y for the i pointer arrow (above baseline, tip points toward ring)."""
-        return self._home_y - self._ring_radius - ARROW_GAP
+        return self._home_y - self._ring_radius - I_ARROW_GAP
 
     def jmin_arrow_y(self) -> float:
         """Tip y for j and min pointer arrows (below baseline, tip points toward ring)."""
-        return self._home_y + self._ring_radius + ARROW_GAP
+        return self._home_y + self._ring_radius + JMIN_ARROW_GAP
 
     def coalesced_pointers(
         self,

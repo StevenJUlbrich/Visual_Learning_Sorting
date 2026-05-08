@@ -10,7 +10,8 @@ import pygame
 import pytest
 
 from visualizer.views.pointer import (
-    ARROW_GAP,
+    I_ARROW_GAP,
+    JMIN_ARROW_GAP,
     POINTER_I_COLOR,
     POINTER_J_COLOR,
     POINTER_MIN_COLOR,
@@ -56,13 +57,13 @@ def test_jmin_arrow_y_below_baseline(pointer_set: PointerSet) -> None:
 
 @pytest.mark.unit
 def test_i_arrow_y_formula(pointer_set: PointerSet) -> None:
-    expected = HOME_Y - RING_RADIUS - ARROW_GAP
+    expected = HOME_Y - RING_RADIUS - I_ARROW_GAP
     assert pointer_set.i_arrow_y() == pytest.approx(expected)
 
 
 @pytest.mark.unit
 def test_jmin_arrow_y_formula(pointer_set: PointerSet) -> None:
-    expected = HOME_Y + RING_RADIUS + ARROW_GAP
+    expected = HOME_Y + RING_RADIUS + JMIN_ARROW_GAP
     assert pointer_set.jmin_arrow_y() == pytest.approx(expected)
 
 

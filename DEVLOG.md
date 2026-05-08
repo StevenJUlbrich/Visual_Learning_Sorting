@@ -179,4 +179,45 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 
 **Visual verification (Steven, 2026-05-08):** All three symptoms resolved. BUILD MAX-HEAP maintains full 7-node tree with edges intact. Root sift-down swap (4↔7) no longer triggers extraction. Tree shrinks correctly during EXTRACTION. Issue #10 closed.
 
-**Next:** Draft and execute 10e (Selection Sort pointer spacing — Issue #4).
+**Next:** Draft and execute 10e (Selection Sort pointer spacing — Issue #4).
+
+---
+
+### 2026-05-08 — 10e pre-action: Selection Sort `i` pointer spacing (Issue #4)
+
+**Plan:** Increase `i` pointer clearance from sprite ring. Three files changed:
+1. `pointer.py` — Rename `ARROW_GAP` to `JMIN_ARROW_GAP` (stays 5px). Add `I_ARROW_GAP = 12`. Update `i_arrow_y()` to use `I_ARROW_GAP`. Update `jmin_arrow_y()` to use `JMIN_ARROW_GAP` (no behavioral change).
+2. `test_pointer.py` — Update import: `ARROW_GAP` → `I_ARROW_GAP`, `JMIN_ARROW_GAP`. Update `test_i_arrow_y_formula` to use `I_ARROW_GAP`. Update `test_jmin_arrow_y_formula` to use `JMIN_ARROW_GAP`.
+
+**Exit criteria:**
+1. `uv run ruff check src/ tests/` — clean
+2. `uv run ruff format --check src/ tests/` — clean
+3. `uv run pytest -x` — 345/345 (test formula updated, no regressions)
+4. Import check — OK
+
+---
+
+### 2026-05-08 — 10e closed: Selection Sort `i` pointer spacing (Issue #4)
+
+**Worked on:** Split `ARROW_GAP: int = 5` into two constants: `I_ARROW_GAP: int = 12` (above-ring clearance for `i` pointer) and `JMIN_ARROW_GAP: int = 5` (below-ring clearance for `j`/`min` pointers). Updated `i_arrow_y()` to use `I_ARROW_GAP` and `jmin_arrow_y()` to use `JMIN_ARROW_GAP`. Updated `test_pointer.py` import and the two formula tests. `pointer.py` truncation was already restored before this prompt.
+
+**Corrections:** 1 ruff correction (W292 missing trailing newline in `pointer.py` — same pattern as the 10d-fix residue).
+
+**Results:**
+
+- `uv run ruff check src/ tests/`: **clean** (after 1 correction)
+- `uv run ruff format --check src/ tests/`: **clean** (38 files)
+- `uv run pytest -x`: **345/345 PASSED** (no regressions)
+- Import check: **OK**
+
+**Verification note**
+
+Manual visual verification deferred to Steven:
+- `i` pointer arrow has visible clearance above sprite rings (was 5px, now 12px)
+- `j` and `min` pointers below sprites unchanged (still 5px gap)
+- Pointer labels ("i", "j", "min") positioned correctly relative to their arrows
+- Coalescing (D-068) still works: when j == min, only min shown
+
+**Next**
+
+All Phase 10 issues resolved. Update AT_READINESS_CHECKLIST.md and proceed to phase closeout.
