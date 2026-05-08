@@ -374,7 +374,7 @@ TreeLayout positions nodes in binary tree. `_draw_heap` renders tree sprites wit
 
 **What to check visually:**
 - [x] Four panel titles: plain text only
-- [f] No colored dot, circle, or symbol precedes any title
+- [X] No colored dot, circle, or symbol precedes any title
 
 ---
 
@@ -405,3 +405,26 @@ All 27 acceptance tests are now implementable. Phase 7c-5 closed both gaps (AT-2
 13. **AT-08** — Duplicate values (requires array change)
 14. **AT-20** — Selection Sort settled region (step through to verify steel-blue)
 15. **AT-06** — Failure isolation (requires code injection — optional)
+
+---
+
+## Issues Found During Visual Testing
+
+### Issue #1 — Heap Sort phase label overlaps root node (AT-22)
+**Severity:** Visual — readability
+**Screenshot:** Startup state, "BUILD MAX-HEAP" text collides with root sprite (4)
+**Root cause:** `HeapPhaseLabel` y-coordinate positions the label at the same vertical level as the tree root. Needs vertical offset to sit clearly above or below the root node.
+**Fix target:** `src/visualizer/views/hud.py` → `HeapPhaseLabel.draw()` label_y calculation, or `src/visualizer/views/sprite_manager.py` → HeapOverlay passing an adjusted y.
+
+### Issue #2 — Sorted-row placeholders visible during BUILD MAX-HEAP (AT-21/AT-23)
+**Severity:** Visual — cosmetic (lower priority per Steven)
+**Screenshot:** Same startup state — gray ghost circles below tree have no meaning until extraction begins.
+**Root cause:** `HeapOverlay.draw_under()` draws placeholders unconditionally. Could gate on phase (only draw during EXTRACTION).
+**Fix target:** `src/visualizer/views/sprite_manager.py` → HeapOverlay.draw_under() conditional on extraction phase.
+
+### Issue #3 — Heap boundary marker renders outside Heap Sort panel (AT-23)
+**Severity:** Visual — functional (boundary marker crosses panel boundaries)
+**Screenshot:** Mid-sort and completion states — dashed boundary line and "heap boundary" label render in the Insertion Sort panel (panel index 2) instead of staying within Heap Sort panel (panel index 3).
+**Observed:** The boundary marker starts at the right edge of the Heap Sort area, then as extraction proceeds, it travels leftward and eventually crosses the panel boundary into the Insertion Sort panel area. At completion, the label and dashed line are fully inside the Insertion Sort panel.
+**Root cause:** `HeapBoundaryLabel` x-coordinate calculation likely uses absolute coordinates that go negative or cross the panel left edge. The draw routine doesn't clip to the Heap Sort panel rect. Additionally, the dashed line in `HeapOverlay.draw_under()` may extend beyond the panel's left boundary.
+**Fix target:** `src/visualizer/views/hud.py` → `HeapBoundaryLabel` coordinate clamping, and/or `src/visualizer/views/sprite_manager.py` → HeapOverlay boundary drawing with panel rect clipping.
