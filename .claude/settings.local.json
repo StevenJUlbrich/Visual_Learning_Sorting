@@ -46,7 +46,13 @@
       "Bash(gh pr *)",
       "Bash(git rebase *)",
       "Bash(git stash *)",
-      "Bash(xargs ls *)"
+      "Bash(xargs ls *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git checkout *)",
+      "Read(//home/sju/.claude/**)",
+      "Bash(bash /home/sju/.claude/statusline-command.sh)",
+      "Bash(SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy uv run *)"
     ]
   },
   "outputStyle": "default"

@@ -123,7 +123,7 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 
 ## Build Status
 
-**Active phase: Phase 6 (Controller/Orchestrator).** Phases 0–4, 5a–5g are complete. See `TODO/IMPLEMENTATION_TRACKER.md` for the full breakdown.
+**Active phase: Phase 7c (Per-Algorithm Choreography).** Phases 0–7b are complete. See `TODO/IMPLEMENTATION_TRACKER.md` for the full breakdown.
 
 **Completed (2026-04-23 / 2026-04-24 / 2026-04-30 / 2026-05-01):**
 - Phase 0: Spec gaps (pyproject.toml, config.toml, pseudocode, fonts helper, implementation order)
@@ -140,5 +140,22 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 - Phase 5g: `hud.py` — BubbleHUD counters + HeapPhaseLabel + HeapBoundaryLabel (26 tests); cumulative 235/235
 - Phase 6a: `orchestrator.py` (partial) — PanelState enum, duration constants, PanelContext, get_duration (28 tests); cumulative 263/263
 - Phase 6b: `orchestrator.py` — Orchestrator class, update(dt) core loop, state machine, cadence lifecycle (27 tests); cumulative 290/290
+- Phase 6c: `orchestrator.py` — compute_sprite_moves() pure function, slot_to_sprite_id mapping, sprite_moves dict, PanelContext.array_size (16 tests); cumulative 306/306
+- Phase 6d: `orchestrator.py` — play(), pause(), step(), restart(), is_running/is_stepping properties, _running/_stepping guards, _algorithm_classes for restart re-instantiation (26 tests); cumulative 332/332
+- Phase 6e: `tests/integration/test_orchestrator_integration.py` — TC-A4/A6/A15/A16/A17/A18 + counter accuracy, FailingAlgorithm helper (7 tests); cumulative 339/339
 
-**Next:** Phase 6c — Sprite identity delta computation.
+- Phase 7: `main.py` — Pygame event loop, config loading, font loading with fallback, keyboard bindings (Space/Right/R/Escape), orchestrator.update(dt) + panel rendering per frame (211 lines); cumulative 339/339 (no new tests)
+
+- Phase 7b: `sprite_manager.py` — SpriteManager class (per-panel sprite lifecycle, animation dispatch via sprite_moves, ease_in_out_quad horizontal + sine_arc swap vertical, highlight colors, z-ordering, restart/pause handling); main.py wired with 4 SpriteManagers (200+207 lines); cumulative 339/339 (no new tests)
+
+- Phase 7c-1: `SelectionOverlay` class in sprite_manager.py — tracks i/j/min pointer indices from Selection Sort ticks, wires PointerSet into panel 1. `algorithm_name` parameter added to SpriteManager.__init__. (2026-05-05, Sonnet 4.6, zero corrections)
+
+- Phase 7c-2: Bubble Sort choreography — SpriteManager refactored: `_dispatch_tick` split into shared + algorithm-specific dispatch (`_dispatch_default`, `_dispatch_bubble`). `_compute_bubble_positions` implements 3-phase compare-lift (ascent 67ms, hold 33ms, descent 50ms) + horizontal swap slide at compare_lane_y. `BubbleOverlay` class manages LimitLine, BubbleHUD, and ComparisonPointer. (2026-05-05, Sonnet 4.6, 2 ruff corrections)
+
+- Phase 7c-3: Insertion Sort choreography — cross-tick key elevation via `_insertion_key_id`/`_insertion_key_elevated` state. `_dispatch_insertion` handles key-lift (single-index T1), shift exclusion (key excluded from `_animating_sprites`), diagonal drop (single-index T2 placement). Key-color force in `_dispatch_tick` keeps elevated key orange across ticks. `InsertionOverlay` class renders stateless KEY label. (2026-05-05, Sonnet 4.6, zero corrections)
+
+- Phase 7c-4: Heap Sort choreography — TreeLayout integration: sprites positioned at binary tree nodes (active heap) + sorted row (extracted). `_dispatch_heap` discriminates Boundary T3 (staggered 120ms sweep + 80ms hold) vs Logical Tree T3 (simultaneous flash) via D-081 message prefix. 2D arc interpolation for sift-down swaps; extraction arc at 1.75× height with reversed direction (root arcs UP). Steel-blue persistence via `_apply_sorted_settled`. `_draw_heap` z-ordering: sorted row → tree (deep-first) → arcing (upward-on-top). `HeapOverlay` class: parent-child edges with active orange highlighting, phase label (BUILD MAX-HEAP/EXTRACTION), sorted-row placeholder outlines, dashed boundary marker. Split draw (draw_under/draw_over) in main.py. sprite_manager.py: 965 lines; main.py: 337 lines. (2026-05-05, Opus 4.6, zero corrections + headless smoke test)
+
+- Phase 7c-5: Selection Sort settled color + configurable array — `_dispatch_selection` replaces `_dispatch_default` for Selection Sort: standard arc-swap motion + `_selection_sorted_count` tracking (increment on T2 SWAP, `while` catch-up on T1 COMPARE for no-swap passes). `_apply_selection_settled` forces `ColorState.SETTLED` (steel-blue) on sorted prefix `0..sorted_count-1`. Dispatch routing updated: `elif "Selection Sort"` before Insertion Sort branch. `config.toml` gains optional `[sort].array` key; `_load_array()` in main.py reads config or falls back to default; `_build_orchestrator()` parameterized with `initial_array`. Addresses AT-20 + AT-08. (2026-05-05, Sonnet 4.6, zero corrections)
+
+**Next:** Phase 10 — Manual acceptance testing (AT-01 through AT-27). Phase 9 (CI) deferred until after visual verification.

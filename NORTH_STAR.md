@@ -2,7 +2,7 @@
 
 **Purpose:** Executive reference for the project blueprint. One page. The authoritative *what* and *why*; the authoritative *how* lives in `docs/design_docs/`.
 
-**Status:** Pre-code blueprint phase. Specification is being completed and simulated before implementation begins.
+**Status:** Active implementation. For current build status, see `CLAUDE.md` Build Status section.
 
 ---
 
@@ -50,4 +50,4 @@ User-provided arrays (F-001), algorithm picker (F-002), more than four simultane
 
 ## Current Phase
 
-Phase 0 closes when the three TTF fonts are placed in `assets/fonts/` (run `scripts/fetch_fonts.sh` on the host). All other Phase 0 gaps are closed. Phase 1 (`contracts.py`) is unblocked pending that single action.
+See `CLAUDE.md` Build Status section and `TODO/IMPLEMENTATION_TRACKER.md` for live implementation progress. This file defines the stable *what* and *why* — current phase tracking lives in those operational files.

@@ -136,11 +136,11 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 - [x] **TC-A13** T3 step counter exclusion (steps=35, T3 count=17) — *Complete. 35 steps, 6 boundary + 11 logical tree T3 = 17 total.*
 - [x] **TC-A14** Insertion Sort terminating comparison (sorted_7 fixture) — *Complete. 6/6 passes verified: 0 shifts, 1 terminating compare, 1 placement each.*
 - [x] **TC-A19** Heap Sort sift-down tick sequence contract (T3->T1->T2 per level) — *Complete. 11 levels verified. D-058 parent-first assertion. First attempt pass.*
-- [ ] **TC-A20** Tree layout node positioning (both presets, no overlap)
-- [ ] **TC-A21** Tree layout edge connectivity
-- [ ] **TC-A22** Tree layout shrinking (heap_size 7 down to 1)
-- [ ] **TC-A23** Selection Sort pointer tracking
-- [ ] **TC-A24** Insertion Sort KEY label lifecycle
+- [x] **TC-A20** Tree layout node positioning (both presets, no overlap) — *Phase 5d: 38 tests in test_tree_layout.py*
+- [x] **TC-A21** Tree layout edge connectivity — *Phase 5d: edge connectivity tests*
+- [x] **TC-A22** Tree layout shrinking (heap_size 7 down to 1) — *Phase 5d: tree shrinking tests*
+- [x] **TC-A23** Selection Sort pointer tracking — *Phase 5e: 25 tests in test_pointer.py*
+- [ ] **TC-A24** Insertion Sort KEY label lifecycle — *No unit test; visual verification via AT-25*
 
 ---
 
@@ -175,14 +175,14 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 - [x] `pointer.py` — Selection Sort i/j/min pointer arrows with coalescing (D-068, TC-A23). *25 tests: arrow positions, slot_center_x formula, coalescing all cases (j==min, j≠min, j/min None), color constants, draw no-crash (all states, edge slots 0+6). 188/188 cumulative. Pyright 0 errors. Ruff clean. Zero corrections. 2026-04-30, Sonnet 4.6.*
 - [x] `limitline.py` — Bubble Sort vertical dashed boundary. *21 tests: position formula, visibility states, advance/reset, slot-center bounds, line-span invariant, color constant, draw no-crash. LINE_COLOR exported for hud.py reuse. 209/209 cumulative. Pyright 0 errors. Ruff clean. Zero first-run corrections. 2026-04-30, Sonnet 4.6.*
 - [x] `hud.py` — Bubble Sort comparison/exchange counters overlay + Heap Sort phase label + Heap Sort boundary label. *26 tests: color constant values/cross-module aliasing, BubbleHUD position formula (counter_x, comparisons_y, exchanges_y) and bounds, draw no-crash (zero/nonzero/large counts), HeapPhaseLabel center_x + draw no-crash (BUILD MAX-HEAP/EXTRACTION/fractional y), HeapBoundaryLabel LABEL_TEXT constant + draw no-crash (normal/origin/fractional coords). 235/235 cumulative. Pyright 0 errors. Ruff clean. One correction: ruff format on test file. 2026-05-01, Sonnet 4.6.*
-- [ ] Z-ordering: lifted sprites on top of baseline (doc 12 Section 3)
-- [ ] Highlight behavior: instant apply/replace, no fade (doc 12 Section 4)
-- [ ] Compare lane: Bubble 50px transient, Insertion proportional sustained (doc 12 Section 5)
-- [ ] Heap boundary sweep: staggered left-to-right over 120ms + 80ms hold (doc 10 Section 5.4.1)
-- [ ] Insertion Sort KEY label + gap visualization (D-071, D-072)
-- [ ] Heap Sort phase label "BUILD MAX-HEAP" / "EXTRACTION" (D-075)
-- [ ] Heap Sort heap boundary marker dashed line (D-076)
-- [ ] Completion panel green background `(35, 55, 42)` (D-078)
+- [x] Z-ordering: lifted sprites on top of baseline (doc 12 Section 3) — *Phase 7b baseline + 7c per-algorithm overrides (_draw_heap tree z-order, Bubble/Insertion lifted-sprite sorting)*
+- [x] Highlight behavior: instant apply/replace, no fade (doc 12 Section 4) — *Phase 7b shared highlight in _dispatch_tick*
+- [x] Compare lane: Bubble 50px transient, Insertion proportional sustained (doc 12 Section 5) — *Phase 7c-2 (Bubble _compare_lane_y) + 7c-3 (Insertion _insertion_lift_offset)*
+- [x] Heap boundary sweep: staggered left-to-right over 120ms + 80ms hold (doc 10 Section 5.4.1) — *Phase 7c-4 (_apply_heap_sweep)*
+- [x] Insertion Sort KEY label + gap visualization (D-071, D-072) — *Phase 7c-3 (InsertionOverlay)*
+- [x] Heap Sort phase label "BUILD MAX-HEAP" / "EXTRACTION" (D-075) — *Phase 7c-4 (HeapOverlay.draw_over → HeapPhaseLabel)*
+- [x] Heap Sort heap boundary marker dashed line (D-076) — *Phase 7c-4 (HeapOverlay._draw_boundary_line)*
+- [x] Completion panel green background `(35, 55, 42)` (D-078) — *Phase 5c (PanelRenderer.draw_background COMPLETED state)*
 - [ ] Error state border + message styling
 
 ---
@@ -196,14 +196,14 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 - [x] Panel state machine: idle_paused -> waiting_for_next_tick -> animating_operation -> completed/failed — full transitions delivered (6b)
 - [x] Operation timing: T1=150ms, T2=400ms, T3=200ms (integer milliseconds) — duration constants + get_duration() delivered (6a)
 - [x] Sift-down cadence override: T1=100ms, T2=250ms, T3=130ms (set after extraction swap, reset on boundary T3) — cadence lifecycle (_update_heap_cadence) delivered (6b)
-- [ ] Sprite identity delta computation (ID-based, never value-matching)
+- [x] Sprite identity delta computation (ID-based, never value-matching) — compute_sprite_moves(), slot_to_sprite_id, sprite_moves on PanelContext (6c)
 - [x] `update(dt)` — subtract dt from remaining, fetch next SortResult when <= 0 (6b)
 - [x] `elapsed_time_ms` — integer accumulator per panel, freezes on completion/failure (6b)
 - [x] Step counter: increment on success=True, is_complete=False, op_type != RANGE (6b)
 - [x] Failure isolation: one panel fails, others continue (6b)
-- [ ] Play/Pause: freeze/resume all time accumulators and sprite positions
-- [ ] Step: advance one tick per active panel, animate to completion, re-pause
-- [ ] Restart: snap all sprites to initial, reset all state, re-pause
+- [x] Play/Pause: freeze/resume all time accumulators and sprite positions — _running guard, play() transitions IDLE→WAITING, pause() preserves panel states (6d)
+- [x] Step: advance one tick per active panel, animate to completion, re-pause — _stepping flag, ANIMATING drains to IDLE_PAUSED, step completion check (6d)
+- [x] Restart: snap all sprites to initial, reset all state, re-pause — re-instantiates algorithms from _algorithm_classes, PanelContext.reset(), re-seeds generators (6d)
 
 ---
 
@@ -212,14 +212,22 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 **Depends on:** Phase 5, Phase 6
 **Output:** `src/visualizer/main.py`
 
-- [ ] Pygame init, clock, display.set_mode (no RESIZABLE flag — D-077)
-- [ ] `config.toml` loading (preset selection)
-- [ ] Window title "Learn Visual - Expand Knowledge"
-- [ ] Event loop: keyboard bindings (Space, Right Arrow, R, Escape — D-022)
-- [ ] On-screen control buttons (Play/Pause, Step, Restart)
-- [ ] dt clamping: `dt = min(clock.tick(60), 33)` (doc 10 Section 1)
-- [ ] Controller.update(dt) -> View.render() per frame
-- [ ] Font loading with fallback (doc 04 Section 3.3)
+- [x] Pygame init, clock, display.set_mode (no RESIZABLE flag — D-077) *(2026-05-04)*
+- [x] `config.toml` loading (preset selection, fallback to desktop on error) *(2026-05-04)*
+- [x] Window title "Learn Visual - Expand Knowledge" *(via init_display in window.py)*
+- [x] Event loop: keyboard bindings (Space, Right Arrow, R, Escape — D-022) *(2026-05-04)*
+- [ ] On-screen control buttons (Play/Pause, Step, Restart) — deferred to later phase
+- [x] dt clamping: `dt = min(clock.tick(60), 33)` (doc 10 Section 1) *(2026-05-04)*
+- [x] Controller.update(dt) -> View.render() per frame *(2026-05-04 — panel background + header; sprite animation in Phase 7b)*
+- [x] Font loading with fallback (doc 04 Section 3.3) *(2026-05-04)*
+- [x] NumberSprite instances wired into render loop — SpriteManager class in sprite_manager.py, 4 instances created in main.py *(2026-05-04, Phase 7b)*
+- [x] Sprite animation driven by PanelContext.sprite_moves — tick detection by identity, ease_in_out_quad horizontal + sine_arc swap vertical, highlight coloring, z-ordering *(2026-05-04, Phase 7b)*
+- [x] Legacy `/main.py` stub deleted *(2026-05-04)*
+- [x] **Phase 7c-1:** SelectionOverlay — i/j/min pointer tracking from tick highlight_indices, PointerSet wired to panel 1, algorithm_name param added to SpriteManager *(2026-05-05)*
+- [x] **Phase 7c-2:** Bubble Sort choreography — _dispatch_bubble (compare-lift: 67ms ascent, 33ms hold, 50ms descent), _compute_bubble_positions (horizontal swap at compare_lane_y), BubbleOverlay (LimitLine + BubbleHUD + ComparisonPointer) *(2026-05-05)*
+- [x] **Phase 7c-3:** Insertion Sort choreography — cross-tick key elevation (_insertion_key_id, _insertion_key_elevated), _dispatch_insertion (key-lift, shift exclusion, diagonal drop), key-color force in _dispatch_tick, InsertionOverlay (KEY label) *(2026-05-05)*
+- [x] **Phase 7c-4:** Heap Sort choreography — TreeLayout integration (tree positions + sorted row), _dispatch_heap (Boundary T3 sweep, Logical Tree T3, sift-down arc, extraction arc 1.75×), 2D arc interpolation, steel-blue persistence, _draw_heap z-ordering, HeapOverlay (edges, phase label, placeholders, boundary marker) *(2026-05-05)*
+- [x] **Phase 7c-5:** Selection Sort settled color + configurable array — _dispatch_selection (arc-swap + sorted prefix tracking via _selection_sorted_count), _apply_selection_settled (steel-blue on 0..sorted_count-1), no-swap pass catch-up, config.toml [sort].array + _load_array() in main.py. Addresses AT-20 + AT-08. *(2026-05-05)*
 
 ---
 
@@ -228,12 +236,12 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 **Depends on:** Phase 6, Phase 7
 **Output:** `tests/integration/test_{controller,panel_state,timer}.py`
 
-- [ ] **TC-A4** Controller independent queues and timers (integer ms arithmetic)
-- [ ] **TC-A6** Controller fairness (no starvation across 4 generators)
-- [ ] **TC-A15** Panel state machine transitions (happy path)
-- [ ] **TC-A16** Panel state machine failure isolation
-- [ ] **TC-A17** Pause freezes interpolation state
-- [ ] **TC-A18** Restart resets all state
+- [x] **TC-A4** Controller independent queues and timers (integer ms arithmetic) — (Delivered as Phase 6e — controller integration tests do not require Phase 7)
+- [x] **TC-A6** Controller fairness (no starvation across 4 generators) — (Delivered as Phase 6e)
+- [x] **TC-A15** Panel state machine transitions (happy path) — (Delivered as Phase 6e)
+- [x] **TC-A16** Panel state machine failure isolation — (Delivered as Phase 6e)
+- [x] **TC-A17** Pause freezes interpolation state — (Delivered as Phase 6e)
+- [x] **TC-A18** Restart resets all state — (Delivered as Phase 6e)
 
 ---
 

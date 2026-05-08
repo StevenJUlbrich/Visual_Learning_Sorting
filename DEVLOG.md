@@ -18,64 +18,44 @@
 | 2 | [`docs/devlog/phase_02.md`](docs/devlog/phase_02.md) | All four algorithm generators: Bubble Sort (2a, 20/26), Selection Sort (2b, 21/10), Insertion Sort (2c, 17/19), Heap Sort (2d, 20/30/35). Includes pre-action plans, post-action closeouts, corrections, and T3 contiguity spec bug discovery. |
 | 3 + 4 | [`docs/devlog/phase_03_04.md`](docs/devlog/phase_03_04.md) | D-081 resolution (message-prefix T3 classification). Phase 3: algorithm unit tests (conftest, bubble, selection, insertion, heap — 29 tests, TC-A1/A2/A3/A7/A8/A9/A10/A11/A12/A13/A14/A19). Phase 4: easing module (ease_in_out_quad, ease_out_cubic, sine_arc — 21 tests, TC-A5). Cumulative: 50/50. |
 | 5 | [`docs/devlog/phase_05.md`](docs/devlog/phase_05.md) | View Layer: window.py (GridLayout), sprite.py (NumberSprite, ColorState), panel.py (PanelRenderer, header rhythm, state overlays), tree_layout.py (binary tree geometry, TC-A20/A21/A22), pointer.py (Selection Sort arrows, D-068 coalescing, TC-A23), limitline.py (Bubble Sort boundary), hud.py (BubbleHUD counters, HeapPhaseLabel, HeapBoundaryLabel). 185 view-layer tests, 235 cumulative. Doc 12 color fix. |
+| 6 | [`docs/devlog/phase_06.md`](docs/devlog/phase_06.md) | Controller/Orchestrator: PanelState, duration constants, PanelContext, get_duration(), Orchestrator update(dt) core loop, compute_sprite_moves() sprite identity delta, play/pause/step/restart controls, integration tests (TC-A4/A6/A15/A16/A17/A18). 104 orchestrator tests (97 unit + 7 integration), 339 cumulative. Zero logic corrections. Spec paralysis vs. spec insufficiency reflection. |
+| 7 | [`docs/devlog/phase_07.md`](docs/devlog/phase_07.md) | Main event loop, sprite animation, per-algorithm choreography: event loop (7), sprite rendering (7b), Selection Sort pointers (7c-1), Bubble Sort compare-lift + BubbleOverlay (7c-2), Insertion Sort key elevation + InsertionOverlay (7c-3), Heap Sort tree layout + HeapOverlay (7c-4, **Opus 4.6**), Selection Sort settled color + configurable array (7c-5). sprite_manager.py ~1000 lines, main.py ~350 lines. 339 cumulative (no new tests). 3 total corrections (all ruff). Model selection reflection. |
 
 ---
 
-## 2026-05-01 11:25 — Phase 6b closed: update(dt) core loop (post-action)
+## Current Phase: 10 — Manual Acceptance Testing (AT-01 through AT-27)
 
-### Worked on
+*Phase 7 entries archived to `docs/devlog/phase_07.md`.*
 
-Extended `src/visualizer/controllers/orchestrator.py` with: three new fields on `PanelContext` (`current_tick`, `previous_array_state`, `extraction_pending`) + reset() updated; `Orchestrator` class (`__init__` builds parallel `_panels`/`_generators`/`_algorithms` lists from a `Sequence[BaseSortAlgorithm]`; `update(dt)` state machine — ANIMATING counts down, WAITING fetches next tick, TERMINAL/FAILURE transitions set `is_active=False`; `_update_heap_cadence` two-step protocol: boundary T3 arms `extraction_pending`, SWAP triggers cadence enable, next boundary T3 resets). Extended `tests/unit/test_orchestrator.py` with `MockAlgorithm` helper, three tick factory functions, and 27 new tests across Groups 6-12.
+### 2026-05-08 14:00 — AT Visual Testing Session (Windows 11)
 
-### Results
+**Worked on:** Steven ran the app natively on Windows 11 (WSLg keyboard focus unreliable) and walked through AT-01 through AT-27 using the AT_READINESS_CHECKLIST.md. Marked results with `[x]` (pass), `[p]` (partial), and `[f]` (fail) with inline observations.
 
-- `uv run pytest tests/unit/test_orchestrator.py -v`: **55/55 PASSED** (first run, zero logic corrections)
-- `uv run pytest tests/unit/ -v`: **290/290 PASSED** (cumulative)
-- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright`: **0 errors, 0 warnings**
-- `uv run ruff check` + `uv run ruff format --check`: **clean** (3 ruff corrections)
+**WSLg note:** App displays under WSLg but keyboard input (Space, Right Arrow, R, Escape) doesn't register — likely a focus/event delivery issue in WSLg. Windows 11 native execution works correctly. Ubuntu 24 laptop testing deferred.
 
-### Corrections
+**Pass summary:** Majority of AT tests pass. Counter accuracy confirmed: Bubble (20/26), Selection (21/10), Insertion (17/19), Heap (20/30/35) all match expected values. All four panels complete with green backgrounds and green sprites. Play/pause/step/restart all functional.
 
-Three ruff corrections: RUF002 (en-dash in docstring), I001 (import sort), UP043 (Generator shortform). Zero logic fixes.
+**Issues found (5 total):**
 
-### Next
+| # | AT | Description | Severity |
+|---|-----|-------------|----------|
+| 1 | AT-22 | Heap phase label ("BUILD MAX-HEAP") overlaps tree root node | Visual — readability |
+| 2 | AT-21/23 | Sorted-row placeholder circles visible during BUILD MAX-HEAP phase | Visual — cosmetic |
+| 3 | AT-23 | Heap boundary marker (dashed line + label) renders outside Heap Sort panel into Insertion Sort panel | Visual — functional |
+| 4 | AT-21 | Completion: Heap Sort elements don't all transition to green | Visual — functional |
+| 5 | AT-27 | Colored dot preceding algorithm title text | Visual — cosmetic |
 
-Phase 6c: Sprite identity delta computation.
+**AT-24 partial fail:** Steven noted `i` pointer is "above the array" — needs clarification whether this is a positioning error or just unexpected placement vs. spec expectation. The `[f]` mark has inline note but most sub-items pass.
 
----
+**Decisions:**
+- Issue #3 (cross-panel boundary) is highest priority — functional rendering bug
+- Issue #1 (label overlap) is high priority — affects readability
+- Issues #2 and #5 are lower priority cosmetic items
+- Issue #4 (AT-21 completion green) needs investigation — may be the same green-vs-steel-blue question
 
-## 2026-05-01 11:20 — Phase 6b pre-action: update(dt) core loop
+**Open questions:**
+- AT-21 completion fail: Is the issue that steel-blue sprites don't transition to green, or that the TERMINAL tick handler doesn't reach Heap Sort's sorted-row sprites?
+- AT-27 colored dot: Need screenshot to determine source — could be a font rendering artifact or an unintended draw call
+- AT-24 `i` pointer: Is the issue that `i` appears above the array (by design — doc 04 §4.4) or that its vertical position is wrong?
 
-### Plan
-
-Add the Orchestrator class to orchestrator.py. Accepts a list of BaseSortAlgorithm instances and the initial array. Creates PanelContext + generator per algorithm. Core update(dt) method: subtract dt from active panels' remaining time, fetch next SortResult when remaining ≤ 0, map OpType to duration via get_duration(), transition state machine, accumulate elapsed_time_ms (integer arithmetic), handle TERMINAL/FAILURE transitions, track step counter (exclude RANGE per D-041), manage sift-down cadence flag lifecycle. Tests use MockAlgorithm helper class.
-
-### Exit criteria
-
-1. pytest test_orchestrator.py — all pass
-2. pytest tests/unit/ — cumulative pass
-3. pyright — 0 errors, 0 warnings
-4. ruff — clean
-
----
-
-## 2026-05-01 11:07 — Phase 6a closed: PanelState + duration constants (post-action)
-
-### Worked on
-
-Created `src/visualizer/controllers/orchestrator.py` (Phase 6a scope: `PanelState` enum with 5 members, standard duration constants T1=150/T2=400/T3=200/TERMINAL=0/FAILURE=0, sift-down cadence override constants T1=100/T2=250/T3=130, `get_duration(op_type, sift_down_cadence)` pure function with match dispatch, `PanelContext` plain class with reset() preserving algorithm_name and complexity) and `tests/unit/test_orchestrator.py` (28 tests: enum membership, standard constants, sift-down constants, all 9 get_duration cases including SHIFT-always-standard invariant, 8 PanelContext construction/reset assertions).
-
-### Results
-
-- `uv run pytest tests/unit/test_orchestrator.py -v`: **28/28 PASSED** (first run after one I001 import-sort fix)
-- `uv run pytest tests/unit/ -v`: **263/263 PASSED** (cumulative)
-- `PYRIGHT_PYTHON_GLOBAL_NODE=false uv run pyright`: **0 errors, 0 warnings**
-- `uv run ruff check` + `uv run ruff format --check`: **clean**
-
-### Corrections
-
-One I001 import-sort fix in test_orchestrator.py (ruff auto-formatted).
-
-### Next
-
-Phase 6b: Core loop — update(dt) + tick dispatch.
+**Next:** Compile fix list, draft Phase 10-fix prompt for Claude Code execution.
