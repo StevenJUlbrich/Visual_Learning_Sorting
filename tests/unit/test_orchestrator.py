@@ -725,6 +725,140 @@ def test_slot_to_sprite_id_mutated_in_place() -> None:
     assert id(slot_mapping) == original_id
 
 
+@pytest.mark.unit
+def test_shift_duplicate_values_detected() -> None:
+    """When a shift copies value X to a slot already holding X, changed is empty.
+    The function must use highlight_indices to detect the movement."""
+    # Simulates: arr[2] = arr[1] where both hold value 3.
+    # old_state and new_state are identical — value delta is empty.
+    old_state = [1, 3, 3, 3, 1, 2, 3]
+    new_state = [1, 3, 3, 3, 1, 2, 3]  # identical
+    slot_mapping = [0, 1, 2, 3, 4, 5, 6]
+    result = compute_sprite_moves(
+        old_state,
+        new_state,
+        slot_mapping,
+        operation_type=OpType.SHIFT,
+        highlight_indices=(1, 2),
+    )
+    # Sprite at slot 1 moves to slot 2, sprite at slot 2 moves to slot 1.
+    assert result == {1: 2, 2: 1}
+    assert slot_mapping == [0, 2, 1, 3, 4, 5, 6]
+
+
+@pytest.mark.unit
+def test_swap_duplicate_values_detected() -> None:
+    """When a swap exchanges two equal values, changed is empty.
+    The function must use highlight_indices to detect the movement."""
+    # Simulates: heap extraction swap of arr[0] and arr[2] where both hold 3.
+    old_state = [3, 1, 3]
+    new_state = [3, 1, 3]  # identical
+    slot_mapping = [0, 1, 2]
+    result = compute_sprite_moves(
+        old_state,
+        new_state,
+        slot_mapping,
+        operation_type=OpType.SWAP,
+        highlight_indices=(0, 2),
+    )
+    assert result == {0: 2, 2: 0}
+    assert slot_mapping == [2, 1, 0]
+
+
+@pytest.mark.unit
+def test_placement_duplicate_value_no_spurious_move() -> None:
+    """Placement tick where key value equals the value already in the target slot.
+    old_state and new_state are identical (key=3 placed into slot already holding 3).
+    highlight_indices has 1 element (placement slot). The fallback must NOT fire
+    because len(highlight_indices) != 2."""
+    old_state = [1, 3, 3, 3, 1, 2, 3]
+    new_state = [1, 3, 3, 3, 1, 2, 3]  # identical — placement of same value
+    slot_mapping = [0, 1, 2, 3, 4, 5, 6]
+    result = compute_sprite_moves(
+        old_state,
+        new_state,
+        slot_mapping,
+        operation_type=OpType.SHIFT,
+        highlight_indices=(1,),  # single-element: placement
+    )
+    # changed is empty, highlight has 1 element -> guard rejects -> returns {}
+    assert result == {}
+    assert slot_mapping == [0, 1, 2, 3, 4, 5, 6]  # unchanged
+
+
+@pytest.mark.unit
+def test_full_sort_duplicates_identity_preserved() -> None:
+    """Run Insertion Sort on a duplicate-heavy array. Every sprite ID must appear
+    exactly once in the final slot_mapping."""
+    from visualizer.models.insertion import InsertionSort
+
+    arr = [3, 1, 3, 2, 1, 2, 3]
+    algo = InsertionSort(list(arr))
+    slot_mapping = list(range(len(arr)))
+    prev = list(arr)
+    for tick in algo.sort_generator():
+        if tick.array_state is not None:
+            compute_sprite_moves(
+                prev,
+                tick.array_state,
+                slot_mapping,
+                operation_type=tick.operation_type,
+                highlight_indices=tick.highlight_indices,
+            )
+            prev = tick.array_state
+    # All 7 sprite IDs present exactly once
+    assert sorted(slot_mapping) == list(range(len(arr)))
+    assert len(set(slot_mapping)) == len(arr)
+
+
+@pytest.mark.unit
+def test_full_sort_bubble_duplicates_identity_preserved() -> None:
+    """Run Bubble Sort on a duplicate-heavy array. Every sprite ID must appear
+    exactly once in the final slot_mapping."""
+    from visualizer.models.bubble import BubbleSort
+
+    arr = [3, 1, 3, 2, 1, 2, 3]
+    algo = BubbleSort(list(arr))
+    slot_mapping = list(range(len(arr)))
+    prev = list(arr)
+    for tick in algo.sort_generator():
+        if tick.array_state is not None:
+            compute_sprite_moves(
+                prev,
+                tick.array_state,
+                slot_mapping,
+                operation_type=tick.operation_type,
+                highlight_indices=tick.highlight_indices,
+            )
+            prev = tick.array_state
+    assert sorted(slot_mapping) == list(range(len(arr)))
+    assert len(set(slot_mapping)) == len(arr)
+
+
+@pytest.mark.unit
+def test_full_sort_heap_duplicates_identity_preserved() -> None:
+    """Run Heap Sort on a duplicate-heavy array. Every sprite ID must appear
+    exactly once in the final slot_mapping."""
+    from visualizer.models.heap import HeapSort
+
+    arr = [3, 1, 3, 2, 1, 2, 3]
+    algo = HeapSort(list(arr))
+    slot_mapping = list(range(len(arr)))
+    prev = list(arr)
+    for tick in algo.sort_generator():
+        if tick.array_state is not None:
+            compute_sprite_moves(
+                prev,
+                tick.array_state,
+                slot_mapping,
+                operation_type=tick.operation_type,
+                highlight_indices=tick.highlight_indices,
+            )
+            prev = tick.array_state
+    assert sorted(slot_mapping) == list(range(len(arr)))
+    assert len(set(slot_mapping)) == len(arr)
+
+
 # ---------------------------------------------------------------------------
 # Group 14 — PanelContext new fields
 # ---------------------------------------------------------------------------

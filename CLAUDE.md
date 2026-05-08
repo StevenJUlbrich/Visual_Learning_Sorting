@@ -123,7 +123,7 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 
 ## Build Status
 
-**Active phase: Phase 7c (Per-Algorithm Choreography).** Phases 0–7b are complete. See `TODO/IMPLEMENTATION_TRACKER.md` for the full breakdown.
+**Active phase: Post-10 (all implementation and visual testing complete).** Phases 0–10 are complete. 345/345 tests passing. See `TODO/IMPLEMENTATION_TRACKER.md` for the full breakdown.
 
 **Completed (2026-04-23 / 2026-04-24 / 2026-04-30 / 2026-05-01):**
 - Phase 0: Spec gaps (pyproject.toml, config.toml, pseudocode, fonts helper, implementation order)
@@ -158,4 +158,24 @@ Heap Sort has 6 boundary T3 ticks (excluded from step count).
 
 - Phase 7c-5: Selection Sort settled color + configurable array — `_dispatch_selection` replaces `_dispatch_default` for Selection Sort: standard arc-swap motion + `_selection_sorted_count` tracking (increment on T2 SWAP, `while` catch-up on T1 COMPARE for no-swap passes). `_apply_selection_settled` forces `ColorState.SETTLED` (steel-blue) on sorted prefix `0..sorted_count-1`. Dispatch routing updated: `elif "Selection Sort"` before Insertion Sort branch. `config.toml` gains optional `[sort].array` key; `_load_array()` in main.py reads config or falls back to default; `_build_orchestrator()` parameterized with `initial_array`. Addresses AT-20 + AT-08. (2026-05-05, Sonnet 4.6, zero corrections)
 
-**Next:** Phase 10 — Manual acceptance testing (AT-01 through AT-27). Phase 9 (CI) deferred until after visual verification.
+- Phase 10a: Build verification — counter accuracy confirmed, WSLg keyboard limitation documented (Windows native workaround). (2026-05-08)
+
+- Phase 10b: Visual acceptance test walkthrough — AT-01 through AT-27. 7 issues found across AT-08, AT-21, AT-22, AT-23, AT-24. Issue triage and fix ordering established. (2026-05-08)
+
+- Phase 10c: `compute_sprite_moves()` duplicate-value fix — highlight_indices augmentation for SWAP/SHIFT with equal values. 6 new tests. Issues #7 and #8 closed. (2026-05-08, Opus 4.6, zero corrections)
+
+- Phase 10d: Heap Sort visual fixes batch — HeapOverlay panel_rect clamping, placeholder/boundary gating on EXTRACTION, phase label None on TERMINAL. Issues #3, #6, #9 closed. Issue #1 partial. (2026-05-08, Sonnet 4.6, zero corrections)
+
+- Phase 10d-fix: HeapPhaseLabel repositioned to upper-right — `hud.py` right-aligned, `sprite_manager.py` simplified label_y. Issue #1 closed. (2026-05-08, Sonnet 4.6, 1 ruff correction)
+
+- Phase 10f: False extraction detection fix — `_heap_in_extraction` flag gates extraction check in `_dispatch_heap` SWAP handler. Issue #10 closed. (2026-05-08, Sonnet 4.6, zero corrections)
+
+- Phase 10e: Selection Sort `i` pointer spacing — `ARROW_GAP` split into `I_ARROW_GAP` (12px) and `JMIN_ARROW_GAP` (5px). (2026-05-08, Sonnet 4.6, 1 ruff correction)
+
+- Phase 10g: Bubble Sort boundary line hide on completion — `_sort_complete` flag in BubbleOverlay. Issue #11 closed. (2026-05-08, Sonnet 4.6, zero corrections)
+
+- Phase 10h: Selection Sort `i` pointer visibility — arrow geometry split (I_ 16/7 vs JMIN_ 12/5), cyan color `(80, 200, 220)`. (2026-05-08, Sonnet 4.6, 1 ruff correction)
+
+- Phase 10i: Selection Sort `i` pointer relocated below j/min tier — `i_arrow_y()` rewritten with font-height-aware positioning, `_draw_i_pointer` flipped to upward triangle. Issue #4 fully closed. (2026-05-08, Sonnet 4.6, 1 ruff correction)
+
+**Next:** Phase 9 (CI pipeline) deferred until needed. On-screen control buttons deferred. Ubuntu 24 native testing deferred. Font assets still using SysFont fallback.

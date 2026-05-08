@@ -168,8 +168,8 @@ def test_heap_phase_label_constructs(body_font: pygame.font.Font) -> None:
 
 
 @pytest.mark.unit
-def test_heap_phase_label_center_x_uses_panel_center(heap_phase_label: HeapPhaseLabel) -> None:
-    assert heap_phase_label.center_x == DESKTOP_RECT.centerx
+def test_heap_phase_label_right_x_uses_panel_right(heap_phase_label: HeapPhaseLabel) -> None:
+    assert heap_phase_label.right_x == DESKTOP_RECT.right - 15
 
 
 # ---------------------------------------------------------------------------

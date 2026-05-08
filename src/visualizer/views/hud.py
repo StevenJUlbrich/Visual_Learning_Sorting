@@ -78,11 +78,13 @@ class BubbleHUD:
 
 
 class HeapPhaseLabel:
-    """Heap Sort phase label (BUILD MAX-HEAP / EXTRACTION) centered horizontally.
+    """Heap Sort phase label (BUILD MAX-HEAP / EXTRACTION) right-aligned in panel.
 
     The caller passes label_y so the Controller can position it relative to
     the tree root node (doc 04 §4.3.2, D-075).
     """
+
+    _RIGHT_MARGIN: int = 15  # px inset from panel right edge
 
     def __init__(
         self,
@@ -90,12 +92,12 @@ class HeapPhaseLabel:
         body_font: pygame.font.Font,
     ) -> None:
         self._font = body_font
-        self._center_x: int = panel_rect.centerx
+        self._right_x: int = panel_rect.right - self._RIGHT_MARGIN
 
     @property
-    def center_x(self) -> int:
-        """Horizontal center used for text centering (panel.centerx)."""
-        return self._center_x
+    def right_x(self) -> int:
+        """Right edge x used for text alignment (panel.right - margin)."""
+        return self._right_x
 
     def draw(
         self,
@@ -103,9 +105,9 @@ class HeapPhaseLabel:
         phase: str,
         label_y: float,
     ) -> None:
-        """Draw phase label centered horizontally in panel at label_y."""
+        """Draw phase label right-aligned in panel at label_y."""
         text_surf = self._font.render(phase, True, PHASE_LABEL_COLOR)
-        x = self._center_x - text_surf.get_width() // 2
+        x = self._right_x - text_surf.get_width()
         surface.blit(text_surf, (x, round(label_y)))
 
 
