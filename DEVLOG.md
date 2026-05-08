@@ -13,7 +13,7 @@
 ## Archived Phases
 
 | Phase | Archive file | Summary |
-|-------|-------------|---------|
+| ----- | ----------- | ------- |
 | 0 + 1 | [`docs/devlog/phase_00_01.md`](docs/devlog/phase_00_01.md) | Project state review, Phase 0 closeout (pyproject, config, pseudocode, implementation order, fonts helper), agentic risk assessment, mempalace post-mortem, context-pack adoption, Phase 1 contracts.py, Correction C verification, model strategy. |
 | 2 | [`docs/devlog/phase_02.md`](docs/devlog/phase_02.md) | All four algorithm generators: Bubble Sort (2a, 20/26), Selection Sort (2b, 21/10), Insertion Sort (2c, 17/19), Heap Sort (2d, 20/30/35). Includes pre-action plans, post-action closeouts, corrections, and T3 contiguity spec bug discovery. |
 | 3 + 4 | [`docs/devlog/phase_03_04.md`](docs/devlog/phase_03_04.md) | D-081 resolution (message-prefix T3 classification). Phase 3: algorithm unit tests (conftest, bubble, selection, insertion, heap — 29 tests, TC-A1/A2/A3/A7/A8/A9/A10/A11/A12/A13/A14/A19). Phase 4: easing module (ease_in_out_quad, ease_out_cubic, sine_arc — 21 tests, TC-A5). Cumulative: 50/50. |
@@ -29,6 +29,7 @@
 Phase 10 manual acceptance testing complete. All 27 ATs pass. All 10 visual issues resolved. 345/345 tests passing.
 
 **Remaining work:**
+
 - Phase 9 (CI pipeline) -- deferred during Phase 10, ready to implement
 - On-screen control buttons (Play/Pause, Step, Restart) -- deferred from Phase 7
 - Ubuntu 24 native testing -- deferred from 10a (WSLg keyboard issue)
