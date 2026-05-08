@@ -102,6 +102,13 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 - `uv run pytest -x`: **345/345 PASSED** (339 existing + 6 new)
 - Import check: **OK**
 
-**Verification note:** Manual visual verification deferred to Steven — run with `config.toml` array `[3, 1, 3, 2, 1, 2, 3]` and confirm all four panels show `[1, 1, 2, 2, 3, 3, 3]` at completion. Check if Issue #8 (Heap vertical misalignment) resolves.
+**Verification note:** Manual visual verification deferred to Steven — run with `config.toml` array `[3, 1, 3, 2, 1, 2, 3]` and confirm:
+
+- All four panels show `[1, 1, 2, 2, 3, 3, 3]` at completion
+- Insertion Sort sprites in correct order (was `1, 2, 3, 1, 2, 3, 3`)
+- Heap Sort sorted-row sprites all on same baseline y-coordinate
+- Then restore default array `[4, 7, 2, 6, 1, 5, 3]` and verify no regressions
+
+Check if Issue #8 (Heap vertical misalignment) resolves with this fix.
 
 **Next:** Steven verifies visually. If Issue #8 resolves, close it. Proceed to 10d (Heap visual batch) and 10e (pointer spacing).
