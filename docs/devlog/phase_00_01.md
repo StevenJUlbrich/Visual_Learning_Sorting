@@ -50,11 +50,11 @@ Additionally established a two-session workflow: Claude Code (VSCode/Ubuntu) han
 - **DEVLOG updates by the active model.** Initially considered Haiku for all DEVLOG appends, but refined away — the model that just wrote the code already has the context for what it did and what it noticed. Switching to Haiku to save ~200 tokens of structured append isn't worth the friction. The real Haiku savings come from Phase 9 (CI YAML) and standalone tracker checkbox updates.
 - **TC-A19 escalation trigger (concrete).** If Sonnet's TC-A19 sift-down segmentation helper fails to correctly distinguish boundary T3 (contiguous) from logical-tree T3 (non-contiguous) on the first attempt, switch to Opus for that test file. Don't iterate on Sonnet — the contiguity-check logic is exactly the kind of multi-constraint reasoning where Opus pays for itself immediately.
 
-### Open questions
+### 2026-04-19 Open questions
 
 - None. The three refinements (session boundaries, DEVLOG by active model, TC-A19 escalation trigger) resolved the open questions from the initial draft.
 
-### Next
+### 2026-04-19 Next
 
 Begin Phase 2a (Bubble Sort) in Claude Code with Sonnet. Bring the completed `bubble.py` back to this Cowork session for spec-level review before moving to Selection Sort.
 
@@ -94,11 +94,11 @@ The old doc-03 value of "~22" was counting swap *operations* (15 total swaps) ra
 - **Correction C signed off.** The ~22 → 30 change in doc-03 §Per-Algorithm Expected Write Totals is confirmed correct. The value now matches CLAUDE.md, 00_PSEUDOCODE.md §Counter reconciliation, and this independent trace.
 - The trace script is disposable (not committed). The verification value lives in this DEVLOG entry and in the doc-03 table itself.
 
-### Open questions
+### 2026-04-16 Open questions
 
 - None from this verification. All three doc-03 corrections (A: Bubble 8→13 swaps, B: highlight_indices order nuance, C: Heap ~22→30 writes) are now closed.
 
-### Next
+### 2026-04-16 Next
 
 Phase 2 (algorithm generators) is fully unblocked. Four files to produce: `bubble.py`, `selection.py`, `insertion.py`, `heap.py` under `src/visualizer/models/`.
 
@@ -153,13 +153,13 @@ The pack was sufficient but revealed four observations worth recording:
 - Ruff 0.15.10 and Pyright were installed from PyPI without issue.
 - Pyright required no additional configuration beyond the `[tool.pyright]` block in `pyproject.toml` (strict mode, include src + tests, py313 target).
 
-### Open questions
+### Phase 1 Open questions
 
 - **Doc 03 swap count correction for Bubble Sort.** Update `8 swaps` → `13 swaps` and `16` → `26` in §Per-Algorithm Expected Write Totals. Small surgical edit; low risk. Consider bundling with the other doc-03 corrections (the `highlight_indices` ordering clarification). Timing: before Phase 2 starts.
 - **Doc 03 update for `Generator[SortResult]` idiom.** Matches contracts.py, more modern, ruff-compatible. Alternatively disable UP043 project-wide if you prefer the explicit form for pedagogical clarity. Either is defensible.
 - **No other surprises from Phase 1.** The pack-design proved sound on its first real test.
 
-### Next
+### Phase 1 Next
 
 **Phase 2 (algorithm generators) is unblocked.** Before starting, consider closing the two doc-03 corrections identified above — both are small and both improve agent accuracy on the higher-stakes Phase 2 work. Alternatively, proceed to Phase 2 and record the corrections as known-good deviations.
 
@@ -187,13 +187,13 @@ The six-question discussion from the earlier assessment entry resolved as follow
 - **Authoring order:** Before Phase 1 begins. Phase 1 is the dogfood test.
 - **Supersession ID handling in packs:** Current binding IDs only. The Supersession Index in `DECISIONS.md` carries the full chain.
 
-### Open questions
+### Context-pack Open questions
 
 - **Pack token-budget estimates are rough.** Eyeballed from line counts, not measured against a tokenizer.
 - **Phase 5 may want sub-loading.** Advisory not prescriptive.
 - **Phase 6 orchestrator rapid-cadence signal.** Still unresolved.
 
-### Next
+### Context-pack Next
 
 Phase 1 begins. Use the Phase 1 pack as the dogfood test.
 
@@ -258,7 +258,7 @@ Evaluated whether the existing spec corpus (4,521 lines / ~306K characters / ~75
 
 No binding decisions this session. Assessment complete, mitigations on the table for author review.
 
-### Next
+### Assessment Next
 
 Author review in progress. No immediate action.
 
@@ -279,15 +279,13 @@ Closed the bulk of Phase 0 gaps: D-080 (path reconciliation), `pyproject.toml` r
 - Insertion Sort terminating-compare written with pass-by-pass truth table.
 - Heap Sort sift-down as reusable helper with contiguous-vs-non-contiguous T3 distinction.
 
-### Closure Decisions
-
-### Open questions
+### Phase 0 Open questions
 
 - Fonts acquisition blocked on sandbox proxy.
 - `main.py` location deferred to Phase 7.
 - Rapid-cadence timing signal deferred to Phase 6.
 
-### Next
+### Phase 0 Next
 
 Run `bash scripts/fetch_fonts.sh` on WSL host, then Phase 1 is unblocked.
 
@@ -305,13 +303,11 @@ Full state audit: 142 tracked items across 10 phases, all open; 4,000 lines of d
 - Secondary objective: **video journal** documenting the engineering methodology. DEVLOG is the raw material.
 - Added `NORTH_STAR.md` and `DEVLOG.md` as retrieval-optimized reference artifacts.
 
-### Audit Decisions
-
-### Open questions
+### Project State Open questions
 
 - Video journal audience framing.
 - Project origin story location.
 
-### Next
+### Project State Next
 
 Phase 0 closeout.
