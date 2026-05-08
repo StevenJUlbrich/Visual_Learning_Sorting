@@ -20,7 +20,7 @@ The orchestrator starts in paused state (`_running = False`). All four panels re
 
 **What to check visually:**
 - [x] 4 panels visible in 2×2 grid
-- [p] Each shows `4 7 2 6 1 5 3` as circular ring sprites
+- [p] Each shows `4 7 2 6 1 5 3` as circular ring sprites: The heap sort is showing a populated branch layout tree and shadow of circles below the tree
 - [x] All timers read `00.00s`
 - [x] All counters read `Steps: 0 | Cmp: 0 | Wr: 0`
 - [x] App is paused (no animation)
@@ -103,7 +103,7 @@ Selection Sort uses `_dispatch_default` with sine_arc vertical offset on swaps. 
 
 **What to check visually:**
 - [x] Selection Sort swaps: visible y-axis arc separating the two sprites
-- [p] Heap Sort swaps: visible arc motion in tree layout
+- [x] Heap Sort swaps: visible arc motion in tree layout
 - [x] Bubble Sort swaps: lift to compare lane, horizontal slide, no arc
 - [x] No teleporting or abrupt snaps during play (pausing mid-animation is acceptable)
 
@@ -115,12 +115,12 @@ Selection Sort uses `_dispatch_default` with sine_arc vertical offset on swaps. 
 The architecture supports duplicates by design (Critical Rule #1: sprite identity by unique ID, never by value). Phase 7c-5 added `[sort].array` to `config.toml` — uncomment and set to `[3, 1, 3, 2, 1, 2, 3]` to test.
 
 **What to check visually:**
-- [ ] Edit `config.toml`: uncomment `array = [3, 1, 3, 2, 1, 2, 3]`
-- [ ] Launch app — verify 7 sprites with duplicate values displayed
-- [ ] Run to completion — verify no sprite disappears or duplicates visually
-- [ ] Verify final sorted array is `[1, 1, 2, 2, 3, 3, 3]`
-- [ ] Verify all sprites animate stably across all 4 panels
-- [ ] Re-comment the array line in config.toml after testing
+- [x] Edit `config.toml`: uncomment `array = [3, 1, 3, 2, 1, 2, 3]`
+- [x] Launch app — verify 7 sprites with duplicate values displayed
+- [x] Run to completion — verify no sprite disappears or duplicates visually
+- [f] Verify final sorted array is `[1, 1, 2, 2, 3, 3, 3]`
+- [f] Verify all sprites animate stably across all 4 panels:Answser - the heap sort array is not aligned properly.
+- [x] Re-comment the array line in config.toml after testing
 
 ---
 
@@ -131,8 +131,8 @@ HeapOverlay renders phase label ("BUILD MAX-HEAP" / "EXTRACTION"). Boundary T3 t
 
 **What to check visually:**
 - [x] Phase 1: visible swaps during heap construction (3 violations repaired)
-- [ ] T3 range emphasis: shrinking active heap highlighted in orange
-- [ ] Binary tree layout with parent-child edges visible
+- [x] T3 range emphasis: shrinking active heap highlighted in orange
+- [x] Binary tree layout with parent-child edges visible
 - [x] Sorted row below tree grows as extractions proceed
 - [x] Final: all sprites ascending, green completion color
 
@@ -156,11 +156,11 @@ Heap Sort generator (Phase 2) guarantees build phase completes before extraction
 `_dispatch_insertion` handles key-lift (single-index T1 with `highlight_indices` length 1), sustained elevation via `_insertion_key_elevated` cross-tick state, and diagonal drop (T2 placement). Key stays at `compare_lane_y - insertion_lift_offset` throughout compare/shift ticks. Placement eases diagonally to home position.
 
 **What to check visually (step through each pass i=1..6):**
-- [ ] First tick of each pass: key lifts above baseline, single index highlighted
-- [ ] All subsequent compare/shift ticks: key remains elevated (never drops mid-pass)
-- [ ] Compare highlights on checked elements; shifts slide right one slot
-- [ ] Final T2 placement: key eases diagonally to destination slot
-- [ ] After placement, key is at rest at home_y
+- [x] First tick of each pass: key lifts above baseline, single index highlighted
+- [x] All subsequent compare/shift ticks: key remains elevated (never drops mid-pass)
+- [x] Compare highlights on checked elements; shifts slide right one slot
+- [x] Final T2 placement: key eases diagonally to destination slot
+- [x] After placement, key is at rest at home_y
 
 ---
 
@@ -170,10 +170,10 @@ Heap Sort generator (Phase 2) guarantees build phase completes before extraction
 Phase 6e integration tests verify exact counter values: Bubble (20/26), Selection (21/10), Insertion (17/19), Heap (20/30). These are locked in CLAUDE.md.
 
 **What to check visually:**
-- [ ] Bubble Sort: Cmp=20, Wr=26
-- [ ] Selection Sort: Cmp=21, Wr=10
-- [ ] Insertion Sort: Cmp=17, Wr=19
-- [ ] Heap Sort: Cmp=20, Wr=30
+- [x] Bubble Sort: Cmp=20, Wr=26
+- [x] Selection Sort: Cmp=21, Wr=10
+- [x] Insertion Sort: Cmp=17, Wr=19
+- [x] Heap Sort: Cmp=20, Wr=30
 
 ---
 
@@ -183,10 +183,10 @@ Phase 6e integration tests verify exact counter values: Bubble (20/26), Selectio
 `BubbleOverlay` manages `LimitLine` which tracks boundary position. `limitline.py` has `advance()` (moves one slot left) and provides the dashed vertical line. ComparisonPointer renders below the active comparison pair.
 
 **What to check visually:**
-- [ ] Step through Bubble Sort — see vertical dashed line marking sorted boundary
-- [ ] After each pass: limit line moves exactly one slot left
-- [ ] Comparison pointer never enters the settled region right of the limit line
-- [ ] Region right of limit line is visually excluded from scan
+- [x] Step through Bubble Sort — see vertical dashed line marking sorted boundary
+- [x] After each pass: limit line moves exactly one slot left
+- [x] Comparison pointer never enters the settled region right of the limit line
+- [x] Region right of limit line is visually excluded from scan
 
 ---
 
@@ -196,11 +196,11 @@ Phase 6e integration tests verify exact counter values: Bubble (20/26), Selectio
 BubbleHUD renders Comparisons and Exchanges counters in bottom-left. Counter values come from `ctx.comparisons` and `ctx.writes` which update on tick dispatch (before animation begins). The 3-phase compare-lift choreography (ascent/hold/descent) begins after counter update.
 
 **What to check visually:**
-- [ ] On comparison: pair turns orange and lifts to compare lane
-- [ ] Comparisons counter already incremented when lift begins
-- [ ] On swap: horizontal exchange at compare lane, Exchanges counter increments
-- [ ] Counters visible throughout swap-lift choreography
-- [ ] Counter order: comparison first, then exchange (never reversed)
+- [x] On comparison: pair turns orange and lifts to compare lane
+- [x] Comparisons counter already incremented when lift begins
+- [x] On swap: horizontal exchange at compare lane, Exchanges counter increments
+- [x] Counters visible throughout swap-lift choreography
+- [x] Counter order: comparison first, then exchange (never reversed)
 
 ---
 
@@ -210,8 +210,8 @@ BubbleHUD renders Comparisons and Exchanges counters in bottom-left. Counter val
 Critical Rule #3: T3 RANGE ticks do not increment step counter. Enforced in orchestrator. TC-A15 (Phase 6e) verifies Heap Sort step count = 35 (20 T1 + 15 T2), excluding 6 T3 ticks.
 
 **What to check visually:**
-- [ ] Count 6 visible boundary sweep highlights during Heap Sort extraction
-- [ ] Final Heap Sort step count = 35 (not 41)
+- [x] Count 6 visible boundary sweep highlights during Heap Sort extraction
+- [x] Final Heap Sort step count = 35 (not 41)
 
 ---
 
@@ -221,9 +221,9 @@ Critical Rule #3: T3 RANGE ticks do not increment step counter. Enforced in orch
 Universal orange `(255, 140, 0)` per D-067. Steel-blue `(130, 150, 190)` for settled/extracted. Completion green `(80, 220, 120)`. All defined in `COLOR_MAP` in sprite.py.
 
 **What to check visually:**
-- [ ] Orange highlights clearly legible against dark panel background
-- [ ] Heap Sort extracted sprites: steel-blue distinct from default blue and orange
-- [ ] Completion green is bright and legible
+- [x] Orange highlights clearly legible against dark panel background
+- [x] Heap Sort extracted sprites: steel-blue distinct from default blue and orange
+- [x] Completion green is bright and legible
 
 ---
 
@@ -233,14 +233,14 @@ Universal orange `(255, 140, 0)` per D-067. Steel-blue `(130, 150, 190)` for set
 `window.py` supports `load_preset("tablet")` → 1024×768. GridLayout computes panel_rects with proportional spacing. `init_display` sets `NOFRAME` (no resize per D-077). TreeLayout handles panel widths ≥ 489px.
 
 **What to check visually:**
-- [ ] Set `config.toml` → `preset = "tablet"`
-- [ ] 4 panels visible, no overlap or clipping
-- [ ] Metrics line fully visible, not truncated
-- [ ] Message line doesn't collide with metrics or array
-- [ ] Number sprites fit within slots
-- [ ] Arc motion stays within panel boundaries
-- [ ] Heap Sort tree has clear horizontal separation
-- [ ] Window cannot be resized
+- [x] Set `config.toml` → `preset = "tablet"`
+- [x] 4 panels visible, no overlap or clipping
+- [x] Metrics line fully visible, not truncated
+- [x] Message line doesn't collide with metrics or array
+- [x] Number sprites fit within slots
+- [x] Arc motion stays within panel boundaries
+- [x] Heap Sort tree has clear horizontal separation
+- [x] Window cannot be resized
 
 ---
 
@@ -250,10 +250,10 @@ Universal orange `(255, 140, 0)` per D-067. Steel-blue `(130, 150, 190)` for set
 Default config: `preset = "desktop"` → 1280×720. Same layout engine as tablet with larger panels.
 
 **What to check visually:**
-- [ ] 4 panels visible with proportional spacing
-- [ ] Header, metrics, message, array regions stacked without overlap
-- [ ] Text is anti-aliased (smooth edges on curved letters)
-- [ ] Window cannot be resized
+- [x] 4 panels visible with proportional spacing
+- [x] Header, metrics, message, array regions stacked without overlap
+- [x] Text is anti-aliased (smooth edges on curved letters)
+- [x] Window cannot be resized
 
 ---
 
@@ -263,10 +263,10 @@ Default config: `preset = "desktop"` → 1280×720. Same layout engine as tablet
 `SelectionOverlay` tracks `i`, `j`, and `min_idx` from Selection Sort tick messages. Highlight indices in ticks mark `j` and `min_idx` with orange. Message line shows comparison details.
 
 **What to check visually:**
-- [ ] Two indices highlighted during each T1 compare: scan cursor `j` and `min_idx`
-- [ ] When new minimum found: min highlight moves to `j`
-- [ ] When `j` is not smaller: min highlight stays on `min_idx`
-- [ ] Message line references current minimum on every scan tick
+- [x] Two indices highlighted during each T1 compare: scan cursor `j` and `min_idx`
+- [x] When new minimum found: min highlight moves to `j`
+- [x] When `j` is not smaller: min highlight stays on `min_idx`
+- [x] Message line references current minimum on every scan tick
 
 ---
 
@@ -276,11 +276,11 @@ Default config: `preset = "desktop"` → 1280×720. Same layout engine as tablet
 `_dispatch_selection` replaces `_dispatch_default` for Selection Sort. `_selection_sorted_count` tracks the growing sorted prefix — increments on T2 SWAP, with `while` catch-up on T1 COMPARE for no-swap passes. `_apply_selection_settled` forces `ColorState.SETTLED` (steel-blue) on sprites at indices `0..sorted_count-1`, surviving the shared highlight reset. On TERMINAL, all sprites transition to green via the shared completion handler.
 
 **What to check visually:**
-- [ ] Step through Selection Sort — after each swap, the element placed at index `i` turns steel-blue
-- [ ] Settled elements (indices `0..i`) remain steel-blue on all subsequent passes
-- [ ] Scan cursor (orange) never highlights settled elements
-- [ ] Sorted region grows from left to right
-- [ ] On completion, all elements (including settled) transition to green
+- [x] Step through Selection Sort — after each swap, the element placed at index `i` turns steel-blue
+- [x] Settled elements (indices `0..i`) remain steel-blue on all subsequent passes
+- [x] Scan cursor (orange) never highlights settled elements
+- [x] Sorted region grows from left to right
+- [x] On completion, all elements (including settled) transition to green
 
 ---
 
@@ -290,13 +290,13 @@ Default config: `preset = "desktop"` → 1280×720. Same layout engine as tablet
 TreeLayout positions nodes in binary tree. `_draw_heap` renders tree sprites with z-ordering. HeapOverlay draws parent-child edges. Extracted sprites move to sorted row. Tree shrinks by one node per extraction. Sorted row grows right-to-left with steel-blue.
 
 **What to check visually:**
-- [ ] Phase 1: all 7 elements in binary tree with visible edges
-- [ ] Root centered at top, children spread horizontally below
-- [ ] Each extraction: root removed from tree → sorted row below
-- [ ] Tree visibly shrinks by one node per extraction
-- [ ] Edges connect correct parent-child nodes, update during sift-down
-- [ ] Sorted row grows right-to-left with steel-blue rings
-- [ ] Completion: all elements transition to green
+- [x] Phase 1: all 7 elements in binary tree with visible edges
+- [x] Root centered at top, children spread horizontally below
+- [x] Each extraction: root removed from tree → sorted row below
+- [x] Tree visibly shrinks by one node per extraction
+- [x] Edges connect correct parent-child nodes, update during sift-down
+- [x] Sorted row grows right-to-left with steel-blue rings
+- [f] Completion: all elements transition to green
 
 ---
 
@@ -306,10 +306,10 @@ TreeLayout positions nodes in binary tree. `_draw_heap` renders tree sprites wit
 `HeapPhaseLabel` renders "BUILD MAX-HEAP" or "EXTRACTION" inside the tree area. HeapOverlay tracks phase and calls label.draw(). Label persists throughout each phase.
 
 **What to check visually:**
-- [ ] During Phase 1: "BUILD MAX-HEAP" visible in orange text in tree area
-- [ ] When Phase 2 begins: label changes to "EXTRACTION"
-- [ ] Label visible throughout each phase, not just on individual ticks
-- [ ] Label is inside the visualization area, not in the message line
+- [x] During Phase 1: "BUILD MAX-HEAP" visible in orange text in tree area
+- [x] When Phase 2 begins: label changes to "EXTRACTION"
+- [x] Label visible throughout each phase, not just on individual ticks
+- [f] Label is inside the visualization area, not in the message line: Answer heap boundary marker is not aligned properly and leaves the area of the tree and overlaps with the sorted row.
 
 ---
 
@@ -319,9 +319,9 @@ TreeLayout positions nodes in binary tree. `_draw_heap` renders tree sprites wit
 `HeapBoundaryLabel` renders boundary marker. HeapOverlay draws dashed line in sorted row separating active heap from sorted slots. Boundary moves left after each extraction.
 
 **What to check visually:**
-- [ ] Vertical dashed line visible in sorted row below tree
-- [ ] Boundary moves one position left after each extraction
-- [ ] Boundary doesn't overlap with sorted elements
+- [x] Vertical dashed line visible in sorted row below tree
+- [x] Boundary moves one position left after each extraction
+- [f] Boundary doesn't overlap with sorted elements
 
 ---
 
@@ -331,13 +331,13 @@ TreeLayout positions nodes in binary tree. `_draw_heap` renders tree sprites wit
 `PointerSet` (Phase 5e, 25 tests, TC-A23) renders `i`, `j`, `min` labeled arrows. `SelectionOverlay` tracks indices from tick data and updates PointerSet. Coalescing when `j == min` shows only `min`.
 
 **What to check visually:**
-- [ ] Three labeled pointer arrows visible: `i` (above), `j` (below), `min` (below)
-- [ ] `i` centered over current outer loop index
-- [ ] `j` advances left-to-right during scan
-- [ ] `min` marks current minimum candidate
-- [ ] When new minimum found: `min` jumps to `j`'s index
-- [ ] When `j == min`: only `min` shown (coalescing)
-- [ ] After swap: `i` advances right, `min` resets, `j` starts from `i+1`
+- [f] Three labeled pointer arrows visible: `i` (above), `j` (below), `min` (below): `i` centered over current outer loop index but above the array.
+- [x] `i` centered over current outer loop index
+- [x] `j` advances left-to-right during scan
+- [x] `min` marks current minimum candidate
+- [x] When new minimum found: `min` jumps to `j`'s index
+- [x] When `j == min`: only `min` shown (coalescing)
+- [x] After swap: `i` advances right, `min` resets, `j` starts from `i+1`
 
 ---
 
@@ -347,10 +347,10 @@ TreeLayout positions nodes in binary tree. `_draw_heap` renders tree sprites wit
 `InsertionOverlay` renders "KEY" label via `body_font.render()`. `insertion_key_info` property exposes (sprite_id, is_elevated) state. KEY label appears when key is elevated, disappears on placement. Gap at original slot: key sprite moves to compare lane, original position is empty.
 
 **What to check visually:**
-- [ ] On key-selection T1: "KEY" label appears adjacent to lifted orange circle
-- [ ] KEY label remains visible throughout compare and shift ticks
-- [ ] On T2 placement: KEY label disappears as circle settles
-- [ ] Original baseline slot shows empty space while key is lifted
+- [x] On key-selection T1: "KEY" label appears adjacent to lifted orange circle
+- [x] KEY label remains visible throughout compare and shift ticks
+- [x] On T2 placement: KEY label disappears as circle settles
+- [x] Original baseline slot shows empty space while key is lifted
 
 ---
 
@@ -360,10 +360,10 @@ TreeLayout positions nodes in binary tree. `_draw_heap` renders tree sprites wit
 `NumberSprite.draw()` renders `pygame.draw.circle` with `RING_STROKE_WIDTH = 3`, fill with `PANEL_BG_COLOR = (45, 45, 53)`, number text centered. Ring outline and text share same color from `COLOR_MAP`.
 
 **What to check visually:**
-- [ ] All 28 sprites (7 × 4 panels) are circular outlined rings
-- [ ] Ring outline color matches number text color (blue `(100, 150, 255)` default)
-- [ ] Circle interior matches panel background (outlined, not solid-filled)
-- [ ] No squares, solid fills, or bare text
+- [x] All 28 sprites (7 × 4 panels) are circular outlined rings
+- [x] Ring outline color matches number text color (blue `(100, 150, 255)` default)
+- [x] Circle interior matches panel background (outlined, not solid-filled)
+- [x] No squares, solid fills, or bare text
 
 ---
 
@@ -373,8 +373,8 @@ TreeLayout positions nodes in binary tree. `_draw_heap` renders tree sprites wit
 `PanelRenderer.draw_header()` renders plain text titles. No colored dots or decorative symbols. `_ALGORITHM_NAMES` in main.py: `["Bubble Sort", "Selection Sort", "Insertion Sort", "Heap Sort"]`.
 
 **What to check visually:**
-- [ ] Four panel titles: plain text only
-- [ ] No colored dot, circle, or symbol precedes any title
+- [x] Four panel titles: plain text only
+- [f] No colored dot, circle, or symbol precedes any title
 
 ---
 
