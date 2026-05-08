@@ -444,7 +444,7 @@ All 27 acceptance tests are now implementable. Phase 7c-5 closed both gaps (AT-2
 ### Issue #5 — Colored dot preceding title (AT-27) — CLOSED
 **Resolution:** Confirmed by Steven as not an issue. AT-27 passes.
 
-### Issue #7 — Sprite tracking fails with duplicate values — CRITICAL (AT-08)
+### Issue #7 — Sprite tracking fails with duplicate values — CLOSED (AT-08)
 **Severity:** Functional — **correctness bug**
 **Screenshot:** Duplicate array `[3, 1, 3, 2, 1, 2, 3]` completion state. Insertion Sort shows `1, 2, 3, 1, 2, 3, 3` (wrong). Heap Sort sorted row has two sprites vertically misaligned.
 **Root cause:** `compute_sprite_moves()` in `orchestrator.py` detects movement by comparing `old_state[i] != new_state[i]`. When a SHIFT copies a value to an adjacent slot that already holds the same value (duplicate), `changed` is empty and the sprite movement goes undetected. Example: shifting value 3 from slot 1 to slot 2 when slot 2 already holds 3 produces identical old/new states. The same bug affects SWAP operations between equal-value slots (Heap Sort extraction of root when root == end value).
@@ -455,7 +455,7 @@ All 27 acceptance tests are now implementable. Phase 7c-5 closed both gaps (AT-2
   - Approach (A) is preferred — minimal contract change, uses data already available.
 **Fix target:** `src/visualizer/controllers/orchestrator.py` → `compute_sprite_moves()` signature and logic, plus all call sites.
 
-### Issue #8 — Heap Sort sorted-row sprites vertically misaligned (AT-08/AT-21)
+### Issue #8 — Heap Sort sorted-row sprites vertically misaligned — CLOSED (AT-08/AT-21)
 **Severity:** Visual — functional
 **Screenshot:** Same duplicate array completion. Two sprites in sorted row (second `1`, last `3`) float above the baseline while others sit correctly.
 **Root cause:** Likely downstream effect of Issue #7 — when extraction swaps between equal values go undetected, the sprite-to-slot mapping diverges from actual positions. The tree-to-sorted-row animation targets wrong sprite IDs, causing some sprites to not fully settle to the sorted row y-position.

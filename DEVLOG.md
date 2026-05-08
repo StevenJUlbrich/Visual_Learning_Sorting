@@ -109,4 +109,6 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 - Heap Sort sorted-row sprites all on same baseline y-coordinate
 - Then restore default array `[4, 7, 2, 6, 1, 5, 3]` and verify no regressions
 
-**Next:** Steven verifies visually. If Issue #8 resolves, close it. Proceed to 10d (Heap visual batch) and 10e (pointer spacing). 
+**Visual verification (Steven, 2026-05-08):** Confirmed with duplicate array `[3, 1, 3, 2, 1, 2, 3]`. All four panels show `[1, 1, 2, 2, 3, 3, 3]` at completion. Insertion Sort correct (was `1, 2, 3, 1, 2, 3, 3`). Heap Sort sorted-row sprites all on same baseline — **Issue #8 resolved** by this fix (downstream effect confirmed). Both Issues #7 and #8 closed.
+
+**Next:** Draft and execute 10d (Heap visual batch — Issues #1, #3, #6, #9) and 10e (pointer spacing — Issue #4). 
