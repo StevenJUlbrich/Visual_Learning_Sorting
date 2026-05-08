@@ -1,9 +1,12 @@
 """Selection Sort pointer arrow geometry and rendering.
 
 Three labeled pointer arrows for Selection Sort:
-  i   — downward triangle ABOVE baseline, marks sorted boundary
-  j   — upward triangle BELOW baseline, marks scan cursor
-  min — upward triangle BELOW baseline, marks minimum tracker
+  i   — upward triangle BELOW j/min tier, marks sorted boundary (cyan)
+  j   — upward triangle BELOW baseline, marks scan cursor (orange)
+  min — upward triangle BELOW baseline, marks minimum tracker (orange)
+
+All three pointers are below the baseline. j and min sit close to the sprite
+rings; i sits further below with vertical spacing to keep labels readable.
 
 Coalescing (D-068): when j and min occupy the same slot, only min is shown.
 
@@ -24,7 +27,7 @@ I_ARROW_HEIGHT: int = 16
 I_ARROW_HALF_WIDTH: int = 7
 JMIN_ARROW_HEIGHT: int = 12
 JMIN_ARROW_HALF_WIDTH: int = 5
-I_ARROW_GAP: int = 12  # clearance between ring edge and i-pointer tip (above)
+I_ARROW_GAP: int = 8  # clearance between j/min label bottom and i-pointer tip
 JMIN_ARROW_GAP: int = 5  # clearance between ring edge and j/min-pointer tip (below)
 LABEL_GAP: int = 2  # gap between arrow base and label text
 
@@ -40,9 +43,9 @@ POINTER_MIN_COLOR: tuple[int, int, int] = COLOR_MAP[ColorState.ACTIVE]  # (255, 
 class PointerSet:
     """Manages the three Selection Sort pointer arrows (i, j, min).
 
-    Arrow rendering:
-    - i: downward triangle ABOVE baseline; label above arrow
-    - j, min: upward triangles BELOW baseline; labels below arrows
+    Arrow rendering (all below baseline):
+    - j, min: upward triangles close to rings; labels below arrows (orange)
+    - i: upward triangle below j/min tier; label below arrow (cyan)
 
     Coalescing (D-068): j is hidden when j_index == min_index.
     """
@@ -72,8 +75,11 @@ class PointerSet:
         )
 
     def i_arrow_y(self) -> float:
-        """Tip y for the i pointer arrow (above baseline, tip points toward ring)."""
-        return self._home_y - self._ring_radius - I_ARROW_GAP
+        """Tip y for the i pointer arrow (below j/min tier, tip points upward)."""
+        jmin_label_bottom = (
+            self.jmin_arrow_y() + JMIN_ARROW_HEIGHT + LABEL_GAP + self._body_font.get_height()
+        )
+        return jmin_label_bottom + I_ARROW_GAP
 
     def jmin_arrow_y(self) -> float:
         """Tip y for j and min pointer arrows (below baseline, tip points toward ring)."""
@@ -111,7 +117,7 @@ class PointerSet:
     def _draw_i_pointer(self, surface: pygame.Surface, slot_index: int) -> None:
         cx = self.slot_center_x(slot_index)
         tip_y = self.i_arrow_y()
-        base_y = tip_y - I_ARROW_HEIGHT
+        base_y = tip_y + I_ARROW_HEIGHT
         points: list[tuple[int, int]] = [
             (round(cx), round(tip_y)),
             (round(cx - I_ARROW_HALF_WIDTH), round(base_y)),
@@ -121,7 +127,7 @@ class PointerSet:
         label_surf = self._body_font.render("i", True, POINTER_I_COLOR)
         label_rect = label_surf.get_rect()
         label_rect.centerx = round(cx)
-        label_rect.bottom = round(base_y) - LABEL_GAP
+        label_rect.top = round(base_y) + LABEL_GAP
         surface.blit(label_surf, label_rect)
 
     def _draw_jmin_pointer(

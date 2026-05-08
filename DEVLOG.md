@@ -259,4 +259,49 @@ Manual visual verification deferred to Steven:
 
 **Next**
 
-All Phase 10 issues resolved. Proceed to Phase 10 closeout.
+All Phase 10 issues resolved. Proceed to Phase 10 closeout.
+
+---
+
+### 2026-05-08 — 10i pre-action: Move `i` pointer below j/min tier (Issue #4 continued)
+
+**Problem:** `i` pointer above baseline collides with panel header counters. Label top (~y=92) touches header bottom (~y=92). Despite 10e gap increase and 10h size/color improvements, the above-baseline position has no room.
+
+**Plan:** Two files changed:
+1. `pointer.py` — Update module + class docstrings. Change `I_ARROW_GAP` from 12 to 8 (now means spacing below j/min labels, not above ring). Rewrite `i_arrow_y()` to position below j/min tier using font height. Flip `_draw_i_pointer` to upward triangle with label below (same orientation as j/min).
+2. `test_pointer.py` — Update imports (add `JMIN_ARROW_HEIGHT`, `LABEL_GAP`). Rename `test_i_arrow_y_above_baseline` → `test_i_arrow_y_below_jmin`. Update `test_i_arrow_y_formula` to match new formula (add `body_font` parameter).
+
+**Exit criteria:**
+1. `uv run ruff check src/ tests/` — clean
+2. `uv run ruff format --check src/ tests/` — clean
+3. `uv run pytest -x` — 345/345 (tests updated, no regressions)
+4. Import check — OK
+
+---
+
+### 2026-05-08 — 10i closed: `i` pointer moved below j/min tier (Issue #4)
+
+**Worked on:** `i_arrow_y()` rewritten to position below j/min label bottom — computes `jmin_tip + JMIN_ARROW_HEIGHT + LABEL_GAP + font_height + I_ARROW_GAP`. `_draw_i_pointer` flipped from downward triangle (label above) to upward triangle (label below), matching j/min orientation. `I_ARROW_GAP` reduced from 12 to 8 (semantic change: now means gap between j/min label bottom and i pointer tip, not between ring edge and i tip). Module and class docstrings updated to reflect all-below-baseline layout. Two tests updated: `test_i_arrow_y_above_baseline` → `test_i_arrow_y_below_jmin` (asserts `i_arrow_y() > jmin_arrow_y()`); `test_i_arrow_y_formula` updated with new formula and `body_font` fixture parameter. `JMIN_ARROW_HEIGHT` and `LABEL_GAP` added to test imports.
+
+**Corrections:** 1 ruff format correction (2 files reformatted — trailing whitespace in multi-line expressions).
+
+**Results:**
+
+- `uv run ruff check src/ tests/`: **clean**
+- `uv run ruff format --check src/ tests/`: **clean** (after format fix)
+- `uv run pytest -x`: **345/345 PASSED** (no regressions)
+- Import check: **OK**
+
+**Verification note**
+
+Manual visual verification deferred to Steven:
+- `i` pointer is now a cyan upward triangle BELOW the j/min pointers
+- `i` label ("i") visible in cyan below the arrow
+- `j` and `min` labels fully readable (no overlap from i)
+- Panel header counters have clear space above sprites (no collision)
+- Coalescing (D-068) still works: when j == min, only min shown
+- All three pointers point upward toward the sprite rings
+
+**Next**
+
+Visual verification of all Phase 10 pointer/boundary fixes (10e, 10g, 10h, 10i). Phase 10 closeout if no further issues.
