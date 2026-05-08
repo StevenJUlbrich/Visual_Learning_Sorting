@@ -886,7 +886,6 @@ _BOUNDARY_DASH: int = 6
 _BOUNDARY_GAP: int = 4
 _BOUNDARY_LINE_COLOR: tuple[int, int, int] = (150, 150, 160)
 _BOUNDARY_LINE_WIDTH: int = 2
-_PHASE_LABEL_OFFSET: int = 20  # px above tree_top for the phase label
 _BOUNDARY_LABEL_OFFSET: int = 15  # px below sorted_row_y + node_radius
 
 
@@ -899,13 +898,15 @@ class HeapOverlay:
         phase_label: HeapPhaseLabel,
         boundary_label: HeapBoundaryLabel,
         array_size: int,
+        panel_rect: pygame.Rect,
     ) -> None:
         self._tree_layout = tree_layout
         self._phase_label = phase_label
         self._boundary_label = boundary_label
         self._array_size = array_size
+        self._panel_rect = panel_rect
         self._heap_size: int = array_size
-        self._phase: str = "BUILD MAX-HEAP"
+        self._phase: str | None = "BUILD MAX-HEAP"
         self._active_edge_parent: int | None = None
         self._active_edge_children: tuple[int, ...] = ()
         self._last_tick: SortResult | None = None
@@ -941,15 +942,17 @@ class HeapOverlay:
             self._active_edge_children = ()
 
         elif op in (OpType.TERMINAL, OpType.FAILURE):
+            self._phase = None
             self._active_edge_parent = None
             self._active_edge_children = ()
 
     def draw_under(self, surface: pygame.Surface) -> None:
         """Draw edges, placeholders, and boundary line (behind sprites)."""
         self._draw_edges(surface)
-        self._draw_placeholders(surface)
-        if self._heap_size < self._array_size:
-            self._draw_boundary_line(surface)
+        if self._phase == "EXTRACTION":
+            self._draw_placeholders(surface)
+            if self._heap_size < self._array_size:
+                self._draw_boundary_line(surface)
 
     def _draw_edges(self, surface: pygame.Surface) -> None:
         """Draw parent-child edges for the active heap tree."""
@@ -978,6 +981,11 @@ class HeapOverlay:
             self._tree_layout.sorted_row_x(self._heap_size - 1)
             + self._tree_layout.sorted_row_x(self._heap_size)
         ) / 2
+        # Clamp to panel bounds — don't draw outside the Heap Sort panel
+        panel_left = self._panel_rect.x + 10
+        panel_right = self._panel_rect.right - 10
+        if boundary_x < panel_left or boundary_x > panel_right:
+            return
         radius = self._tree_layout.tree_node_radius
         row_y = self._tree_layout.sorted_row_y
         y_start = row_y - radius - 10
@@ -998,19 +1006,24 @@ class HeapOverlay:
 
     def draw_over(self, surface: pygame.Surface) -> None:
         """Draw phase label and boundary label (on top of sprites)."""
-        label_y = self._tree_layout.tree_top - _PHASE_LABEL_OFFSET
-        self._phase_label.draw(surface, self._phase, label_y)
+        if self._phase is not None:
+            root_clearance = self._tree_layout.tree_node_radius + 8
+            label_y = self._tree_layout.tree_top - root_clearance
+            self._phase_label.draw(surface, self._phase, label_y)
         if self._heap_size < self._array_size:
             boundary_x = (
                 self._tree_layout.sorted_row_x(self._heap_size - 1)
                 + self._tree_layout.sorted_row_x(self._heap_size)
             ) / 2
-            label_y_boundary = (
-                self._tree_layout.sorted_row_y
-                + self._tree_layout.tree_node_radius
-                + _BOUNDARY_LABEL_OFFSET
-            )
-            self._boundary_label.draw(surface, boundary_x, label_y_boundary)
+            panel_left = self._panel_rect.x + 10
+            panel_right = self._panel_rect.right - 10
+            if panel_left <= boundary_x <= panel_right:
+                label_y_boundary = (
+                    self._tree_layout.sorted_row_y
+                    + self._tree_layout.tree_node_radius
+                    + _BOUNDARY_LABEL_OFFSET
+                )
+                self._boundary_label.draw(surface, boundary_x, label_y_boundary)
 
     def reset(self) -> None:
         self._last_tick = None

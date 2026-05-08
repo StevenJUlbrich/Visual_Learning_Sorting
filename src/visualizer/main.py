@@ -281,6 +281,7 @@ def main() -> None:
         phase_label=_heap_phase_label,
         boundary_label=_heap_boundary_label,
         array_size=len(initial_array),
+        panel_rect=layout.panel_rects[3],
     )
 
     orchestrator = _build_orchestrator(initial_array)

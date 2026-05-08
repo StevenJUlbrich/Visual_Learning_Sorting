@@ -111,4 +111,53 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 
 **Visual verification (Steven, 2026-05-08):** Confirmed with duplicate array `[3, 1, 3, 2, 1, 2, 3]`. All four panels show `[1, 1, 2, 2, 3, 3, 3]` at completion. Insertion Sort correct (was `1, 2, 3, 1, 2, 3, 3`). Heap Sort sorted-row sprites all on same baseline — **Issue #8 resolved** by this fix (downstream effect confirmed). Both Issues #7 and #8 closed.
 
-**Next:** Draft and execute 10d (Heap visual batch — Issues #1, #3, #6, #9) and 10e (pointer spacing — Issue #4). 
+**Next:** Draft and execute 10d (Heap visual batch — Issues #1, #3, #6, #9) and 10e (pointer spacing — Issue #4).
+
+---
+
+### 2026-05-08 — 10d pre-action: Heap Sort visual fixes (Issues #1, #3, #6, #9)
+
+**Plan:** Four fixes in HeapOverlay class, all in `src/visualizer/views/sprite_manager.py`:
+1. Issue #1 — Increase phase label offset so "BUILD MAX-HEAP" / "EXTRACTION" clears the root node.
+2. Issue #3 — Clamp boundary marker drawing to panel rect; skip when boundary_x falls outside panel.
+3. Issue #6 — Gate sorted-row placeholder drawing on extraction phase.
+4. Issue #9 — Hide phase label on TERMINAL (set `_phase = None`, guard draw).
+
+One call-site update in `main.py` to pass `panel_rect` to HeapOverlay constructor.
+
+**Exit criteria:**
+1. `uv run ruff check src/ tests/` — clean
+2. `uv run ruff format --check src/ tests/` — clean
+3. `uv run pytest -x` — 345/345 (no test changes, no regressions)
+4. Import check — OK
+
+---
+
+### 2026-05-08 — 10d closed: Heap Sort visual fixes (Issues #1, #3, #6, #9)
+
+**Worked on:** All changes in `src/visualizer/views/sprite_manager.py` and `src/visualizer/main.py`. No algorithm, test, or contract files touched.
+
+- **Issue #1 (phase label offset):** Removed `_PHASE_LABEL_OFFSET = 20` constant. In `draw_over()`, replaced static offset with `tree_node_radius + 8` dynamic clearance, ensuring the label always sits above the root ring at any resolution. Wrapped in `if self._phase is not None` guard (also handles Issue #9).
+- **Issue #3 (boundary marker clamp):** Added `panel_rect: pygame.Rect` constructor parameter (stored as `self._panel_rect`). In `_draw_boundary_line()`, added `panel_left / panel_right` clamp — returns early if `boundary_x` falls outside panel bounds. Same clamp applied to boundary label in `draw_over()`.
+- **Issue #6 (placeholder phase gate):** In `draw_under()`, wrapped `_draw_placeholders()` and `_draw_boundary_line()` calls in `if self._phase == "EXTRACTION"`. Placeholders and boundary line now only render during extraction.
+- **Issue #9 (phase label persistence):** In `_process_tick()`, added `self._phase = None` in the `TERMINAL/FAILURE` branch. Updated `_phase` type annotation to `str | None`. The `if self._phase is not None` guard in `draw_over()` suppresses label rendering on completion.
+- **main.py call site:** Added `panel_rect=layout.panel_rects[3]` to `HeapOverlay(...)` constructor call.
+
+No deviations from the plan.
+
+**Corrections:** Zero corrections. Ruff check and format clean on first run.
+
+**Results:**
+- `uv run ruff check src/ tests/`: **clean**
+- `uv run ruff format --check src/ tests/`: **clean** (38 files)
+- `uv run pytest -x`: **345/345 PASSED** (no regressions)
+- Import check `from visualizer.views.sprite_manager import HeapOverlay`: **OK**
+
+**Verification note:** Manual visual verification deferred to Steven — check with both default and duplicate arrays:
+- Phase label ("BUILD MAX-HEAP" / "EXTRACTION") clears the root node at all times
+- No boundary marker or label visible in Insertion Sort panel
+- No placeholder circles during BUILD MAX-HEAP phase
+- Phase label disappears on sort completion (green state)
+- Restart (R) restores "BUILD MAX-HEAP" label correctly
+
+**Next:** Proceed to 10e (Selection Sort pointer spacing — Issue #4). 
