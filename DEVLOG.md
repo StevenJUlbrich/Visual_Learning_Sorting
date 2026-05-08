@@ -215,4 +215,48 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 
 **Verification note:** Visual verification pending — confirm boundary line disappears on completion (green state) and reappears after restart (R).
 
-**Next:** Visual verification of 10e (pointer spacing) and 10g (limit line hide), then Phase 10 closeout.
+**Next:** Visual verification of 10e (pointer spacing) and 10g (limit line hide), then Phase 10 closeout.
+
+---
+
+### 2026-05-08 — 10h pre-action: `i` pointer visibility — bigger arrow + cyan color (Issue #4 continued)
+
+**Problem:** 10e increased gap but `i` pointer still nearly invisible. Arrow too small (12×5) and color too faint (light gray blends into background).
+
+**Plan:** Two files changed:
+1. `pointer.py` — Add `I_ARROW_HEIGHT = 16`, `I_ARROW_HALF_WIDTH = 7`. Change `POINTER_I_COLOR` from `PRIMARY_TEXT` to `(80, 200, 220)` (cyan). Rename shared `ARROW_HEIGHT`/`ARROW_HALF_WIDTH` to `JMIN_ARROW_HEIGHT`/`JMIN_ARROW_HALF_WIDTH`. Update `_draw_i_pointer` to use `I_` constants. Update `_draw_jmin_pointer` to use `JMIN_` constants.
+2. `test_pointer.py` — Update color assertion from `(240, 240, 245)` to `(80, 200, 220)`.
+
+**Exit criteria:**
+1. `uv run ruff check src/ tests/` — clean
+2. `uv run ruff format --check src/ tests/` — clean
+3. `uv run pytest -x` — 345/345 (one test assertion updated, no regressions)
+4. Import check — OK
+
+---
+
+### 2026-05-08 — 10h closed: `i` pointer visibility — bigger arrow + cyan color (Issue #4)
+
+**Worked on:** Split `ARROW_HEIGHT`/`ARROW_HALF_WIDTH` into `I_ARROW_HEIGHT = 16` / `I_ARROW_HALF_WIDTH = 7` (i pointer) and `JMIN_ARROW_HEIGHT = 12` / `JMIN_ARROW_HALF_WIDTH = 5` (j/min pointers). Changed `POINTER_I_COLOR` from `PRIMARY_TEXT (240, 240, 245)` to cyan `(80, 200, 220)`. Removed now-unused `PRIMARY_TEXT` import from `visualizer.views.panel`. Updated `_draw_i_pointer` to use `I_` constants; updated `_draw_jmin_pointer` to use `JMIN_` constants. Updated color test `test_pointer_i_color_is_primary_text` → `test_pointer_i_color_is_cyan` with assertion `(80, 200, 220)`.
+
+**Corrections:** Zero corrections.
+
+**Results:**
+
+- `uv run ruff check src/ tests/`: **clean**
+- `uv run ruff format --check src/ tests/`: **clean** (38 files)
+- `uv run pytest -x`: **345/345 PASSED** (no regressions)
+- Import check: **OK**
+
+**Verification note**
+
+Manual visual verification deferred to Steven:
+- `i` pointer is now a larger cyan triangle, clearly visible above sprite rings
+- `i` label text is cyan, readable against dark background
+- `j` and `min` pointers unchanged (orange, same size as before)
+- Coalescing (D-068) still works: when j == min, only min shown
+- Sorted boundary semantic is visually distinct from scan cursor
+
+**Next**
+
+All Phase 10 issues resolved. Proceed to Phase 10 closeout.

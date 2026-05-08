@@ -162,8 +162,8 @@ def test_coalesce_all_none(pointer_set: PointerSet) -> None:
 
 
 @pytest.mark.unit
-def test_pointer_i_color_is_primary_text() -> None:
-    assert POINTER_I_COLOR == (240, 240, 245)
+def test_pointer_i_color_is_cyan() -> None:
+    assert POINTER_I_COLOR == (80, 200, 220)
 
 
 @pytest.mark.unit
