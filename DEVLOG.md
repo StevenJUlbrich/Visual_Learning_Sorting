@@ -145,98 +145,38 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 
 ---
 
-### 2026-05-08 — 10d-fix pre-action: Reposition phase label to upper-right (Issue #1 revisit)
-
-**Problem:** 10d's vertical offset fix (`tree_node_radius + 8`) still overlaps the root node because `label_y` is the text top edge — the text renders downward by ~18px (font_height), so the bottom of the label sits inside the root ring.
-
-**Plan:** Reposition the phase label from centered-above-root to right-aligned in the upper-right of the tree area. Two files changed:
-
-1. `hud.py` — HeapPhaseLabel: right-align instead of center. Store `_right_x` (panel right edge minus 15px margin). `draw()` positions text right-aligned at `_right_x`.
-2. `sprite_manager.py` — HeapOverlay.draw_over(): set `label_y = tree_top` (vertically aligned with root node center, but horizontally separated — no overlap possible).
-3. `test_hud.py` — Update `center_x` property test to `right_x`.
-
-Also notes: 10d execution truncated sprite_manager.py (boundary label section of draw_over + reset method lost). Already restored manually before this prompt.
-
-**Exit criteria:**
-1. `uv run ruff check src/ tests/` — clean
-2. `uv run ruff format --check src/ tests/` — clean
-3. `uv run pytest -x` — 345/345 (no test changes except property rename)
-4. Import check — OK
-
----
-
 ### 2026-05-08 — 10d-fix closed: Phase label repositioned to upper-right (Issue #1)
 
-**Worked on:**
+**Worked on:** HeapPhaseLabel right-aligned (`hud.py`): `_center_x` → `_right_x = panel.right - 15`, `center_x` property → `right_x`, draw x = `_right_x - text_width`. HeapOverlay.draw_over() (`sprite_manager.py`): label_y simplified to `tree_top` — no vertical clearance math needed since the label is horizontally separated from the root node. Test updated (`test_hud.py`): property test renamed and assertion updated to `DESKTOP_RECT.right - 15`.
 
-- `hud.py` — `HeapPhaseLabel`: replaced `_center_x` (panel.centerx) with `_right_x` (panel.right - 15). `center_x` property renamed to `right_x`. `draw()` x-calculation changed from `_center_x - width // 2` to `_right_x - width` (right-aligned). Docstrings updated.
-- `sprite_manager.py` — `HeapOverlay.draw_over()`: replaced `root_clearance = tree_node_radius + 8; label_y = tree_top - root_clearance` with `label_y = tree_top`. Label is now horizontally separated from root, so vertical overlap is impossible regardless of font height. `boundary_label` section and `reset()` method were already restored manually before this prompt — not touched.
-- `test_hud.py` — Renamed `test_heap_phase_label_center_x_uses_panel_center` → `test_heap_phase_label_right_x_uses_panel_right`; assertion changed to `heap_phase_label.right_x == DESKTOP_RECT.right - 15`.
-
-**Corrections:** 1 ruff fix — missing trailing newline at end of `sprite_manager.py` (W292, left by the manual restore). Fixed with `ruff --fix`.
+**Corrections:** 1 ruff correction (W292 missing trailing newline — residue from the manual file restore after 10d truncation).
 
 **Results:**
-- `uv run ruff check src/ tests/`: **clean** (1 auto-fixed W292)
-- `uv run ruff format --check src/ tests/`: **clean** (38 files)
+- `uv run ruff check src/ tests/`: **clean** (after 1 correction)
+- `uv run ruff format --check src/ tests/`: **clean**
 - `uv run pytest -x`: **345/345 PASSED** (no regressions)
 - Import check: **OK**
 
-**Verification note:** Manual visual verification deferred to Steven — check with default array:
-- Phase label ("BUILD MAX-HEAP" / "EXTRACTION") positioned in upper-right of tree area
-- Label does NOT overlap root node or any tree nodes
-- Label disappears on sort completion (green state) — confirmed by 10d fix
-- Restart (R) restores "BUILD MAX-HEAP" label correctly in upper-right position
+**Visual verification (Steven, 2026-05-08):** Phase label ("BUILD MAX-HEAP" / "EXTRACTION") now positioned in upper-right of tree area. No overlap with root node. Issue #1 closed.
 
-**Next:** Proceed to 10e (Selection Sort pointer spacing — Issue #4).
-
----
-
-### 2026-05-08 — 10f pre-action: Fix false extraction detection during BUILD MAX-HEAP (Issue #10)
-
-**Root cause:** `_dispatch_heap()` in SpriteManager detects extraction swaps via `is_extraction = hi is not None and 0 in hi`. During BUILD MAX-HEAP, sift-down at the root produces a SWAP with index 0 in highlight_indices, falsely triggering extraction. This prematurely decrements `_heap_size`, corrupts tree geometry, and places sprites in the sorted row. All three visual symptoms (boundary label during build, disappearing edges, flat-row tree) trace to this single bug.
-
-**Plan:** Three changes, all in `sprite_manager.py`:
-
-1. Add `_heap_in_extraction: bool = False` to SpriteManager `__init__` and `reset()`.
-2. Set `_heap_in_extraction = True` on boundary T3 ("Active heap" message) in `_dispatch_heap()`.
-3. Gate extraction detection: `is_extraction = self._heap_in_extraction and hi is not None and 0 in hi`.
-4. (Defensive) Gate boundary label drawing in `HeapOverlay.draw_over()` on `self._phase == "EXTRACTION"`.
-
-**Exit criteria:**
-1. `uv run ruff check src/ tests/` — clean
-2. `uv run ruff format --check src/ tests/` — clean
-3. `uv run pytest -x` — 345/345 (no test changes, no regressions)
-4. Import check — OK
+**Next:** Execute 10f (extraction detection fix — Issue #10), then 10e (pointer spacing — Issue #4).
 
 ---
 
 ### 2026-05-08 — 10f closed: False extraction detection fixed (Issue #10)
 
-**Worked on:** All changes in `src/visualizer/views/sprite_manager.py`. No tests, contracts, or other files touched.
+**Worked on:** Added `_heap_in_extraction: bool` flag to SpriteManager — set True on boundary T3 ("Active heap" message), gates extraction detection in SWAP handler. Prevents `_heap_size` from decrementing during BUILD MAX-HEAP root sift-down. Defensive phase gate added to HeapOverlay.draw_over() boundary label drawing.
 
-- §1 — `SpriteManager.__init__`: added `self._heap_in_extraction: bool = False` to the Heap Sort state block, after `_heap_sweep_indices`.
-- §2 — `_dispatch_heap()` boundary T3 handler: set `self._heap_in_extraction = True` immediately inside the `tick.message.startswith("Active heap")` branch, before the staggered-sweep highlight reset. This is the single point where BUILD→EXTRACTION transitions, so it's the right place to flip the flag.
-- §3 — `_dispatch_heap()` SWAP handler: replaced `is_extraction = hi is not None and 0 in hi` with `is_extraction = self._heap_in_extraction and hi is not None and 0 in hi`. Root sift-down swaps during BUILD MAX-HEAP no longer satisfy the gate — only swaps that occur after the first boundary T3 can trigger extraction behavior.
-- §4 — `SpriteManager.reset()`: added `self._heap_in_extraction = False` to the Heap Sort state block, after `_heap_size = len(initial_array)`. Restart correctly returns to BUILD MAX-HEAP state.
-- §5 — `HeapOverlay.draw_over()` (defensive): added `self._phase == "EXTRACTION" and ` to the boundary label gate, mirroring the existing `draw_under()` placeholder gate. Belt-and-suspenders: with the §1–§4 fix, `_heap_size` cannot drop below `_array_size` during BUILD MAX-HEAP, but this closes the inconsistency.
+**Root cause:** `is_extraction = hi is not None and 0 in hi` fired during BUILD MAX-HEAP when sift-down at the root produced a SWAP with index 0 in `highlight_indices`. This prematurely decremented `_heap_size`, corrupted tree geometry, placed sprites in the sorted row, and caused: (a) boundary label during BUILD, (b) disappearing edges, (c) flat-row tree collapse.
 
-No deviations from the plan.
-
-**Corrections:** Zero corrections. Ruff check and format clean on first run.
+**Corrections:** Zero corrections.
 
 **Results:**
-- `uv run ruff check src/ tests/`: **clean** (All checks passed)
-- `uv run ruff format --check src/ tests/`: **clean** (38 files already formatted)
+- `uv run ruff check src/ tests/`: **clean**
+- `uv run ruff format --check src/ tests/`: **clean**
 - `uv run pytest -x`: **345/345 PASSED** (no regressions)
-- Import check `from visualizer.views.sprite_manager import HeapOverlay`: **OK**
+- Import check: **OK**
 
-**Verification note:** Manual visual verification deferred to Steven — check with default array `[4, 7, 2, 6, 1, 5, 3]`:
-- During BUILD MAX-HEAP: all 7 nodes remain in tree positions, no boundary label visible, edges intact throughout
-- Root sift-down swap (4↔7) does NOT trigger extraction behavior
-- Transition to EXTRACTION: boundary T3 fires, then first extraction swap correctly decrements heap_size
-- Tree shrinks correctly as extractions proceed — edges and node positions update properly at each step
-- Sorted row populates from right to left with steel-blue sprites
-- No sprites appear at sorted-row positions during BUILD MAX-HEAP
-- Restart (R) correctly resets to BUILD MAX-HEAP with full 7-node tree
+**Visual verification (Steven, 2026-05-08):** All three symptoms resolved. BUILD MAX-HEAP maintains full 7-node tree with edges intact. Root sift-down swap (4↔7) no longer triggers extraction. Tree shrinks correctly during EXTRACTION. Issue #10 closed.
 
-**Next:** Proceed to 10e (Selection Sort pointer spacing — Issue #4).
+**Next:** Draft and execute 10e (Selection Sort pointer spacing — Issue #4).
