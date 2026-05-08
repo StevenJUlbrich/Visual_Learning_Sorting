@@ -201,46 +201,18 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 
 ---
 
-### 2026-05-08 — 10g pre-action: Hide Bubble Sort boundary line on completion (Issue #11)
-
-**Problem:** Bubble Sort boundary line (LimitLine) persists after sort completion. The line's `is_visible` check relies on `boundary_index` reaching 0, but Bubble Sort terminates when a pass has no swaps — the boundary may still be mid-array.
-
-**Plan:** One file changed (`sprite_manager.py`):
-1. Add `_sort_complete: bool = False` to BubbleOverlay.__init__.
-2. Set `self._sort_complete = True` on TERMINAL in `_process_tick()`.
-3. Gate limit line draw: `if not self._sort_complete:` before `self._limit_line.draw(surface)` in `draw()`.
-4. Reset flag in `reset()`.
-
-**Exit criteria:**
-1. `uv run ruff check src/ tests/` — clean
-2. `uv run ruff format --check src/ tests/` — clean
-3. `uv run pytest -x` — 345/345 (no test changes, no regressions)
-4. Import check — OK
-
----
-
 ### 2026-05-08 — 10g closed: Bubble Sort boundary line hidden on completion (Issue #11)
 
-**Worked on:** Added `_sort_complete: bool = False` flag to `BubbleOverlay.__init__`. Set `self._sort_complete = True` on TERMINAL/FAILURE in `_process_tick()`. Gated `self._limit_line.draw(surface)` behind `if not self._sort_complete:` in `draw()`. Added `self._sort_complete = False` to `reset()`.
+**Worked on:** Added `_sort_complete: bool` flag to BubbleOverlay. Set True on TERMINAL/FAILURE. Gates `self._limit_line.draw(surface)` on `not self._sort_complete`. Reset to False in `reset()`.
 
 **Corrections:** Zero corrections.
 
 **Results:**
-
 - `uv run ruff check src/ tests/`: **clean**
-- `uv run ruff format --check src/ tests/`: **clean** (38 files)
+- `uv run ruff format --check src/ tests/`: **clean**
 - `uv run pytest -x`: **345/345 PASSED** (no regressions)
 - Import check: **OK**
 
-**Verification note**
+**Verification note:** Visual verification pending — confirm boundary line disappears on completion (green state) and reappears after restart (R).
 
-Manual visual verification deferred to Steven:
-- Boundary line visible during sorting, advances leftward each pass
-- Boundary line disappears when sort completes (green state)
-- Comparison pointer (green triangle) still disappears on completion
-- Counters (Comparisons/Exchanges) still visible on completion
-- Restart (R) restores boundary line correctly
-
-**Next**
-
-Update issue register. Proceed to Phase 10 closeout if no further issues found.
+**Next:** Visual verification of 10e (pointer spacing) and 10g (limit line hide), then Phase 10 closeout.
