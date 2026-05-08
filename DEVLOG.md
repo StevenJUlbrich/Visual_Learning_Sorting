@@ -109,6 +109,4 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 - Heap Sort sorted-row sprites all on same baseline y-coordinate
 - Then restore default array `[4, 7, 2, 6, 1, 5, 3]` and verify no regressions
 
-Check if Issue #8 (Heap vertical misalignment) resolves with this fix.
-
-**Next:** Steven verifies visually. If Issue #8 resolves, close it. Proceed to 10d (Heap visual batch) and 10e (pointer spacing).
+**Next:** Steven verifies visually. If Issue #8 resolves, close it. Proceed to 10d (Heap visual batch) and 10e (pointer spacing). 
