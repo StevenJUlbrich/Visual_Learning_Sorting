@@ -88,14 +88,32 @@ def compute_sprite_moves(
     old_state: list[int],
     new_state: list[int],
     slot_to_sprite_id: list[int],
+    operation_type: OpType | None = None,
+    highlight_indices: tuple[int, ...] | None = None,
 ) -> dict[int, int]:
     """Return {sprite_id: new_slot} for moved sprites; mutate slot_to_sprite_id in place.
 
     Never identifies sprites by value — uses slot-position delta (doc 12 §1, Trap A).
+    For duplicate-value SHIFT/SWAP ticks (where old_state == new_state despite a real
+    sprite exchange), falls back to highlight_indices to detect movement.
     """
     changed = [i for i in range(len(old_state)) if old_state[i] != new_state[i]]
 
     if len(changed) == 0:
+        # Value-delta detection found nothing. For unique arrays, this means
+        # no movement occurred. For duplicate arrays, equal-value shifts/swaps
+        # produce identical states. Fall through to highlight-based detection.
+        if (
+            operation_type in (OpType.SWAP, OpType.SHIFT)
+            and highlight_indices is not None
+            and len(highlight_indices) == 2
+        ):
+            i, j = highlight_indices[0], highlight_indices[1]
+            sprite_a = slot_to_sprite_id[i]
+            sprite_b = slot_to_sprite_id[j]
+            slot_to_sprite_id[i] = sprite_b
+            slot_to_sprite_id[j] = sprite_a
+            return {sprite_a: j, sprite_b: i}
         return {}
 
     if len(changed) == 2:
@@ -251,10 +269,14 @@ class Orchestrator:
 
                 ctx.current_tick = tick
 
-                # Sprite identity delta (6c)
+                # Sprite identity delta (6c, 10c duplicate-value fallback)
                 if tick.array_state is not None and ctx.previous_array_state is not None:
                     ctx.sprite_moves = compute_sprite_moves(
-                        ctx.previous_array_state, tick.array_state, ctx.slot_to_sprite_id
+                        ctx.previous_array_state,
+                        tick.array_state,
+                        ctx.slot_to_sprite_id,
+                        operation_type=tick.operation_type,
+                        highlight_indices=tick.highlight_indices,
                     )
                 else:
                     ctx.sprite_moves = {}
