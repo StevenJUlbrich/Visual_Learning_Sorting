@@ -261,34 +261,35 @@ All four pseudocode blocks are now codified in `docs/design_docs/00_PSEUDOCODE.m
 
 **Depends on:** All prior phases
 **Spec:** doc 07 (all AT-01 through AT-27)
+**Status:** Complete (2026-05-08). All 27 ATs pass. 10 visual issues found and resolved across sub-phases 10a–10i. 6 new tests added (10c). 345/345 cumulative. See `docs/devlog/phase_10.md` for full details.
 
-- [ ] AT-01 Startup baseline
-- [ ] AT-02 Independent queue progression (step mode)
-- [ ] AT-03 Completion race
-- [ ] AT-03a Completion green panel
-- [ ] AT-04 Generator completion contract
-- [ ] AT-05 Selection Sort regression guard
-- [ ] AT-06 Failure isolation
-- [ ] AT-07 Sprite motion and tweening smoothness
-- [ ] AT-08 Duplicate value stability
-- [ ] AT-09 Heap Sort two-phase visual distinction
-- [ ] AT-10 Heap Sort phase correctness
-- [ ] AT-11 Insertion Sort lift-and-settle sequence
-- [ ] AT-12 Counter accuracy
-- [ ] AT-13 Bubble Sort LimitLine migration
-- [ ] AT-14 Bubble Sort swap-lift counter sync
-- [ ] AT-15 T3 step counter exclusion
-- [ ] AT-16 Accent color readability
-- [ ] AT-17 Tablet preset layout integrity
-- [ ] AT-18 Desktop preset layout integrity
-- [ ] AT-19 Selection Sort min tracking
-- [ ] AT-20 Selection Sort sorted region stability
-- [ ] AT-21 Heap Sort tree visualization
-- [ ] AT-22 Heap Sort phase label
-- [ ] AT-23 Heap Sort heap boundary marker
-- [ ] AT-24 Selection Sort pointer assets
-- [ ] AT-25 Insertion Sort KEY label and gap
-- [ ] AT-26 Circular ring sprite shape
-- [ ] AT-27 No algorithm title dots
+- [x] AT-01 Startup baseline
+- [x] AT-02 Independent queue progression (step mode)
+- [x] AT-03 Completion race
+- [x] AT-03a Completion green panel
+- [x] AT-04 Generator completion contract
+- [x] AT-05 Selection Sort regression guard
+- [x] AT-06 Failure isolation *(requires code injection — verified via automated TC-A17/A18)*
+- [x] AT-07 Sprite motion and tweening smoothness
+- [x] AT-08 Duplicate value stability *(Issue #7 fixed in 10c — compute_sprite_moves augmentation)*
+- [x] AT-09 Heap Sort two-phase visual distinction
+- [x] AT-10 Heap Sort phase correctness
+- [x] AT-11 Insertion Sort lift-and-settle sequence
+- [x] AT-12 Counter accuracy
+- [x] AT-13 Bubble Sort LimitLine migration
+- [x] AT-14 Bubble Sort swap-lift counter sync
+- [x] AT-15 T3 step counter exclusion
+- [x] AT-16 Accent color readability
+- [x] AT-17 Tablet preset layout integrity
+- [x] AT-18 Desktop preset layout integrity
+- [x] AT-19 Selection Sort min tracking
+- [x] AT-20 Selection Sort sorted region stability
+- [x] AT-21 Heap Sort tree visualization *(Issues #6, #8 fixed in 10c/10d)*
+- [x] AT-22 Heap Sort phase label *(Issues #1, #9 fixed in 10d/10d-fix)*
+- [x] AT-23 Heap Sort heap boundary marker *(Issue #3 fixed in 10d)*
+- [x] AT-24 Selection Sort pointer assets *(Issue #4 fixed in 10e/10h/10i)*
+- [x] AT-25 Insertion Sort KEY label and gap
+- [x] AT-26 Circular ring sprite shape
+- [x] AT-27 No algorithm title dots
 
 ---
