@@ -9,6 +9,7 @@
 ## 2026-04-19 — Model strategy for agentic implementation: Opus / Sonnet / Haiku assignment per phase
 
 ### Worked on
+
 Evaluated each remaining project phase against the three available Claude models (Opus 4.6, Sonnet 4.6, Haiku 4.5) to optimize token cost without sacrificing output quality. The evaluation considered constraint density per phase, reasoning depth required, risk of subtle spec violations, and the mechanical vs. architectural nature of each task.
 
 Additionally established a two-session workflow: Claude Code (VSCode/Ubuntu) handles implementation with the assigned model; this Cowork session (Opus) serves as the oversight/review layer with full spec context loaded. One algorithm at a time for Phase 2.
@@ -42,6 +43,7 @@ Additionally established a two-session workflow: Claude Code (VSCode/Ubuntu) han
 - Phase 10: Manual acceptance — real-monitor visual inspection of AT-01 through AT-27. Cowork (Opus) assists with check-off sheet organization and result recording.
 
 ### Decisions
+
 - **Session boundaries over mid-session model switching.** Rather than switching models within a Claude Code session (which forces the new model to pay for all prior context tokens), group by model across sessions: Sonnet session for Bubble+Selection, Opus session for Insertion+Heap. Avoids Opus token rates on Bubble/Selection context and avoids Sonnet rates on context it won't use well for the harder algorithms.
 - **Oversight stays on Opus.** The review role (this Cowork session) needs full spec context and the ability to catch violations the implementation model missed. Catching a bug in review is cheaper than discovering it three phases later.
 - **Escalation rule:** If Sonnet produces a deliverable that fails exit criteria after one correction attempt, escalate to Opus for that specific file rather than iterating further on Sonnet.
@@ -49,19 +51,22 @@ Additionally established a two-session workflow: Claude Code (VSCode/Ubuntu) han
 - **TC-A19 escalation trigger (concrete).** If Sonnet's TC-A19 sift-down segmentation helper fails to correctly distinguish boundary T3 (contiguous) from logical-tree T3 (non-contiguous) on the first attempt, switch to Opus for that test file. Don't iterate on Sonnet — the contiguity-check logic is exactly the kind of multi-constraint reasoning where Opus pays for itself immediately.
 
 ### Open questions
+
 - None. The three refinements (session boundaries, DEVLOG by active model, TC-A19 escalation trigger) resolved the open questions from the initial draft.
 
 ### Next
+
 Begin Phase 2a (Bubble Sort) in Claude Code with Sonnet. Bring the completed `bubble.py` back to this Cowork session for spec-level review before moving to Selection Sort.
 
 ---
 
 ## 2026-04-16 — Correction C verified: Heap Sort writes = 30 confirmed by independent trace
 
-### Worked on
+### Verification
+
 Independently verified Correction C (doc-03 Heap Sort writes ~22 → 30) by writing a step-by-step Python trace of `heap_sort_generator` on the default array `[4, 7, 2, 6, 1, 5, 3]`. The trace mirrors the pseudocode in `00_PSEUDOCODE.md` §4 exactly — every sift-down level, every swap, every T3 highlight — and logs the running writes counter at each mutation.
 
-**Phase 1 — Build Max-Heap: 6 writes (3 swaps)**
+#### Phase 1 — Build Max-Heap: 6 writes (3 swaps)
 
 - `sift_down(2, 7)`: arr[2]=2 swapped with arr[5]=5 → +2 (running: 2)
 - `sift_down(1, 7)`: arr[1]=7 already largest → 0 (running: 2)
@@ -69,10 +74,10 @@ Independently verified Correction C (doc-03 Heap Sort writes ~22 → 30) by writ
 
 Max-heap: `[7, 6, 5, 4, 1, 2, 3]`
 
-**Phase 2 — Extraction: 24 writes (6 root swaps + 6 sift-down repair swaps)**
+#### Phase 2 — Extraction: 24 writes (6 root swaps + 6 sift-down repair swaps)
 
 | Extraction | Root swap | Sift-down repair swaps | Writes | Running |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | 1 | arr[0]↔arr[6] | 2 levels (root→1, 1→3) | 6 | 12 |
 | 2 | arr[0]↔arr[5] | 1 level (root→2) | 4 | 16 |
 | 3 | arr[0]↔arr[4] | 2 levels (root→1, 1→3) | 6 | 22 |
@@ -85,20 +90,24 @@ Max-heap: `[7, 6, 5, 4, 1, 2, 3]`
 The old doc-03 value of "~22" was counting swap *operations* (15 total swaps) rather than *array positions written* (15 × 2 = 30). The distinction is defined in doc 03 §Per-Operation Increment Rules: "A single swap operation modifies two array positions, so it counts as 2 writes."
 
 ### Decisions
+
 - **Correction C signed off.** The ~22 → 30 change in doc-03 §Per-Algorithm Expected Write Totals is confirmed correct. The value now matches CLAUDE.md, 00_PSEUDOCODE.md §Counter reconciliation, and this independent trace.
 - The trace script is disposable (not committed). The verification value lives in this DEVLOG entry and in the doc-03 table itself.
 
 ### Open questions
+
 - None from this verification. All three doc-03 corrections (A: Bubble 8→13 swaps, B: highlight_indices order nuance, C: Heap ~22→30 writes) are now closed.
 
 ### Next
+
 Phase 2 (algorithm generators) is fully unblocked. Four files to produce: `bubble.py`, `selection.py`, `insertion.py`, `heap.py` under `src/visualizer/models/`.
 
 ---
 
 ## 2026-04-14 — Phase 1 closed: contracts.py authored and verified; dogfood observations
 
-### Worked on
+### Implementation
+
 Authored `src/visualizer/models/contracts.py` against the Phase 1 pack in `14_CONTEXT_PACKS.md`. The pack served as the dogfood test for the context-pack design. The file is 116 lines including docstrings: `OpType` enum with the six tick classes, `SortResult` dataclass with `slots=True` and fields in doc-03 order, and `BaseSortAlgorithm` ABC with `__init__(data, name, complexity)` and an abstract `sort_generator` method.
 
 All four Phase 1 exit criteria verified:
@@ -143,18 +152,21 @@ The pack was sufficient but revealed four observations worth recording:
 - Pyright required no additional configuration beyond the `[tool.pyright]` block in `pyproject.toml` (strict mode, include src + tests, py313 target).
 
 ### Open questions
+
 - **Doc 03 swap count correction for Bubble Sort.** Update `8 swaps` → `13 swaps` and `16` → `26` in §Per-Algorithm Expected Write Totals. Small surgical edit; low risk. Consider bundling with the other doc-03 corrections (the `highlight_indices` ordering clarification). Timing: before Phase 2 starts.
 - **Doc 03 update for `Generator[SortResult]` idiom.** Matches contracts.py, more modern, ruff-compatible. Alternatively disable UP043 project-wide if you prefer the explicit form for pedagogical clarity. Either is defensible.
 - **No other surprises from Phase 1.** The pack-design proved sound on its first real test.
 
 ### Next
+
 **Phase 2 (algorithm generators) is unblocked.** Before starting, consider closing the two doc-03 corrections identified above — both are small and both improve agent accuracy on the higher-stakes Phase 2 work. Alternatively, proceed to Phase 2 and record the corrections as known-good deviations.
 
 ---
 
 ## 2026-04-14 — Context-pack adoption: Supersession Index + 14_CONTEXT_PACKS.md authored
 
-### Worked on
+### Adoption
+
 Closed the agent-context / hallucination mitigation item identified in the earlier 2026-04-14 assessment. Two concrete artifacts landed, plus a tracker update and this entry.
 
 **Supersession Index** added to the top of `DECISIONS.md`. Six clean supersessions catalogued in a flat table: D-007→D-056 (tick model), D-017→D-067 (theme strategy), D-019→D-074 (Heap Sort flat-row constraint), D-054→D-067 (Heap accent color), D-065→D-068 (Selection minimum tracking), D-066→D-068 (Selection cursor distinction). The index explicitly distinguishes *superseded* decisions (old rule no longer binding) from *refined* decisions marked `(REVISED)` without a `REPLACED` or `SUPERSEDED by D-NNN` clause — the latter remain current binding and are intentionally excluded from the index to prevent over-correction.
@@ -162,6 +174,7 @@ Closed the agent-context / hallucination mitigation item identified in the earli
 **`14_CONTEXT_PACKS.md`** authored. Eleven packs, one per implementation phase (Phase 0 through Phase 10), structured-block format, deterministic file-path and decision-ID enumeration, no classifier or keyword inference. Each pack has sections for Intent, Inputs (spec files + decision IDs + upstream code files + test references), Expected Outputs, Approximate Token Budget, and Notes. An informal coverage test at the bottom lists twelve archetypal queries and names the pack(s) that answer each. An amendment protocol codifies when and how the document should change over time.
 
 ### Decisions
+
 The six-question discussion from the earlier assessment entry resolved as follows:
 
 - **Granularity:** Per-phase, not per-task. Eleven packs total.
@@ -173,25 +186,30 @@ The six-question discussion from the earlier assessment entry resolved as follow
 - **Supersession ID handling in packs:** Current binding IDs only. The Supersession Index in `DECISIONS.md` carries the full chain.
 
 ### Open questions
+
 - **Pack token-budget estimates are rough.** Eyeballed from line counts, not measured against a tokenizer.
 - **Phase 5 may want sub-loading.** Advisory not prescriptive.
 - **Phase 6 orchestrator rapid-cadence signal.** Still unresolved.
 
 ### Next
+
 Phase 1 begins. Use the Phase 1 pack as the dogfood test.
 
 ---
 
 ## 2026-04-14 — Mempalace post-mortem and archive
 
-### Worked on
+### Archival
+
 Reviewed three legacy files at the repo root — `mempalace.yaml`, `mempalace.yaml.bak`, and `entities.json`. Archived into `docs/AI_Conversations/mempalace-experiment/` with a companion `README.md` documenting the attempt, the specific failure modes identified, and the lessons inherited by the active context-pack design.
 
 ### Decisions
+
 - **Archive rather than delete.** High-value video journal content (failure modes are more instructive than success stories).
 - **Do not revive.** The underlying mismatch — keyword taxonomy cannot express task-shaped queries — is not solved by tuning.
 
 ### Failure modes documented
+
 1. Keyword ambiguity at scale.
 2. Taxonomy dimension orthogonal to query dimension.
 3. Keywords cannot traverse cross-references.
@@ -200,22 +218,26 @@ Reviewed three legacy files at the repo root — `mempalace.yaml`, `mempalace.ya
 6. No measurement loop.
 
 ### Lessons carried forward into the context-pack design
+
 - Group by implementation phase, not document type.
 - Enumerate file paths explicitly.
 - Name cross-references by ID.
 - Define a coverage test.
 
 ### Next
+
 Resume discussion of the context-pack proposal.
 
 ---
 
 ## 2026-04-14 — Agentic-coder context and hallucination risk assessment (UNDER REVIEW)
 
-### Worked on
+### Assessment
+
 Evaluated whether the existing spec corpus (4,521 lines / ~306K characters / ~75-80K tokens across 18 markdown files) is appropriately sized and structured for agentic coding tools.
 
 ### Identified risk vectors
+
 1. Context dilution — 75-80K tokens leaves ~25% of a 200K window for working code.
 2. Supersession blindness — agents find superseded rules first by keyword.
 3. Cross-reference hallucination — agents fabricate plausible content for unloaded D-NNN references.
@@ -223,24 +245,29 @@ Evaluated whether the existing spec corpus (4,521 lines / ~306K characters / ~75
 5. Vocabulary fragility — partial-context agents infer T0-T4 meaning from usage, not definition.
 
 ### Proposed mitigations
+
 - High leverage: Supersession index, per-phase context packs, inline active/superseded markers.
 - Medium leverage: Root-level glossary, counter table consolidation.
 - Structural: Project-specific skill file.
 
 ### Decisions
+
 No binding decisions this session. Assessment complete, mitigations on the table for author review.
 
 ### Next
+
 Author review in progress. No immediate action.
 
 ---
 
 ## 2026-04-14 — Phase 0 closeout: pyproject, config, pseudocode, implementation order, fonts helper
 
-### Worked on
+### Closure
+
 Closed the bulk of Phase 0 gaps: D-080 (path reconciliation), `pyproject.toml` rewrite, `config.toml` rewrite, `00_PSEUDOCODE.md`, `13_IMPLEMENTATION_ORDER.md`, and `scripts/fetch_fonts.sh`.
 
 ### Decisions
+
 - **D-080 (locked):** Source package at `src/visualizer/`, not `visual_sort/src/`.
 - `pyproject.toml`: hatchling build, pytest markers from doc 08, ruff py313, pyright strict.
 - `config.toml`: `preset = "desktop"` per D-018/D-079.
@@ -249,28 +276,34 @@ Closed the bulk of Phase 0 gaps: D-080 (path reconciliation), `pyproject.toml` r
 - Heap Sort sift-down as reusable helper with contiguous-vs-non-contiguous T3 distinction.
 
 ### Open questions
+
 - Fonts acquisition blocked on sandbox proxy.
 - `main.py` location deferred to Phase 7.
 - Rapid-cadence timing signal deferred to Phase 6.
 
 ### Next
+
 Run `bash scripts/fetch_fonts.sh` on WSL host, then Phase 1 is unblocked.
 
 ---
 
 ## 2026-04-14 — Project state review and methodology realignment
 
-### Worked on
+### Audit
+
 Full state audit: 142 tracked items across 10 phases, all open; 4,000 lines of design documentation and 79 locked decisions; zero implementation code. Source scaffold conflict identified and resolved.
 
 ### Decisions
+
 - Project operates in **blueprint-first** methodology. Not paralysis — disciplined pre-implementation.
 - Secondary objective: **video journal** documenting the engineering methodology. DEVLOG is the raw material.
 - Added `NORTH_STAR.md` and `DEVLOG.md` as retrieval-optimized reference artifacts.
 
 ### Open questions
+
 - Video journal audience framing.
 - Project origin story location.
 
 ### Next
+
 Phase 0 closeout.
