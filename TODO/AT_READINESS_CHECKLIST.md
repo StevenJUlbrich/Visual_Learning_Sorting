@@ -296,7 +296,7 @@ TreeLayout positions nodes in binary tree. `_draw_heap` renders tree sprites wit
 - [x] Tree visibly shrinks by one node per extraction
 - [x] Edges connect correct parent-child nodes, update during sift-down
 - [x] Sorted row grows right-to-left with steel-blue rings
-- [f] Completion: all elements transition to green
+- [x] Completion: all elements transition to green (confirmed not an issue)
 
 ---
 
@@ -331,7 +331,7 @@ TreeLayout positions nodes in binary tree. `_draw_heap` renders tree sprites wit
 `PointerSet` (Phase 5e, 25 tests, TC-A23) renders `i`, `j`, `min` labeled arrows. `SelectionOverlay` tracks indices from tick data and updates PointerSet. Coalescing when `j == min` shows only `min`.
 
 **What to check visually:**
-- [f] Three labeled pointer arrows visible: `i` (above), `j` (below), `min` (below): `i` centered over current outer loop index but above the array.
+- [f] Three labeled pointer arrows visible: `i` (above), `j` (below), `min` (below): `i` pointer is too close to sprites and gets lost in the visual design — needs more vertical offset.
 - [x] `i` centered over current outer loop index
 - [x] `j` advances left-to-right during scan
 - [x] `min` marks current minimum candidate
@@ -410,21 +410,58 @@ All 27 acceptance tests are now implementable. Phase 7c-5 closed both gaps (AT-2
 
 ## Issues Found During Visual Testing
 
-### Issue #1 — Heap Sort phase label overlaps root node (AT-22)
-**Severity:** Visual — readability
-**Screenshot:** Startup state, "BUILD MAX-HEAP" text collides with root sprite (4)
-**Root cause:** `HeapPhaseLabel` y-coordinate positions the label at the same vertical level as the tree root. Needs vertical offset to sit clearly above or below the root node.
-**Fix target:** `src/visualizer/views/hud.py` → `HeapPhaseLabel.draw()` label_y calculation, or `src/visualizer/views/sprite_manager.py` → HeapOverlay passing an adjusted y.
+### Issue #1 — Heap Sort phase label overlaps root node (AT-22) — ACTIVE
+**Severity:** Visual — readability (affects both phases)
+**Screenshots:** (1) Startup state — "BUILD MAX-HEAP" collides with root sprite. (2) Extraction state — "EXTRACTION" renders directly on top of root sprite, splitting the word around the orange circle. Label is unreadable throughout the entire extraction phase because every extraction step has an active root node at the same y-coordinate.
+**Root cause:** `_PHASE_LABEL_OFFSET` in HeapOverlay is too small. `label_y = self._tree_layout.tree_top - _PHASE_LABEL_OFFSET` places the label at approximately the same y as the root node. Needs a larger offset that accounts for the root node's radius plus clearance.
+**Fix target:** `src/visualizer/views/sprite_manager.py` → `_PHASE_LABEL_OFFSET` constant increase, or compute dynamically as `tree_node_radius + font_height + margin`.
 
-### Issue #2 — Sorted-row placeholders visible during BUILD MAX-HEAP (AT-21/AT-23)
+### Issue #9 — EXTRACTION label persists after sort completion (AT-22) — ACTIVE
+**Severity:** Visual — cosmetic
+**Observed:** "EXTRACTION" label remains visible on the completed Heap Sort panel (green background, all sprites green). Other overlays (SelectionOverlay pointers, BubbleOverlay comparison pointer) hide on TERMINAL. HeapOverlay should follow the same pattern.
+**Root cause:** `HeapOverlay._process_tick()` TERMINAL handler clears edge highlighting but doesn't clear `self._phase`. `draw_over()` unconditionally draws the phase label regardless of completion state. Needs a `_completed` flag or phase set to `None` on TERMINAL, with a guard in `draw_over()`.
+**Fix target:** `src/visualizer/views/sprite_manager.py` → HeapOverlay._process_tick() TERMINAL branch + draw_over() guard.
+
+### Issue #2 — Sorted-row placeholders visible during BUILD MAX-HEAP (AT-21/AT-23) — SUPERSEDED by Issue #6
 **Severity:** Visual — cosmetic (lower priority per Steven)
 **Screenshot:** Same startup state — gray ghost circles below tree have no meaning until extraction begins.
 **Root cause:** `HeapOverlay.draw_under()` draws placeholders unconditionally. Could gate on phase (only draw during EXTRACTION).
 **Fix target:** `src/visualizer/views/sprite_manager.py` → HeapOverlay.draw_under() conditional on extraction phase.
 
-### Issue #3 — Heap boundary marker renders outside Heap Sort panel (AT-23)
+### Issue #3 — Heap boundary marker renders outside Heap Sort panel (AT-23) — ACTIVE
 **Severity:** Visual — functional (boundary marker crosses panel boundaries)
 **Screenshot:** Mid-sort and completion states — dashed boundary line and "heap boundary" label render in the Insertion Sort panel (panel index 2) instead of staying within Heap Sort panel (panel index 3).
 **Observed:** The boundary marker starts at the right edge of the Heap Sort area, then as extraction proceeds, it travels leftward and eventually crosses the panel boundary into the Insertion Sort panel area. At completion, the label and dashed line are fully inside the Insertion Sort panel.
 **Root cause:** `HeapBoundaryLabel` x-coordinate calculation likely uses absolute coordinates that go negative or cross the panel left edge. The draw routine doesn't clip to the Heap Sort panel rect. Additionally, the dashed line in `HeapOverlay.draw_under()` may extend beyond the panel's left boundary.
 **Fix target:** `src/visualizer/views/hud.py` → `HeapBoundaryLabel` coordinate clamping, and/or `src/visualizer/views/sprite_manager.py` → HeapOverlay boundary drawing with panel rect clipping.
+
+### Issue #4 — Selection Sort `i` pointer too close to sprites (AT-24) — ACTIVE
+**Severity:** Visual — readability
+**Observed:** The `i` pointer arrow (above-array) renders too close to the sprite rings and gets lost in the visual design. The pointer needs more vertical clearance above the sprites to be clearly distinguishable.
+**Root cause:** `PointerSet` above-array offset is too small. The gap between the sprite ring top and the `i` arrow tip needs to increase.
+**Fix target:** `src/visualizer/views/pointer.py` → above-arrow y-offset calculation (increase vertical gap).
+
+### Issue #5 — Colored dot preceding title (AT-27) — CLOSED
+**Resolution:** Confirmed by Steven as not an issue. AT-27 passes.
+
+### Issue #7 — Sprite tracking fails with duplicate values — CRITICAL (AT-08)
+**Severity:** Functional — **correctness bug**
+**Screenshot:** Duplicate array `[3, 1, 3, 2, 1, 2, 3]` completion state. Insertion Sort shows `1, 2, 3, 1, 2, 3, 3` (wrong). Heap Sort sorted row has two sprites vertically misaligned.
+**Root cause:** `compute_sprite_moves()` in `orchestrator.py` detects movement by comparing `old_state[i] != new_state[i]`. When a SHIFT copies a value to an adjacent slot that already holds the same value (duplicate), `changed` is empty and the sprite movement goes undetected. Example: shifting value 3 from slot 1 to slot 2 when slot 2 already holds 3 produces identical old/new states. The same bug affects SWAP operations between equal-value slots (Heap Sort extraction of root when root == end value).
+**Impact:** Sprites accumulate in wrong positions over the sort. Every algorithm is affected when duplicates are present.
+**Fix:** `compute_sprite_moves()` needs augmentation. Two approaches:
+  - (A) Pass `operation_type` and `highlight_indices` from the tick. For SHIFT/SWAP ticks, use `highlight_indices` to determine which slots are involved, regardless of whether values changed.
+  - (B) Add explicit `(from_slot, to_slot)` fields to SortResult (larger contract change).
+  - Approach (A) is preferred — minimal contract change, uses data already available.
+**Fix target:** `src/visualizer/controllers/orchestrator.py` → `compute_sprite_moves()` signature and logic, plus all call sites.
+
+### Issue #8 — Heap Sort sorted-row sprites vertically misaligned (AT-08/AT-21)
+**Severity:** Visual — functional
+**Screenshot:** Same duplicate array completion. Two sprites in sorted row (second `1`, last `3`) float above the baseline while others sit correctly.
+**Root cause:** Likely downstream effect of Issue #7 — when extraction swaps between equal values go undetected, the sprite-to-slot mapping diverges from actual positions. The tree-to-sorted-row animation targets wrong sprite IDs, causing some sprites to not fully settle to the sorted row y-position.
+**Fix:** Will likely resolve when Issue #7 is fixed. Verify after Issue #7 fix.
+
+### Issue #6 — Sorted-row placeholders visible during BUILD MAX-HEAP (AT-21/AT-23) — ACTIVE
+**Severity:** Visual — cosmetic (lower priority)
+**Reclassified from Issue #2.** Placeholder circles below the tree are visible from startup even though extraction hasn't begun. Gate drawing on extraction phase.
+**Fix target:** `src/visualizer/views/sprite_manager.py` → HeapOverlay.draw_under() conditional on `self._phase == "EXTRACTION"`.
