@@ -42,7 +42,7 @@ Additionally established a two-session workflow: Claude Code (VSCode/Ubuntu) han
 
 - Phase 10: Manual acceptance — real-monitor visual inspection of AT-01 through AT-27. Cowork (Opus) assists with check-off sheet organization and result recording.
 
-### Decisions
+### 2026-04-19 Decisions
 
 - **Session boundaries over mid-session model switching.** Rather than switching models within a Claude Code session (which forces the new model to pay for all prior context tokens), group by model across sessions: Sonnet session for Bubble+Selection, Opus session for Insertion+Heap. Avoids Opus token rates on Bubble/Selection context and avoids Sonnet rates on context it won't use well for the harder algorithms.
 - **Oversight stays on Opus.** The review role (this Cowork session) needs full spec context and the ability to catch violations the implementation model missed. Catching a bug in review is cheaper than discovering it three phases later.
@@ -89,7 +89,7 @@ Max-heap: `[7, 6, 5, 4, 1, 2, 3]`
 
 The old doc-03 value of "~22" was counting swap *operations* (15 total swaps) rather than *array positions written* (15 × 2 = 30). The distinction is defined in doc 03 §Per-Operation Increment Rules: "A single swap operation modifies two array positions, so it counts as 2 writes."
 
-### Decisions
+### Verification Decisions
 
 - **Correction C signed off.** The ~22 → 30 change in doc-03 §Per-Algorithm Expected Write Totals is confirmed correct. The value now matches CLAUDE.md, 00_PSEUDOCODE.md §Counter reconciliation, and this independent trace.
 - The trace script is disposable (not committed). The verification value lives in this DEVLOG entry and in the doc-03 table itself.
@@ -133,6 +133,8 @@ Doc 03 §BaseSortAlgorithm Interface specifies the abstract method return type a
 
 **Consequence for spec:** Doc 03 should be updated to reflect the 3.13-idiomatic form, or the ruff rule should be disabled project-wide. Low-priority cleanup — not blocking Phase 2. Recorded as an open question below.
 
+### Authoring Decisions
+
 ### Dogfood observations on the Phase 1 pack
 
 The pack was sufficient but revealed four observations worth recording:
@@ -173,7 +175,7 @@ Closed the agent-context / hallucination mitigation item identified in the earli
 
 **`14_CONTEXT_PACKS.md`** authored. Eleven packs, one per implementation phase (Phase 0 through Phase 10), structured-block format, deterministic file-path and decision-ID enumeration, no classifier or keyword inference. Each pack has sections for Intent, Inputs (spec files + decision IDs + upstream code files + test references), Expected Outputs, Approximate Token Budget, and Notes. An informal coverage test at the bottom lists twelve archetypal queries and names the pack(s) that answer each. An amendment protocol codifies when and how the document should change over time.
 
-### Decisions
+### Adoption Decisions
 
 The six-question discussion from the earlier assessment entry resolved as follows:
 
@@ -203,10 +205,12 @@ Phase 1 begins. Use the Phase 1 pack as the dogfood test.
 
 Reviewed three legacy files at the repo root — `mempalace.yaml`, `mempalace.yaml.bak`, and `entities.json`. Archived into `docs/AI_Conversations/mempalace-experiment/` with a companion `README.md` documenting the attempt, the specific failure modes identified, and the lessons inherited by the active context-pack design.
 
-### Decisions
+### Mempalace Decisions
 
 - **Archive rather than delete.** High-value video journal content (failure modes are more instructive than success stories).
 - **Do not revive.** The underlying mismatch — keyword taxonomy cannot express task-shaped queries — is not solved by tuning.
+
+### Archival Decisions
 
 ### Failure modes documented
 
@@ -250,7 +254,7 @@ Evaluated whether the existing spec corpus (4,521 lines / ~306K characters / ~75
 - Medium leverage: Root-level glossary, counter table consolidation.
 - Structural: Project-specific skill file.
 
-### Decisions
+### Assessment Decisions
 
 No binding decisions this session. Assessment complete, mitigations on the table for author review.
 
@@ -266,7 +270,7 @@ Author review in progress. No immediate action.
 
 Closed the bulk of Phase 0 gaps: D-080 (path reconciliation), `pyproject.toml` rewrite, `config.toml` rewrite, `00_PSEUDOCODE.md`, `13_IMPLEMENTATION_ORDER.md`, and `scripts/fetch_fonts.sh`.
 
-### Decisions
+### Phase 0 Decisions
 
 - **D-080 (locked):** Source package at `src/visualizer/`, not `visual_sort/src/`.
 - `pyproject.toml`: hatchling build, pytest markers from doc 08, ruff py313, pyright strict.
@@ -274,6 +278,8 @@ Closed the bulk of Phase 0 gaps: D-080 (path reconciliation), `pyproject.toml` r
 - `00_PSEUDOCODE.md`: single source of truth for generator control flow.
 - Insertion Sort terminating-compare written with pass-by-pass truth table.
 - Heap Sort sift-down as reusable helper with contiguous-vs-non-contiguous T3 distinction.
+
+### Closure Decisions
 
 ### Open questions
 
@@ -293,11 +299,13 @@ Run `bash scripts/fetch_fonts.sh` on WSL host, then Phase 1 is unblocked.
 
 Full state audit: 142 tracked items across 10 phases, all open; 4,000 lines of design documentation and 79 locked decisions; zero implementation code. Source scaffold conflict identified and resolved.
 
-### Decisions
+### Project State Decisions
 
 - Project operates in **blueprint-first** methodology. Not paralysis — disciplined pre-implementation.
 - Secondary objective: **video journal** documenting the engineering methodology. DEVLOG is the raw material.
 - Added `NORTH_STAR.md` and `DEVLOG.md` as retrieval-optimized reference artifacts.
+
+### Audit Decisions
 
 ### Open questions
 
