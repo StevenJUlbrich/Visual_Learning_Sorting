@@ -75,7 +75,7 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 
 ---
 
-### 10c pre-action: Fix compute_sprite_moves() for duplicate values (2026-05-08)
+### 2026-05-08 — 10c pre-action: Fix compute_sprite_moves() for duplicate values
 
 **Plan:** Augment `compute_sprite_moves()` with `operation_type` and `highlight_indices` parameters (both optional, default `None`). When the existing value-delta detection finds zero changes but the tick is a SHIFT or SWAP with a 2-element `highlight_indices`, use the highlight data to determine which slots exchanged sprites. Existing logic unchanged for non-empty `changed` lists (backward compatible). Update call site in `Orchestrator.update()` to pass tick data. Add 6 new unit tests for duplicate-value cases. Existing 8 Group 13 tests and 7 integration tests must pass unchanged.
 
@@ -90,38 +90,18 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 
 ---
 
-### 10c closed: Fix compute_sprite_moves() for duplicate values (2026-05-08)
+### 2026-05-08 — 10c closed: Fix compute_sprite_moves() for duplicate values
 
-**Worked on**
+**Worked on:** Added `operation_type: OpType | None = None` and `highlight_indices: tuple[int, ...] | None = None` parameters to `compute_sprite_moves()` (orchestrator.py:87). When `changed` is empty AND `operation_type in (SWAP, SHIFT)` AND `highlight_indices` has exactly 2 elements, swaps the two slots in `slot_to_sprite_id` and returns `{sprite_a: j, sprite_b: i}`. Existing 1-change and 2-change paths untouched. Call site at `Orchestrator.update()` (line 274) forwards `tick.operation_type` and `tick.highlight_indices`. 6 new Group 13 tests added: duplicate SHIFT, duplicate SWAP, placement single-element guard, plus full-sort identity preservation for Insertion/Bubble/Heap on `[3, 1, 3, 2, 1, 2, 3]`.
 
-- `src/visualizer/controllers/orchestrator.py`: Augmented `compute_sprite_moves()` signature with optional `operation_type: OpType | None = None` and `highlight_indices: tuple[int, ...] | None = None`. Added a fallback branch inside the existing `len(changed) == 0` block: when the tick is `OpType.SWAP` or `OpType.SHIFT` AND `highlight_indices` has exactly 2 elements, swap the two slots in `slot_to_sprite_id` and return the corresponding `{sprite_a: j, sprite_b: i}` move dict. Single-element highlights (placement ticks) and `None` highlights fall through to the existing `return {}` — no behavior change for those paths.
-- The existing `len(changed) == 1` and `len(changed) == 2` handlers were left untouched, so unique-value arrays exercise the same code path as before.
-- `Orchestrator.update()` (around line 256): the call site now forwards `tick.operation_type` and `tick.highlight_indices` into `compute_sprite_moves`. No other behavior in `update(dt)` changed.
-- `tests/unit/test_orchestrator.py`: appended 6 new Group 13 tests after `test_slot_to_sprite_id_mutated_in_place` covering (1) SHIFT with equal values, (2) SWAP with equal values, (3) placement-shift single-element guard, (4–6) full-sort identity preservation on `[3, 1, 3, 2, 1, 2, 3]` for Insertion / Bubble / Heap.
-- `OpType` was already imported in `orchestrator.py`; no new imports required. Existing 8 Group 13 tests and 7 integration tests pass unchanged — the new parameters default to `None`, so `if operation_type in (OpType.SWAP, OpType.SHIFT)` is false and the function returns `{}` exactly as before.
+**Corrections:** Zero corrections.
 
-No deviations from the plan.
-
-**Corrections**
-
-Zero corrections. `ruff check` and `ruff format --check` clean on first run.
-
-**Results**
-
-- `uv run ruff check src/ tests/`: **clean** (All checks passed)
-- `uv run ruff format --check src/ tests/`: **clean** (38 files already formatted)
+**Results:**
+- `uv run ruff check src/ tests/`: **clean**
+- `uv run ruff format --check src/ tests/`: **clean** (38 files)
 - `uv run pytest -x`: **345/345 PASSED** (339 existing + 6 new)
-- Import check `from visualizer.controllers.orchestrator import compute_sprite_moves, Orchestrator`: **PASS**
+- Import check: **OK**
 
-**Verification note**
+**Verification note:** Manual visual verification deferred to Steven — run with `config.toml` array `[3, 1, 3, 2, 1, 2, 3]` and confirm all four panels show `[1, 1, 2, 2, 3, 3, 3]` at completion. Check if Issue #8 (Heap vertical misalignment) resolves.
 
-Manual visual verification deferred to Steven — run with `config.toml` array `[3, 1, 3, 2, 1, 2, 3]` and confirm:
-
-- All four panels show `[1, 1, 2, 2, 3, 3, 3]` at completion
-- Insertion Sort sprites in correct order (was `1, 2, 3, 1, 2, 3, 3`)
-- Heap Sort sorted-row sprites all on same baseline y-coordinate
-- Then restore default array `[4, 7, 2, 6, 1, 5, 3]` and verify no regressions
-
-**Next**
-
-If Issue #8 (Heap vertical misalignment) resolves with this fix, close it. Proceed to 10d (Heap visual batch) and 10e (pointer spacing).
+**Next:** Steven verifies visually. If Issue #8 resolves, close it. Proceed to 10d (Heap visual batch) and 10e (pointer spacing).
