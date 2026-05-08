@@ -803,6 +803,7 @@ class BubbleOverlay:
         self._arrow_height: int = 12
         self._arrow_half_width: int = 5
         self._pointer_color: tuple[int, int, int] = (80, 220, 120)
+        self._sort_complete: bool = False
 
     def update(self, ctx: PanelContext) -> None:
         if ctx.current_tick is not None and ctx.current_tick is not self._last_tick:
@@ -823,9 +824,11 @@ class BubbleOverlay:
 
         elif op in (OpType.TERMINAL, OpType.FAILURE):
             self._pointer_visible = False
+            self._sort_complete = True
 
     def draw(self, surface: pygame.Surface, comparisons: int, writes: int) -> None:
-        self._limit_line.draw(surface)
+        if not self._sort_complete:
+            self._limit_line.draw(surface)
         self._bubble_hud.draw(surface, comparisons, writes // 2)
         if self._pointer_visible and self._j >= 0:
             self._draw_comparison_pointer(surface)
@@ -850,6 +853,7 @@ class BubbleOverlay:
         self._last_tick = None
         self._j = -1
         self._pointer_visible = False
+        self._sort_complete = False
         self._limit_line.reset()
 
 
