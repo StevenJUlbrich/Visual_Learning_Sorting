@@ -82,6 +82,7 @@ class SpriteManager:
         self._extraction_arc_height: float = panel_rect.height * 0.14
         self._is_extraction_swap: bool = False
         self._heap_sweep_indices: tuple[int, ...] | None = None
+        self._heap_in_extraction: bool = False
 
         # Selection Sort settled-region state
         self._selection_sorted_count: int = 0
@@ -300,7 +301,9 @@ class SpriteManager:
         if op == OpType.RANGE:
             hi = tick.highlight_indices
             if tick.message.startswith("Active heap"):
-                # Boundary T3 — staggered sweep: reset highlights, sweep applies progressively
+                # Boundary T3 — marks BUILD→EXTRACTION transition
+                self._heap_in_extraction = True
+                # Staggered sweep: reset highlights, sweep applies progressively
                 self._heap_sweep_indices = hi
                 for sprite in self._sprites:
                     sprite.set_color_state(ColorState.DEFAULT)
@@ -316,8 +319,8 @@ class SpriteManager:
                 sprite = self._sprites[sprite_id]
                 self._animating_sprites[sprite_id] = (sprite.exact_x, sprite.exact_y)
 
-            # Detect extraction swap: one of the highlighted indices is 0
-            is_extraction = hi is not None and 0 in hi
+            # Detect extraction swap: must be in extraction phase AND involve the root
+            is_extraction = self._heap_in_extraction and hi is not None and 0 in hi
             self._is_extraction_swap = is_extraction
 
             if is_extraction:
@@ -695,6 +698,7 @@ class SpriteManager:
         self._is_extraction_swap = False
         self._heap_sweep_indices = None
         self._heap_size = len(initial_array)
+        self._heap_in_extraction = False
         # Selection Sort state
         self._selection_sorted_count = 0
         self._selection_last_j = -1
@@ -1009,7 +1013,7 @@ class HeapOverlay:
         if self._phase is not None:
             label_y = self._tree_layout.tree_top
             self._phase_label.draw(surface, self._phase, label_y)
-        if self._heap_size < self._array_size:
+        if self._phase == "EXTRACTION" and self._heap_size < self._array_size:
             boundary_x = (
                 self._tree_layout.sorted_row_x(self._heap_size - 1)
                 + self._tree_layout.sorted_row_x(self._heap_size)

@@ -187,4 +187,56 @@ Also notes: 10d execution truncated sprite_manager.py (boundary label section of
 - Label disappears on sort completion (green state) — confirmed by 10d fix
 - Restart (R) restores "BUILD MAX-HEAP" label correctly in upper-right position
 
+**Next:** Proceed to 10e (Selection Sort pointer spacing — Issue #4).
+
+---
+
+### 2026-05-08 — 10f pre-action: Fix false extraction detection during BUILD MAX-HEAP (Issue #10)
+
+**Root cause:** `_dispatch_heap()` in SpriteManager detects extraction swaps via `is_extraction = hi is not None and 0 in hi`. During BUILD MAX-HEAP, sift-down at the root produces a SWAP with index 0 in highlight_indices, falsely triggering extraction. This prematurely decrements `_heap_size`, corrupts tree geometry, and places sprites in the sorted row. All three visual symptoms (boundary label during build, disappearing edges, flat-row tree) trace to this single bug.
+
+**Plan:** Three changes, all in `sprite_manager.py`:
+
+1. Add `_heap_in_extraction: bool = False` to SpriteManager `__init__` and `reset()`.
+2. Set `_heap_in_extraction = True` on boundary T3 ("Active heap" message) in `_dispatch_heap()`.
+3. Gate extraction detection: `is_extraction = self._heap_in_extraction and hi is not None and 0 in hi`.
+4. (Defensive) Gate boundary label drawing in `HeapOverlay.draw_over()` on `self._phase == "EXTRACTION"`.
+
+**Exit criteria:**
+1. `uv run ruff check src/ tests/` — clean
+2. `uv run ruff format --check src/ tests/` — clean
+3. `uv run pytest -x` — 345/345 (no test changes, no regressions)
+4. Import check — OK
+
+---
+
+### 2026-05-08 — 10f closed: False extraction detection fixed (Issue #10)
+
+**Worked on:** All changes in `src/visualizer/views/sprite_manager.py`. No tests, contracts, or other files touched.
+
+- §1 — `SpriteManager.__init__`: added `self._heap_in_extraction: bool = False` to the Heap Sort state block, after `_heap_sweep_indices`.
+- §2 — `_dispatch_heap()` boundary T3 handler: set `self._heap_in_extraction = True` immediately inside the `tick.message.startswith("Active heap")` branch, before the staggered-sweep highlight reset. This is the single point where BUILD→EXTRACTION transitions, so it's the right place to flip the flag.
+- §3 — `_dispatch_heap()` SWAP handler: replaced `is_extraction = hi is not None and 0 in hi` with `is_extraction = self._heap_in_extraction and hi is not None and 0 in hi`. Root sift-down swaps during BUILD MAX-HEAP no longer satisfy the gate — only swaps that occur after the first boundary T3 can trigger extraction behavior.
+- §4 — `SpriteManager.reset()`: added `self._heap_in_extraction = False` to the Heap Sort state block, after `_heap_size = len(initial_array)`. Restart correctly returns to BUILD MAX-HEAP state.
+- §5 — `HeapOverlay.draw_over()` (defensive): added `self._phase == "EXTRACTION" and ` to the boundary label gate, mirroring the existing `draw_under()` placeholder gate. Belt-and-suspenders: with the §1–§4 fix, `_heap_size` cannot drop below `_array_size` during BUILD MAX-HEAP, but this closes the inconsistency.
+
+No deviations from the plan.
+
+**Corrections:** Zero corrections. Ruff check and format clean on first run.
+
+**Results:**
+- `uv run ruff check src/ tests/`: **clean** (All checks passed)
+- `uv run ruff format --check src/ tests/`: **clean** (38 files already formatted)
+- `uv run pytest -x`: **345/345 PASSED** (no regressions)
+- Import check `from visualizer.views.sprite_manager import HeapOverlay`: **OK**
+
+**Verification note:** Manual visual verification deferred to Steven — check with default array `[4, 7, 2, 6, 1, 5, 3]`:
+- During BUILD MAX-HEAP: all 7 nodes remain in tree positions, no boundary label visible, edges intact throughout
+- Root sift-down swap (4↔7) does NOT trigger extraction behavior
+- Transition to EXTRACTION: boundary T3 fires, then first extraction swap correctly decrements heap_size
+- Tree shrinks correctly as extractions proceed — edges and node positions update properly at each step
+- Sorted row populates from right to left with steel-blue sprites
+- No sprites appear at sorted-row positions during BUILD MAX-HEAP
+- Restart (R) correctly resets to BUILD MAX-HEAP with full 7-node tree
+
 **Next:** Proceed to 10e (Selection Sort pointer spacing — Issue #4).
