@@ -141,4 +141,50 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 
 **Decision:** Reposition the phase label to the upper-right of the tree area (Option B) rather than continuing to fight for vertical space above the root. This is a design improvement, not just a bug fix. Prompt drafted as `10d-fix`.
 
-**Next:** Execute 10d-fix (label reposition), then 10e (pointer spacing — Issue #4).
+**Next:** Execute 10d-fix (label reposition), then 10e (pointer spacing — Issue #4).
+
+---
+
+### 2026-05-08 — 10d-fix pre-action: Reposition phase label to upper-right (Issue #1 revisit)
+
+**Problem:** 10d's vertical offset fix (`tree_node_radius + 8`) still overlaps the root node because `label_y` is the text top edge — the text renders downward by ~18px (font_height), so the bottom of the label sits inside the root ring.
+
+**Plan:** Reposition the phase label from centered-above-root to right-aligned in the upper-right of the tree area. Two files changed:
+
+1. `hud.py` — HeapPhaseLabel: right-align instead of center. Store `_right_x` (panel right edge minus 15px margin). `draw()` positions text right-aligned at `_right_x`.
+2. `sprite_manager.py` — HeapOverlay.draw_over(): set `label_y = tree_top` (vertically aligned with root node center, but horizontally separated — no overlap possible).
+3. `test_hud.py` — Update `center_x` property test to `right_x`.
+
+Also notes: 10d execution truncated sprite_manager.py (boundary label section of draw_over + reset method lost). Already restored manually before this prompt.
+
+**Exit criteria:**
+1. `uv run ruff check src/ tests/` — clean
+2. `uv run ruff format --check src/ tests/` — clean
+3. `uv run pytest -x` — 345/345 (no test changes except property rename)
+4. Import check — OK
+
+---
+
+### 2026-05-08 — 10d-fix closed: Phase label repositioned to upper-right (Issue #1)
+
+**Worked on:**
+
+- `hud.py` — `HeapPhaseLabel`: replaced `_center_x` (panel.centerx) with `_right_x` (panel.right - 15). `center_x` property renamed to `right_x`. `draw()` x-calculation changed from `_center_x - width // 2` to `_right_x - width` (right-aligned). Docstrings updated.
+- `sprite_manager.py` — `HeapOverlay.draw_over()`: replaced `root_clearance = tree_node_radius + 8; label_y = tree_top - root_clearance` with `label_y = tree_top`. Label is now horizontally separated from root, so vertical overlap is impossible regardless of font height. `boundary_label` section and `reset()` method were already restored manually before this prompt — not touched.
+- `test_hud.py` — Renamed `test_heap_phase_label_center_x_uses_panel_center` → `test_heap_phase_label_right_x_uses_panel_right`; assertion changed to `heap_phase_label.right_x == DESKTOP_RECT.right - 15`.
+
+**Corrections:** 1 ruff fix — missing trailing newline at end of `sprite_manager.py` (W292, left by the manual restore). Fixed with `ruff --fix`.
+
+**Results:**
+- `uv run ruff check src/ tests/`: **clean** (1 auto-fixed W292)
+- `uv run ruff format --check src/ tests/`: **clean** (38 files)
+- `uv run pytest -x`: **345/345 PASSED** (no regressions)
+- Import check: **OK**
+
+**Verification note:** Manual visual verification deferred to Steven — check with default array:
+- Phase label ("BUILD MAX-HEAP" / "EXTRACTION") positioned in upper-right of tree area
+- Label does NOT overlap root node or any tree nodes
+- Label disappears on sort completion (green state) — confirmed by 10d fix
+- Restart (R) restores "BUILD MAX-HEAP" label correctly in upper-right position
+
+**Next:** Proceed to 10e (Selection Sort pointer spacing — Issue #4).

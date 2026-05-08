@@ -1007,8 +1007,7 @@ class HeapOverlay:
     def draw_over(self, surface: pygame.Surface) -> None:
         """Draw phase label and boundary label (on top of sprites)."""
         if self._phase is not None:
-            root_clearance = self._tree_layout.tree_node_radius + 8
-            label_y = self._tree_layout.tree_top - root_clearance
+            label_y = self._tree_layout.tree_top
             self._phase_label.draw(surface, self._phase, label_y)
         if self._heap_size < self._array_size:
             boundary_x = (
