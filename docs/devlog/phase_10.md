@@ -6,14 +6,14 @@
 
 ---
 
-### 2026-05-08 14:00 — 10a: Build Verification and Platform Testing
+## 2026-05-08 14:00 — 10a: Build Verification and Platform Testing
 
 **Worked on:** Application launch and full-run verification on Windows 11 native (Dell 7770).
 
 All four panels animate independently. Play/pause/step/restart all functional via keyboard (Space/Right/R/Escape). Counter accuracy confirmed against expected values:
 
 | Algorithm | Cmp | Wr | Steps | Expected | Match |
-|-----------|-----|-----|-------|----------|-------|
+| ----------- | ----- | ----- | ------- | ---------- | ------- |
 | Bubble Sort | 20 | 26 | — | 20/26 | ✓ |
 | Selection Sort | 21 | 10 | — | 21/10 | ✓ |
 | Insertion Sort | 17 | 19 | — | 17/19 | ✓ |
@@ -25,7 +25,7 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 
 ---
 
-### 2026-05-08 15:00 — 10b: Visual Acceptance Test Results
+## 2026-05-08 15:00 — 10b: Visual Acceptance Test Results
 
 **Worked on:** Walked through AT-01 through AT-27 using `TODO/AT_READINESS_CHECKLIST.md`. Results marked with `[x]` (pass), `[p]` (partial), `[f]` (fail).
 
@@ -34,7 +34,7 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 **Issues found:** 7 active issues from visual testing across AT-08, AT-21, AT-22, AT-23, AT-24.
 
 | # | Severity | AT | Description | Fix Phase |
-|---|----------|-----|-------------|-----------|
+| --- | ---------- | --- | --- | ------------- | ----------- |
 | **7** | **CRITICAL** | AT-08 | `compute_sprite_moves()` fails with duplicate values — sprites in wrong positions | 10c |
 | 8 | HIGH | AT-08/21 | Heap sorted-row vertical misalignment (likely downstream of #7) | verify after 10c |
 | 3 | HIGH | AT-23 | Boundary marker crosses into Insertion Sort panel | 10d |
@@ -46,6 +46,7 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 **Closed items:** Issue #5 (AT-27 colored dot) — confirmed not an issue. AT-21 completion green — confirmed not an issue.
 
 **Decisions:**
+
 - Fix #7 first, alone — foundational, affects all algorithms with duplicates. Issue #8 may auto-resolve.
 - Opus for 10c, Sonnet for 10d/10e — match model to decision density, not code volume (same lesson as Phase 7c-4).
 - Batch Heap visual fixes (#1, #3, #6, #9) into 10d — all touch HeapOverlay; separate prompts risk merge conflicts.
@@ -56,13 +57,14 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 
 ---
 
-### 2026-05-08 — 10c pre-action: Fix compute_sprite_moves() for duplicate values
+## 2026-05-08 — 10c pre-action: Fix compute_sprite_moves() for duplicate values
 
 **Plan:** Augment `compute_sprite_moves()` with `operation_type` and `highlight_indices` parameters (both optional, default `None`). When the existing value-delta detection finds zero changes but the tick is a SHIFT or SWAP with a 2-element `highlight_indices`, use the highlight data to determine which slots exchanged sprites. Existing logic unchanged for non-empty `changed` lists (backward compatible). Update call site in `Orchestrator.update()` to pass tick data. Add 6 new unit tests for duplicate-value cases. Existing 8 Group 13 tests and 7 integration tests must pass unchanged.
 
 **Root cause:** `changed = [i for i in range(len(old_state)) if old_state[i] != new_state[i]]` produces an empty list when equal values shift or swap. The function returns `{}` — no sprite movement. Over a full sort with duplicates, sprites diverge from actual positions.
 
 **Exit criteria:**
+
 1. `uv run ruff check src/ tests/` — clean
 2. `uv run ruff format --check src/ tests/` — clean
 3. `uv run pytest -x` — all passing (339 existing + 6 new = 345)
@@ -71,13 +73,14 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 
 ---
 
-### 2026-05-08 — 10c closed: Fix compute_sprite_moves() for duplicate values
+## 2026-05-08 — 10c closed: Fix compute_sprite_moves() for duplicate values
 
 **Worked on:** Added `operation_type: OpType | None = None` and `highlight_indices: tuple[int, ...] | None = None` parameters to `compute_sprite_moves()` (orchestrator.py:87). When `changed` is empty AND `operation_type in (SWAP, SHIFT)` AND `highlight_indices` has exactly 2 elements, swaps the two slots in `slot_to_sprite_id` and returns `{sprite_a: j, sprite_b: i}`. Existing 1-change and 2-change paths untouched. Call site at `Orchestrator.update()` (line 274) forwards `tick.operation_type` and `tick.highlight_indices`. 6 new Group 13 tests added: duplicate SHIFT, duplicate SWAP, placement single-element guard, plus full-sort identity preservation for Insertion/Bubble/Heap on `[3, 1, 3, 2, 1, 2, 3]`.
 
 **Corrections:** Zero corrections.
 
 **Results:**
+
 - `uv run ruff check src/ tests/`: **clean**
 - `uv run ruff format --check src/ tests/`: **clean** (38 files)
 - `uv run pytest -x`: **345/345 PASSED** (339 existing + 6 new)
@@ -89,9 +92,10 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 
 ---
 
-### 2026-05-08 — 10d closed: Heap Sort visual fixes (Issues #3, #6, #9 fixed; Issue #1 partial)
+## 2026-05-08 — 10d closed: Heap Sort visual fixes (Issues #3, #6, #9 fixed; Issue #1 partial)
 
 **Worked on:** Four changes in HeapOverlay class (`sprite_manager.py`):
+
 - §1: `panel_rect` parameter added to HeapOverlay constructor.
 - §2: Phase label offset changed from static `_PHASE_LABEL_OFFSET = 20` to dynamic `tree_node_radius + 8`. Wrapped in `if self._phase is not None` guard.
 - §3: Boundary marker and label clamped to panel rect bounds (skip drawing when outside).
@@ -104,6 +108,7 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 **Corrections:** Zero corrections (ruff/format clean on first run).
 
 **Results:**
+
 - `uv run ruff check src/ tests/`: **clean**
 - `uv run ruff format --check src/ tests/`: **clean**
 - `uv run pytest -x`: **345/345 PASSED** (no regressions)
@@ -119,13 +124,14 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 
 ---
 
-### 2026-05-08 — 10d-fix closed: Phase label repositioned to upper-right (Issue #1)
+## 2026-05-08 — 10d-fix closed: Phase label repositioned to upper-right (Issue #1)
 
 **Worked on:** HeapPhaseLabel right-aligned (`hud.py`): `_center_x` → `_right_x = panel.right - 15`, `center_x` property → `right_x`, draw x = `_right_x - text_width`. HeapOverlay.draw_over() (`sprite_manager.py`): label_y simplified to `tree_top` — no vertical clearance math needed since the label is horizontally separated from the root node. Test updated (`test_hud.py`): property test renamed and assertion updated to `DESKTOP_RECT.right - 15`.
 
 **Corrections:** 1 ruff correction (W292 missing trailing newline — residue from the manual file restore after 10d truncation).
 
 **Results:**
+
 - `uv run ruff check src/ tests/`: **clean** (after 1 correction)
 - `uv run ruff format --check src/ tests/`: **clean**
 - `uv run pytest -x`: **345/345 PASSED** (no regressions)
@@ -137,7 +143,7 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 
 ---
 
-### 2026-05-08 — 10f closed: False extraction detection fixed (Issue #10)
+## 2026-05-08 — 10f closed: False extraction detection fixed (Issue #10)
 
 **Worked on:** Added `_heap_in_extraction: bool` flag to SpriteManager — set True on boundary T3 ("Active heap" message), gates extraction detection in SWAP handler. Prevents `_heap_size` from decrementing during BUILD MAX-HEAP root sift-down. Defensive phase gate added to HeapOverlay.draw_over() boundary label drawing.
 
@@ -146,6 +152,7 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 **Corrections:** Zero corrections.
 
 **Results:**
+
 - `uv run ruff check src/ tests/`: **clean**
 - `uv run ruff format --check src/ tests/`: **clean**
 - `uv run pytest -x`: **345/345 PASSED** (no regressions)
@@ -157,13 +164,14 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 
 ---
 
-### 2026-05-08 — 10e closed: Selection Sort `i` pointer spacing (Issue #4)
+## 2026-05-08 — 10e closed: Selection Sort `i` pointer spacing (Issue #4)
 
 **Worked on:** Split `ARROW_GAP` (5px) into `I_ARROW_GAP` (12px) and `JMIN_ARROW_GAP` (5px) in `pointer.py`. `i_arrow_y()` uses the larger gap, giving the `i` pointer visible clearance above sprite rings. `jmin_arrow_y()` uses the original gap — `j`/`min` pointers unchanged. Test formulas in `test_pointer.py` updated to match new constant names. Also restored truncated `pointer.py` (last 3 lines of `_draw_jmin_pointer` were missing).
 
 **Corrections:** 1 ruff correction (W292 trailing newline in pointer.py — residue from manual file restore).
 
 **Results:**
+
 - `uv run ruff check src/ tests/`: **clean** (after 1 correction)
 - `uv run ruff format --check src/ tests/`: **clean**
 - `uv run pytest -x`: **345/345 PASSED** (no regressions)
@@ -180,6 +188,7 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 **Corrections:** Zero corrections.
 
 **Results:**
+
 - `uv run ruff check src/ tests/`: **clean**
 - `uv run ruff format --check src/ tests/`: **clean**
 - `uv run pytest -x`: **345/345 PASSED** (no regressions)
@@ -191,7 +200,7 @@ All four panels reach completion with green backgrounds and green sprites. Elaps
 
 ---
 
-### 2026-05-08 — 10h closed: `i` pointer visibility — bigger arrow + cyan color (Issue #4 continued)
+## 2026-05-08 — 10h closed: `i` pointer visibility — bigger arrow + cyan color (Issue #4 continued)
 
 **Worked on:** Split shared `ARROW_HEIGHT`/`ARROW_HALF_WIDTH` into `I_ARROW_HEIGHT = 16`/`I_ARROW_HALF_WIDTH = 7` (bigger) and `JMIN_ARROW_HEIGHT = 12`/`JMIN_ARROW_HALF_WIDTH = 5` (unchanged). Changed `POINTER_I_COLOR` from `PRIMARY_TEXT (240, 240, 245)` to cyan `(80, 200, 220)`. Removed unused `PRIMARY_TEXT` import. Updated `_draw_i_pointer` and `_draw_jmin_pointer` to use respective constants. Color test renamed `test_pointer_i_color_is_cyan`, assertion updated.
 
@@ -200,6 +209,7 @@ Also restored truncated `pointer.py` and `test_pointer.py` (same truncation patt
 **Corrections:** 1 ruff format correction.
 
 **Results:**
+
 - `uv run ruff check src/ tests/`: **clean** (after 1 correction)
 - `uv run ruff format --check src/ tests/`: **clean**
 - `uv run pytest -x`: **345/345 PASSED** (no regressions)
@@ -211,7 +221,7 @@ Also restored truncated `pointer.py` and `test_pointer.py` (same truncation patt
 
 ---
 
-### 2026-05-08 — 10i closed: `i` pointer moved below j/min tier (Issue #4 final)
+## 2026-05-08 — 10i closed: `i` pointer moved below j/min tier (Issue #4 final)
 
 **Worked on:** Rewrote `i_arrow_y()` to position below j/min label bottom using `body_font.get_height()`. Flipped `_draw_i_pointer` from downward to upward triangle with label below arrow (matching j/min orientation). Changed `I_ARROW_GAP` from 12 to 8 (now means spacing between j/min label bottom and i tip, not spacing above ring). Updated module + class docstrings. Two tests updated: position test asserts `i_arrow_y > jmin_arrow_y`, formula test uses new computation with `body_font` fixture parameter.
 
@@ -220,6 +230,7 @@ Also restored truncated `pointer.py` and `test_pointer.py` before execution.
 **Corrections:** 1 ruff format correction.
 
 **Results:**
+
 - `uv run ruff check src/ tests/`: **clean** (after 1 correction)
 - `uv run ruff format --check src/ tests/`: **clean**
 - `uv run pytest -x`: **345/345 PASSED** (no regressions)
@@ -232,7 +243,7 @@ Also restored truncated `pointer.py` and `test_pointer.py` before execution.
 ### Phase 10 Issue Register — Final State
 
 | # | Issue | Fix Phase | Status |
-|---|-------|-----------|--------|
+ --- | --- | --------- | ----------- | -------- |
 | 1 | Phase label overlaps root node | 10d-fix | CLOSED |
 | 3 | Boundary marker crosses into Insertion panel | 10d | CLOSED |
 | 4 | `i` pointer visibility | 10e + 10h + 10i | CLOSED |
@@ -245,10 +256,11 @@ Also restored truncated `pointer.py` and `test_pointer.py` before execution.
 | 11 | Bubble boundary line persists on completion | 10g | CLOSED |
 
 **Files changed during Phase 10:**
+
 - `src/visualizer/controllers/orchestrator.py` — compute_sprite_moves() duplicate-value augmentation (10c)
 - `src/visualizer/views/sprite_manager.py` — HeapOverlay panel_rect, phase gating, boundary clamping, BubbleOverlay sort_complete, SpriteManager _heap_in_extraction (10d, 10f, 10g)
 - `src/visualizer/views/hud.py` — HeapPhaseLabel right-alignment (10d-fix)
-- `src/visualizer/views/pointer.py` — Arrow geometry split (I_ vs JMIN_), i pointer repositioned below j/min, cyan color (10e, 10h, 10i)
+- `src/visualizer/views/pointer.py` — Arrow geometry split (I_vs JMIN_), i pointer repositioned below j/min, cyan color (10e, 10h, 10i)
 - `src/visualizer/main.py` — HeapOverlay panel_rect argument (10d)
 - `tests/unit/test_orchestrator_sprite_moves.py` — 6 new duplicate-value tests (10c)
 - `tests/unit/test_hud.py` — HeapPhaseLabel right_x test (10d-fix)
