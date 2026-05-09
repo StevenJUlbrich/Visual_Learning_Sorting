@@ -25,6 +25,7 @@ These failures are silent. They don't crash the build. They don't fail a test. T
 **What happened:** During Claude Code sessions, edits to CLAUDE.md were truncated mid-word. The "Build Status" section — the single most important orientation block for any new session — was left incomplete.
 
 **Examples:**
+
 - Line 126 read `"5a–5d"` when phases 5e and 5f were also complete. The agent that wrote it ran out of output tokens or lost track of the cumulative state.
 - Line 142 read `"**Next:** Phase 6 — Controll"` — cut off mid-word. The next session would read this line and have an incomplete picture of what comes next.
 
@@ -83,6 +84,7 @@ The incidents above share a common structure:
 This leads to a practice we've adopted:
 
 **After every Claude Code session, before moving forward:**
+
 - Read CLAUDE.md build status end-to-end. Verify completeness.
 - Check `git diff --stat`. If more than the expected files changed, investigate.
 - Verify IMPLEMENTATION_TRACKER.md line count and tail content.

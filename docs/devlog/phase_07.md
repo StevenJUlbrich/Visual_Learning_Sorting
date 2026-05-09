@@ -63,6 +63,7 @@ The most complex sub-phase — fundamentally different from the flat-baseline al
 **TreeLayout integration:** Heap Sort sprites override `home_x`/`home_y` from flat baseline to `TreeLayout.node_positions()` during `__init__`. Active heap elements positioned in binary tree, extracted elements in `TreeLayout.sorted_row_x/y`. `tree_node_radius` applied to sprite ring_radius.
 
 **`_dispatch_heap`:** Discriminates three tick types:
+
 - Boundary T3 (`message.startswith("Active heap")`) → staggered sweep: 120ms sweep window with per-index delay, then 80ms hold. `_apply_heap_sweep` progressively sets `ColorState.ACTIVE`.
 - Logical Tree T3 (`message.startswith("Evaluating tree level")`) → simultaneous flash, handled by shared highlight.
 - T2 SWAP → record start positions, then distinguish sift-down (lower-slot arcs up) from extraction (root arcs UP despite going to higher slot index — direction based on source position, not target).
@@ -76,6 +77,7 @@ The most complex sub-phase — fundamentally different from the flat-baseline al
 **Z-ordering (`_draw_heap`):** sorted row (left-to-right) → tree sprites (deep-first, higher y draws first) → arcing sprites (downward-first, upward-on-top).
 
 Created `HeapOverlay` class with split draw:
+
 - `draw_under` (before sprites): parent-child edges with active orange highlighting, sorted-row placeholder outlines, dashed boundary marker
 - `draw_over` (after sprites): phase label ("BUILD MAX-HEAP" / "EXTRACTION"), boundary label
 
@@ -112,7 +114,7 @@ The lesson: match the model to the decision density, not the code volume. A 200-
 ## Summary
 
 | Sub-phase | Files | Lines at HEAD | Model | Corrections |
-|-----------|-------|---------------|-------|-------------|
+| ----------- | ------- | --------------- | ------- | ------------- |
 | 7 (event loop) | main.py | 211 | Sonnet 4.6 | 1 ruff |
 | 7b (sprite render) | sprite_manager.py, main.py | 158+211 | Sonnet 4.6 | 0 |
 | 7c-1 (Selection pointers) | sprite_manager.py, main.py | ~230+270 | Sonnet 4.6 | 0 |
