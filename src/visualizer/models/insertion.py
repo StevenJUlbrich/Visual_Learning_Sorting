@@ -29,6 +29,8 @@ from visualizer.models.contracts import BaseSortAlgorithm, OpType, SortResult
 
 
 class InsertionSort(BaseSortAlgorithm):
+    """Insertion Sort with individual shifts and terminating-compare rule."""
+
     def __init__(self, data: list[int]) -> None:
         super().__init__(data, name="Insertion Sort", complexity="O(n²)")
 

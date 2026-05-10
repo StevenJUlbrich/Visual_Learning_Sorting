@@ -20,6 +20,8 @@ from visualizer.models.contracts import BaseSortAlgorithm, OpType, SortResult
 
 
 class SelectionSort(BaseSortAlgorithm):
+    """Selection Sort with minimum tracking and conditional swap skip."""
+
     def __init__(self, data: list[int]) -> None:
         super().__init__(data, name="Selection Sort", complexity="O(n²)")
 

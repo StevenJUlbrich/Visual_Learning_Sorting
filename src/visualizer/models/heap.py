@@ -41,6 +41,8 @@ from visualizer.models.contracts import BaseSortAlgorithm, OpType, SortResult
 
 
 class HeapSort(BaseSortAlgorithm):
+    """Heap Sort with build-max-heap and extraction phases using sift-down."""
+
     def __init__(self, data: list[int]) -> None:
         super().__init__(data, name="Heap Sort", complexity="O(n log n)")
 

@@ -14,6 +14,8 @@ from visualizer.models.contracts import BaseSortAlgorithm, OpType, SortResult
 
 
 class BubbleSort(BaseSortAlgorithm):
+    """Bubble Sort with early-exit optimization and shrinking inner boundary."""
+
     def __init__(self, data: list[int]) -> None:
         super().__init__(data, name="Bubble Sort", complexity="O(n²)")
 

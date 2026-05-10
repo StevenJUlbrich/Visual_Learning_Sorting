@@ -38,6 +38,11 @@ htmlcov/
 
 # IDE and editor settings
 .idea/
+.vscode/
+
+# Claude Code / AI tooling local state
+.claude/
+.codex
 
 # OS-generated files
 .DS_Store
@@ -46,5 +51,10 @@ Thumbs.db
 # Logs
 *.log
 
-# MemPalace palace data (stored in home dir, not here)
-# Nothing to add — palace lives in ~/.mempalace by default~/
+# UV package manager cache
+.uv-cache/
+
+# Vim/editor temp files
+*.swp
+*.swo
+*.bak
