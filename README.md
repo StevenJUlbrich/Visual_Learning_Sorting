@@ -79,24 +79,47 @@ uv run ruff format --check src/ tests/  # format check
 
 All acceptance tests (AT-01 through AT-27) pass visual verification. See `TODO/AT_READINESS_CHECKLIST.md` for the full walkthrough.
 
-## How It Was Built — AI-Assisted Development
+## How It Was Built — Spec-Driven AI Development
 
-This project was built using a **two-agent workflow** as an experiment in AI-assisted software engineering:
+This is not a "vibe coding" project. No code was written by asking an AI to "build me a sorting visualizer." Instead, the entire application was engineered **spec-first** — 15 design documents, 81 locked decisions, and tick-level animation contracts were written before a single line of implementation existed. The AI agents then built to those specifications, and the specifications caught them when they drifted.
 
-1. **Cowork (Opus)** — Generates detailed, prescriptive prompts with exact code snippets, file paths, and exit criteria
-2. **Claude Code (Sonnet/Opus)** — Executes the prompts mechanically, runs gates (lint, format, test), reports results
+### The Core Problem: AI Misalignment
 
-The entire development process is documented:
+AI code agents don't reliably follow complex requirements. They batch operations that should be individual. They invent behavior not in the contract. They silently change counter semantics. They truncate files mid-write. Over 10 development phases, misalignment was the central engineering challenge — not "getting AI to write code," but **detecting and correcting the gap between what was specified and what was produced.**
+
+### The Solution: Specifications as an Immune System
+
+Every design document serves as a mechanical pass/fail gate:
+
+- **Counter targets** (e.g., Insertion Sort must produce exactly 17 comparisons and 19 writes for `[4, 7, 2, 6, 1, 5, 3]`) — catch silent logic drift immediately
+- **81 locked decisions** (`DECISIONS.md`) — resolve ambiguity before the agent encounters it, eliminating the judgment calls where models hallucinate
+- **Tick-level contracts** — prescribe the exact sequence of operations (compare, shift, placement) so "working code that sorts correctly" isn't sufficient; it must sort correctly *in the right sequence of steps*
+- **27 acceptance tests** with human-verifiable visual criteria — catch rendering misalignment that unit tests can't reach
+
+### Two-Agent Workflow
+
+The spec-first approach led naturally to separating two concerns:
+
+1. **Cowork (Opus)** — Reads specifications, designs prompts with exact code paths and exit gates, makes judgment calls about architectural trade-offs
+2. **Claude Code (Sonnet/Opus)** — Executes prompts mechanically, runs lint/format/test gates, reports pass/fail without interpretation
+
+This separation exists because *judgment and execution are different failure modes*. When the same model does both, it rationalizes its own mistakes. When execution is mechanical and gates are objective, misalignment becomes visible.
+
+### What's Documented
 
 | Resource | What it shows |
 |----------|--------------|
-| [`docs/devlog/`](docs/devlog/) | Session-by-session engineering journal (Phases 0-10) |
-| [`docs/prompts/`](docs/prompts/) | The exact prompts fed to Claude Code for each fix |
-| [`docs/design_docs/`](docs/design_docs/) | 15 specification documents written before any code |
+| [`docs/design_docs/`](docs/design_docs/) | 15 specification documents — the authority the code was built against |
+| [`docs/prompts/`](docs/prompts/) | The exact prompts fed to Claude Code, showing how specs became instructions |
+| [`docs/devlog/`](docs/devlog/) | Session journal — includes every misalignment incident and correction |
 | [`docs/AI_Conversations/`](docs/AI_Conversations/) | Review sessions, gap analysis, agent trap identification |
-| [`CLAUDE.md`](CLAUDE.md) | Agent context file — critical rules, architecture, build status |
+| [`CLAUDE.md`](CLAUDE.md) | Agent context file — critical rules, counter targets, architecture summary |
 
-Key lessons from the process: spec-first development prevents agent drift, model selection matters (Opus for judgment, Sonnet for mechanical execution), and file truncation is a recurring failure mode that requires manual verification.
+### Key Takeaways
+
+**For hiring managers:** This demonstrates that AI-assisted development requires the same engineering rigor as traditional development — more, actually, because the failure modes are less predictable. The specs, tests, and decision logs are the engineering artifact; the code is the output.
+
+**For AI-assisted development learners:** Write your specs first. Make them testable. When the AI drifts (it will), the spec tells you *what* drifted and *how far*. Without specs, you can't distinguish "works" from "works correctly." The four-step prompt pattern (pre-action log → implementation → gates → post-action log) creates an audit trail that makes misalignment visible after the fact.
 
 ## Tech Stack
 
