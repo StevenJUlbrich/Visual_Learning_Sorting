@@ -2,9 +2,7 @@
 
 A real-time sorting algorithm visualizer built with Python and Pygame. Four algorithms — Bubble Sort, Selection Sort, Insertion Sort, and Heap Sort — race side-by-side in a 2x2 panel grid, driven by operation-weighted timing that reflects actual algorithmic cost.
 
-<!-- TODO: Add screenshot or GIF of the running application here -->
-<!-- Suggested captures: (1) all 4 panels mid-sort, (2) Heap Sort tree view, (3) completion state -->
-
+![Visual Sort Animation](images/visual_sort.gif)
 ## Features
 
 - **Genuine race:** Operation timing (compare=150ms, swap=400ms) creates natural speed differences between algorithms — faster algorithms visibly finish first
