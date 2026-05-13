@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>pytest 339/339 — Visual Learning Sorting (Pre-Phase 10c)</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#11111b;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace}
+#wrapper{width:min(960px,95vw);padding:24px}
+#titlebar{background:#181825;border-radius:12px 12px 0 0;padding:10px 16px;display:flex;align-items:center;gap:8px}
+.dot{width:12px;height:12px;border-radius:50%}
+.dot-r{background:#f38ba8}.dot-y{background:#f9e2af}.dot-g{background:#a6e3a1}
+#titlebar-text{color:#6c7086;font-size:12px;margin-left:12px}
+#term{background:#1e1e2e;color:#cdd6f4;font-size:14px;line-height:1.7;padding:24px;border-radius:0 0 12px 12px;min-height:520px;overflow-y:auto;max-height:75vh;white-space:pre;tab-size:4}
+.g{color:#a6e3a1}.y{color:#f9e2af}.w{color:#cdd6f4}.d{color:#6c7086}.b{color:#89b4fa}.m{color:#cba6f7}.cy{color:#94e2d5}.r{color:#f38ba8}
+#controls{display:flex;gap:16px;align-items:center;margin-top:16px;justify-content:center}
+#controls button{background:#313244;color:#cdd6f4;border:1px solid #45475a;border-radius:8px;padding:8px 20px;font-size:14px;font-family:inherit;cursor:pointer;transition:background .15s}
+#controls button:hover{background:#45475a}
+#controls button:disabled{opacity:.4;cursor:default}
+#speed-group{display:flex;align-items:center;gap:10px}
+#speed-group label{color:#6c7086;font-size:13px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:140px;height:4px;background:#45475a;border-radius:2px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#89b4fa;cursor:pointer}
+#speed-val{color:#89b4fa;font-size:13px;min-width:24px;text-align:center}
+#context{color:#6c7086;font-size:12px;text-align:center;margin-top:12px}
+</style>
+</head>
+<body>
+<div id="wrapper">
+<div id="titlebar">
+<div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+<span id="titlebar-text">steven@dell7770: ~/Visual_Learning_Sorting</span>
+</div>
+<div id="term"></div>
+<div id="controls">
+<button id="btn-start">&#9654; Run simulation</button>
+<button id="btn-reset" style="display:none">&#8635; Reset</button>
+<div id="speed-group">
+<label>Speed</label>
+<input type="range" min="1" max="10" value="4" id="speed">
+<span id="speed-val">4x</span>
+</div>
+</div>
+<div id="context">Pre-Phase 10c state: all 339 tests pass, but visual output contains 7 undetected bugs</div>
+</div>
+<script>
+const term=document.getElementById('term');
+const btnStart=document.getElementById('btn-start');
+const btnReset=document.getElementById('btn-reset');
+const speedSlider=document.getElementById('speed');
+const speedVal=document.getElementById('speed-val');
+let running=false,timer=null;
+speedSlider.addEventListener('input',()=>{speedVal.textContent=speedSlider.value+'x'});
+
+const files=[
+{path:'tests/unit/test_bubble.py',tests:['test_tc_a1_final_sortedness','test_tc_a2_completion_tick','test_tc_a3_empty_input','test_tc_a10_counter_accuracy','test_tc_a12_swap_writes','test_single_element_terminal_only']},
+{path:'tests/unit/test_selection.py',tests:['test_tc_a1_final_sortedness','test_tc_a2_completion_tick','test_tc_a3_empty_input','test_tc_a10_counter_accuracy','test_single_element_terminal_only','test_swap_skipped_when_already_sorted']},
+{path:'tests/unit/test_insertion.py',tests:['test_tc_a1_final_sortedness','test_tc_a2_completion_tick','test_tc_a3_empty_input','test_tc_a10_counter_accuracy','test_single_element_terminal_only','test_tc_a9_per_pass_tick_sequence','test_tc_a11_key_selection_no_comparisons','test_tc_a14_terminating_compare_sorted']},
+{path:'tests/unit/test_heap.py',tests:['test_tc_a1_final_sortedness','test_tc_a2_completion_tick','test_tc_a3_empty_input','test_tc_a10_counter_accuracy','test_single_element_terminal_only','test_tc_a7_heap_phase_contract','test_tc_a8_sift_down_correctness','test_tc_a13_t3_step_counter_exclusion','test_tc_a19_sift_down_tick_sequence']},
+{path:'tests/unit/test_easing.py',tests:['test_ease_in_out_quad_boundary_zero','test_ease_in_out_quad_boundary_one','test_ease_in_out_quad_clamp_high','test_ease_in_out_quad_clamp_low','test_ease_in_out_quad_symmetry_midpoint','test_ease_in_out_quad_non_linear','test_ease_in_out_quad_acceleration','test_ease_in_out_quad_deceleration','test_ease_out_cubic_boundary_zero','test_ease_out_cubic_boundary_one','test_ease_out_cubic_clamp_high','test_ease_out_cubic_clamp_low','test_ease_out_cubic_non_linear','test_ease_out_cubic_fast_start','test_sine_arc_boundary_zero','test_sine_arc_boundary_one','test_sine_arc_clamp_high','test_sine_arc_clamp_low','test_sine_arc_peak','test_sine_arc_symmetry','test_sine_arc_non_linear']},
+{path:'tests/unit/test_window.py',tests:['test_desktop_padding','test_desktop_control_bar_height','test_desktop_grid_height','test_desktop_panel_width','test_desktop_panel_height','test_desktop_rect_top_left','test_desktop_rect_top_right','test_desktop_rect_bottom_left','test_desktop_rect_bottom_right','test_panel_radius','test_desktop_array_x_padding','test_desktop_slot_width','test_tablet_padding','test_tablet_control_bar_height','test_tablet_grid_height','test_tablet_panel_width','test_tablet_panel_height','test_tablet_panel_radius','test_panels_non_overlapping','test_panels_fit_within_window','test_panel_width_minimum','test_unknown_preset_raises']},
+{path:'tests/unit/test_sprite.py',tests:['test_initial_position','test_home_x_slot_0','test_home_x_slot_3','test_home_x_slot_6','test_home_y','test_ring_radius','test_initial_color_state','test_set_color_state','test_is_lifted_at_rest','test_is_lifted_when_above','test_is_lifted_when_below','test_surface_cache_has_all_states','test_surface_cache_entries_not_none','test_update_home_changes_home_x','test_update_home_preserves_exact','test_update_home_preserves_home_y','test_draw_no_error','test_sprite_id_immutable_by_convention','test_different_slots_different_home_x']},
+{path:'tests/unit/test_panel.py',tests:['test_desktop_header_inset_x_minimum','test_desktop_header_inset_x_proportional','test_desktop_header_inset_y_minimum','test_desktop_header_inset_y_proportional','test_tablet_header_inset_x_minimum','test_tablet_header_inset_x_proportional','test_tablet_header_inset_y_minimum','test_tablet_header_inset_y_proportional','test_metrics_gap_value','test_message_gap_value','test_renderer_inset_x_desktop','test_renderer_inset_y_desktop','test_title_anchor_x','test_title_anchor_y','test_metrics_anchor_y_formula','test_message_anchor_y_formula','test_header_budget_desktop_within_35pct','test_header_budget_tablet_within_35pct','test_panel_bg_imported_from_sprite','test_completion_bg_color','test_error_border_color','test_error_border_width','test_running_background_draws_panel_bg','test_completed_background_draws_green','test_error_background_no_crash','test_draw_header_running_no_crash','test_draw_header_failed_state_no_crash','test_draw_header_returns_positive_height','test_truncate_short_string_unchanged','test_truncate_long_string_ends_with_ellipsis','test_truncate_respects_max_width']},
+{path:'tests/unit/test_tree_layout.py',tests:['test_tree_area_height_positive_desktop','test_tree_node_diameter_positive_desktop','test_tree_node_diameter_at_most_quarter_area_desktop','test_sorted_row_below_tree_desktop','test_tree_node_radius_is_int_desktop','test_tc_a20_all_nodes_within_panel_bounds_desktop','test_tc_a20_root_centered_desktop','test_tc_a20_level1_symmetric_desktop','test_tc_a20_level2_symmetric_3_6_desktop','test_tc_a20_level2_symmetric_4_5_desktop','test_tc_a20_no_adjacent_overlap_level2_desktop','test_tc_a20_all_nodes_within_panel_bounds_tablet','test_tc_a20_root_centered_tablet','test_tc_a20_level1_symmetric_tablet','test_tc_a21_six_edges_for_heap7','test_tc_a21_edge_parent_child_indices_heap7','test_tc_a21_edge_endpoints_match_node_positions','test_tc_a21_leaf_nodes_not_in_outgoing_edges','test_tc_a22_node_count_equals_heap_size','test_tc_a22_edges_within_heap_size','test_tc_a22_heap_size_1_zero_edges','test_tc_a22_heap_size_1_one_node','test_tc_a22_heap_size_1_root_at_tree_top','test_tc_a22_heap_size_3_two_edges','test_tc_a22_heap_size_0_empty','test_sorted_row_x_matches_flat_row_formula_desktop','test_sorted_row_x_seven_distinct_positions']},
+{path:'tests/unit/test_pointer.py',tests:['test_i_arrow_y_below_jmin','test_jmin_arrow_y_below_baseline','test_i_arrow_y_formula','test_jmin_arrow_y_formula','test_slot_center_x_slot_0','test_slot_center_x_slot_3','test_slot_center_x_slot_6','test_i_arrow_x_matches_slot_center','test_coalesce_j_equals_min_hides_j','test_coalesce_j_equals_min_keeps_min','test_coalesce_j_different_from_min_both_visible','test_coalesce_j_none_min_visible','test_coalesce_min_none_j_visible','test_coalesce_i_not_affected_by_coalescing','test_coalesce_all_different_all_visible','test_coalesce_all_none','test_pointer_i_color_is_cyan','test_pointer_j_color_is_active_orange','test_pointer_min_color_matches_j','test_draw_all_valid_no_crash','test_draw_all_none_no_crash','test_draw_coalescing_j_equals_min_no_crash','test_draw_edge_slot_0_no_crash','test_draw_edge_slot_6_no_crash','test_draw_i_only_no_crash']},
+{path:'tests/unit/test_limitline.py',tests:['test_initial_boundary_index','test_initial_x_position','test_initial_not_visible','test_advance_decrements_boundary','test_advance_twice_boundary','test_x_position_after_advance','test_x_position_formula_consistency','test_advance_guard_no_below_zero','test_is_visible_after_advance','test_is_visible_boundary_1','test_is_not_visible_boundary_0','test_is_visible_mid_range','test_reset_restores_array_size','test_reset_restores_not_visible','test_reset_after_full_cycle','test_x_between_slot_5_and_6_centers_after_advance','test_line_spans_array_region','test_line_color_constant','test_draw_visible_no_crash','test_draw_invisible_initial_no_crash','test_draw_boundary_zero_no_crash']},
+{path:'tests/unit/test_hud.py',tests:['test_hud_text_color_value','test_phase_label_color_value','test_boundary_label_color_value','test_phase_label_color_matches_color_map','test_boundary_label_color_matches_line_color','test_bubble_hud_constructs','test_bubble_hud_counter_x_uses_inset','test_bubble_hud_exchanges_y_uses_bottom_margin','test_bubble_hud_comparisons_y_uses_above_exchanges','test_bubble_hud_comparisons_y_strictly_above_exchanges','test_bubble_hud_comparisons_y_within_panel','test_bubble_hud_exchanges_y_within_panel','test_bubble_hud_counter_x_within_panel','test_bubble_hud_draw_zero_counts','test_bubble_hud_draw_nonzero_counts','test_bubble_hud_draw_large_counts','test_heap_phase_label_constructs','test_heap_phase_label_right_x_uses_panel_right','test_heap_phase_label_draw_build_max_heap','test_heap_phase_label_draw_extraction','test_heap_phase_label_draw_uses_integer_y','test_heap_boundary_label_constructs','test_heap_boundary_label_text_constant','test_heap_boundary_label_draw_no_crash','test_heap_boundary_label_draw_at_origin','test_heap_boundary_label_draw_fractional_coords']},
+{path:'tests/unit/test_orchestrator.py',tests:['test_panel_state_has_five_members','test_panel_state_idle_paused_exists','test_panel_state_all_values_unique','test_t1_compare_duration','test_t2_write_duration','test_t3_range_duration','test_terminal_duration_zero','test_failure_duration_zero','test_sift_down_t1','test_sift_down_t2','test_sift_down_t3','test_get_duration_compare_standard','test_get_duration_compare_cadence','test_get_duration_swap_standard','test_get_duration_swap_cadence','test_get_duration_shift_always_standard','test_get_duration_range_standard','test_get_duration_range_cadence','test_get_duration_terminal','test_get_duration_failure','test_panel_context_initial_state','test_panel_context_initial_timing','test_panel_context_initial_counters','test_panel_context_initial_cadence_false','test_panel_context_initial_is_active','test_panel_context_stores_name_and_complexity','test_panel_context_reset_restores_defaults','test_panel_context_reset_preserves_identity','test_orchestrator_creates_panels_per_algorithm','test_orchestrator_all_panels_start_idle','test_update_skips_idle_paused','test_waiting_fetches_tick_transitions_to_animating','test_animating_decrements_remaining','test_animating_to_waiting_when_remaining_zero','test_animating_to_waiting_on_overshoot','test_terminal_tick_transitions_to_completed','test_failure_tick_transitions_to_failed','test_completed_panel_skipped','test_elapsed_time_accumulates_compare_duration','test_elapsed_time_accumulates_multiple_ticks','test_elapsed_time_freezes_on_completion','test_elapsed_time_freezes_on_failure','test_step_increments_on_compare','test_step_increments_on_swap','test_step_excludes_range','test_step_excludes_terminal','test_comparisons_synced_from_algorithm','test_writes_synced_from_algorithm','test_cadence_initially_false','test_boundary_t3_sets_extraction_pending','test_swap_after_boundary_sets_cadence','test_next_boundary_resets_cadence','test_cadence_not_set_during_phase1','test_cadence_affects_duration_of_subsequent_ticks','test_failure_isolation_other_panels_continue','test_no_change_returns_empty_dict','test_swap_two_adjacent_indices','test_swap_non_adjacent_indices','test_shift_single_element_rightward','test_sequential_swaps_cumulative_mapping','test_full_sort_identity_preserved','test_slot_to_sprite_id_mutated_in_place','test_context_has_slot_mapping','test_context_has_sprite_moves','test_context_reset_restores_slot_mapping','test_context_reset_clears_sprite_moves','test_swap_tick_populates_sprite_moves','test_range_tick_empty_sprite_moves','test_terminal_tick_no_sprite_moves','test_failure_tick_no_sprite_moves','test_sprite_moves_reflects_only_current_tick','test_play_sets_running_true','test_play_transitions_idle_panels_to_waiting','test_play_does_not_affect_completed_panel','test_play_ignored_while_stepping','test_pause_clears_running','test_pause_preserves_animating_state','test_paused_update_does_not_advance','test_pause_then_play_resumes','test_step_sets_stepping_true','test_step_transitions_idle_to_waiting','test_step_ignored_while_running','test_step_ignored_while_already_stepping','test_step_animating_drains_to_idle_paused','test_step_clears_stepping_after_animation_drains','test_step_two_panels_both_drain_before_stepping_clears','test_step_multiple_calls_advance_one_tick_each','test_restart_clears_running','test_restart_clears_stepping','test_restart_resets_panel_state_to_idle_paused','test_restart_resets_elapsed_time','test_restart_restores_fresh_generator','test_restart_resets_slot_to_sprite_id','test_restart_restores_previous_array_state','test_initial_is_running_false','test_initial_is_stepping_false','test_update_noop_when_not_running_or_stepping']},
+{path:'tests/integration/test_orchestrator_integration.py',tests:['test_tc_a4_independent_queues_integer_timing','test_tc_a6_fairness_all_complete_no_starvation','test_tc_a15_state_machine_happy_path','test_tc_a16_failure_isolation','test_tc_a17_pause_freezes_state','test_tc_a18_restart_resets_state','test_counter_accuracy_all_algorithms']}
+];
+
+let allSteps=[];
+function buildSteps(){
+allSteps=[];
+allSteps.push({type:'cmd',text:'<span class="b">$</span> <span class="w">uv run pytest</span>'});
+allSteps.push({type:'blank'});
+allSteps.push({type:'line',text:'<span class="m">============================</span> <span class="w">test session starts</span> <span class="m">============================</span>'});
+allSteps.push({type:'line',text:'<span class="d">platform linux -- Python 3.13.3, pytest-8.3.5, pluggy-1.5.0</span>'});
+allSteps.push({type:'line',text:'<span class="d">rootdir: /home/steven/Visual_Learning_Sorting</span>'});
+allSteps.push({type:'line',text:'<span class="d">configfile: pyproject.toml</span>'});
+allSteps.push({type:'line',text:'<span class="d">plugins: anyio-4.9.0</span>'});
+allSteps.push({type:'line',text:'<span class="w">collected <span class="b">339 items</span></span>'});
+allSteps.push({type:'blank'});
+let passed=0;
+for(const f of files){
+let dots='';
+for(let i=0;i<f.tests.length;i++){
+passed++;
+dots+='<span class="g">.</span>';
+}
+let pct=Math.round(passed/339*100);
+let pctStr=String(pct).padStart(3,' ');
+allSteps.push({type:'file',text:'<span class="w">'+f.path+'</span> '+dots+' <span class="d">['+pctStr+'%]</span>',count:f.tests.length});
+}
+allSteps.push({type:'blank'});
+let elapsed=(4.2+Math.random()*0.8).toFixed(2);
+allSteps.push({type:'line',text:'<span class="g">============================ 339 passed in '+elapsed+'s ============================</span>'});
+allSteps.push({type:'blank'});
+allSteps.push({type:'cmd',text:'<span class="b">$</span> <span class="w">uv run ruff check src/ tests/</span>'});
+allSteps.push({type:'pause',ms:600});
+allSteps.push({type:'line',text:'<span class="g">All checks passed!</span>'});
+allSteps.push({type:'blank'});
+allSteps.push({type:'cmd',text:'<span class="b">$</span> <span class="w">uv run ruff format --check src/ tests/</span>'});
+allSteps.push({type:'pause',ms:400});
+allSteps.push({type:'line',text:'<span class="d">38 files already formatted</span>'});
+}
+buildSteps();
+
+let stepIdx=0;
+function getDelay(){
+return 90/parseInt(speedSlider.value);
+}
+
+function addLine(html){
+term.innerHTML+=html+'\n';
+term.scrollTop=term.scrollHeight;
+}
+
+function runNext(){
+if(stepIdx>=allSteps.length){
+btnStart.style.display='none';
+btnReset.style.display='inline-block';
+running=false;
+return;
+}
+let s=allSteps[stepIdx++];
+if(s.type==='blank'){addLine('');timer=setTimeout(runNext,getDelay()*0.5);}
+else if(s.type==='cmd'){addLine(s.text);timer=setTimeout(runNext,getDelay()*8);}
+else if(s.type==='file'){addLine(s.text);timer=setTimeout(runNext,getDelay()*Math.max(2,s.count*0.5));}
+else if(s.type==='pause'){timer=setTimeout(runNext,s.ms/parseInt(speedSlider.value));}
+else{addLine(s.text);timer=setTimeout(runNext,getDelay());}
+}
+
+btnStart.addEventListener('click',()=>{
+if(running)return;
+running=true;
+btnStart.disabled=true;
+term.innerHTML='';
+stepIdx=0;
+buildSteps();
+runNext();
+});
+btnReset.addEventListener('click',()=>{
+if(timer)clearTimeout(timer);
+running=false;
+stepIdx=0;
+term.innerHTML='';
+btnStart.style.display='inline-block';
+btnStart.disabled=false;
+btnReset.style.display='none';
+});
+</script>
+</body>
+</html>
