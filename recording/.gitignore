@@ -1,0 +1,4 @@
+# The recording sandbox is a transient working dir built by sandbox.py.
+# It contains its own git repo for the HEAD~1 recovery demonstration.
+# Never commit it to the main project repo.
+sandbox/

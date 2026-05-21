@@ -1,0 +1,318 @@
+<h2 class="sr-only">Simulation of the Episode 5 hook visual: implementation tracker showing four sequential phases with model assignments and exit gates, with the boundary between Phase 10d and Phase 10e highlighted as the moment a new gate was added.</h2>
+
+<style>
+.it-wrap { padding: 1rem 0; }
+.it-header {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.08em;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.it-header .ttl { font-weight: 500; color: var(--color-text-primary); letter-spacing: 0; }
+.it-list {
+  position: relative;
+}
+.it-phase {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  gap: 14px;
+  align-items: center;
+}
+.it-phase.done { opacity: 0.85; }
+.it-id {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+.it-id .badge {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--color-background-secondary);
+  color: var(--color-text-secondary);
+  letter-spacing: 0.04em;
+}
+.it-body { min-width: 0; }
+.it-task {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0 0 6px 0;
+  color: var(--color-text-primary);
+}
+.it-meta {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: center;
+}
+.it-model {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: var(--border-radius-md);
+  background: var(--color-background-secondary);
+}
+.it-model.sonnet { background: #e1f5ee; color: #085041; }
+.it-model.opus { background: #eeedfe; color: #3c3489; }
+@media (prefers-color-scheme: dark) {
+  .it-model.sonnet { background: #04342c; color: #9fe1cb; }
+  .it-model.opus { background: #26215c; color: #cecbf6; }
+}
+.it-gates {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.it-gate {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 3px 7px;
+  border-radius: var(--border-radius-md);
+  background: var(--color-background-success);
+  color: var(--color-text-success);
+}
+.it-gate .x { font-weight: 500; }
+.it-gate.new {
+  background: transparent;
+  color: var(--color-text-warning);
+  border: 0.5px solid var(--color-border-warning);
+  position: relative;
+}
+.it-gate.new::after {
+  content: 'NEW';
+  position: absolute;
+  top: -8px;
+  right: -4px;
+  font-size: 8px;
+  font-weight: 500;
+  padding: 1px 4px;
+  border-radius: 2px;
+  background: var(--color-background-warning);
+  color: var(--color-text-warning);
+  letter-spacing: 0.06em;
+}
+
+/* Phase boundary between cards */
+.it-boundary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  margin: 2px 16px;
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+}
+.it-boundary::before,
+.it-boundary::after {
+  content: '';
+  flex: 1;
+  height: 0.5px;
+  background: var(--color-border-tertiary);
+}
+.it-boundary.spotlight {
+  font-size: 12px;
+  color: var(--color-text-warning);
+  margin: 6px 16px;
+  padding: 10px 0;
+  position: relative;
+}
+.it-boundary.spotlight::before,
+.it-boundary.spotlight::after {
+  height: 1px;
+  background: var(--color-border-warning);
+}
+.spotlight-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: var(--border-radius-md);
+  background: var(--color-background-warning);
+  color: var(--color-text-warning);
+  position: relative;
+  animation: pulse 2.4s ease-in-out infinite;
+}
+.spotlight-label::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: var(--border-radius-md);
+  border: 0.5px solid var(--color-border-warning);
+  pointer-events: none;
+  opacity: 0;
+  animation: ring 2.4s ease-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+@keyframes ring {
+  0% { opacity: 0.55; transform: scale(1); }
+  70% { opacity: 0; transform: scale(1.18); }
+  100% { opacity: 0; transform: scale(1.18); }
+}
+
+.it-callout {
+  margin: 10px 0 0;
+  padding: 10px 14px 10px 16px;
+  background: var(--color-background-warning);
+  border-left: 2px solid var(--color-border-warning);
+  border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0;
+  font-size: 12px;
+  color: var(--color-text-warning);
+  line-height: 1.55;
+}
+.it-callout strong { font-weight: 500; }
+
+.it-footer {
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+  text-align: right;
+}
+
+/* Stagger entry */
+.it-phase, .it-boundary {
+  opacity: 0;
+  animation: enter 400ms ease-out forwards;
+}
+.it-phase:nth-child(1) { animation-delay: 0ms; }
+.it-boundary:nth-child(2) { animation-delay: 120ms; }
+.it-phase:nth-child(3) { animation-delay: 240ms; }
+.it-boundary:nth-child(4) { animation-delay: 360ms; }
+.it-phase:nth-child(5) { animation-delay: 480ms; }
+.it-boundary:nth-child(6) { animation-delay: 600ms; }
+.it-phase:nth-child(7) { animation-delay: 720ms; }
+@keyframes enter {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.it-phase + .it-phase { margin-top: 0; }
+</style>
+
+<div class="it-wrap">
+  <div class="it-header">
+    <span class="ttl">Implementation tracker · Phase 10 slice</span>
+    <span>4 phases · model · exit gates</span>
+  </div>
+
+  <div class="it-list">
+
+    <div class="it-phase done">
+      <div class="it-id">
+        10c
+        <div class="badge">done</div>
+      </div>
+      <div class="it-body">
+        <h4 class="it-task">compute_sprite_moves() duplicate-value fix</h4>
+        <div class="it-meta">
+          <span class="it-model opus">Opus 4.6</span>
+          <span>6 new tests</span>
+          <span>zero corrections</span>
+        </div>
+      </div>
+      <div class="it-gates">
+        <span class="it-gate"><span class="x">✓</span>tests</span>
+        <span class="it-gate"><span class="x">✓</span>ruff</span>
+        <span class="it-gate"><span class="x">✓</span>pyright</span>
+      </div>
+    </div>
+
+    <div class="it-boundary"><span>exit gate</span></div>
+
+    <div class="it-phase done">
+      <div class="it-id">
+        10d
+        <div class="badge">done</div>
+      </div>
+      <div class="it-body">
+        <h4 class="it-task">HeapOverlay panel_rect clamping</h4>
+        <div class="it-meta">
+          <span class="it-model sonnet">Sonnet 4.6</span>
+          <span>truncation incident #1</span>
+          <span>recovered via git restore</span>
+        </div>
+      </div>
+      <div class="it-gates">
+        <span class="it-gate"><span class="x">✓</span>tests</span>
+        <span class="it-gate"><span class="x">✓</span>ruff</span>
+        <span class="it-gate"><span class="x">✓</span>pyright</span>
+      </div>
+    </div>
+
+    <div class="it-boundary spotlight">
+      <span class="spotlight-label">exit gate · AST parse added</span>
+    </div>
+
+    <div class="it-phase done">
+      <div class="it-id">
+        10e
+        <div class="badge">done</div>
+      </div>
+      <div class="it-body">
+        <h4 class="it-task">Selection Sort i-pointer spacing</h4>
+        <div class="it-meta">
+          <span class="it-model sonnet">Sonnet 4.6</span>
+          <span>truncation incident #2</span>
+          <span>caught by new gate</span>
+        </div>
+      </div>
+      <div class="it-gates">
+        <span class="it-gate new"><span class="x">✓</span>parse</span>
+        <span class="it-gate"><span class="x">✓</span>tests</span>
+        <span class="it-gate"><span class="x">✓</span>ruff</span>
+      </div>
+    </div>
+
+    <div class="it-boundary"><span>exit gate</span></div>
+
+    <div class="it-phase done">
+      <div class="it-id">
+        10f
+        <div class="badge">done</div>
+      </div>
+      <div class="it-body">
+        <h4 class="it-task">false extraction detection fix</h4>
+        <div class="it-meta">
+          <span class="it-model sonnet">Sonnet 4.6</span>
+          <span>zero corrections</span>
+        </div>
+      </div>
+      <div class="it-gates">
+        <span class="it-gate"><span class="x">✓</span>parse</span>
+        <span class="it-gate"><span class="x">✓</span>tests</span>
+        <span class="it-gate"><span class="x">✓</span>ruff</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="it-callout">
+    <strong>The boundary is the gate.</strong> AST parse didn't exist before Phase 10d. After the first truncation, it was added as an exit-gate requirement — and immediately caught the next truncation in 10e. The phase boundary is where the work has to prove itself.
+  </div>
+
+  <div class="it-footer">source: TODO/IMPLEMENTATION_TRACKER.md + docs/devlog/phase_10.md</div>
+</div>

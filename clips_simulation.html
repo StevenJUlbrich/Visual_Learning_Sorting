@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Spec-First Project — Quick Clips</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --panel-2: #1c2128;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #ff8c00;     /* matches project's universal orange */
+    --blue: #58a6ff;
+    --green: #7ee787;
+    --purple: #d2a8ff;
+    --steel: #79c0ff;
+    --code-bg: #0b1018;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0; padding: 0;
+    background: #050811;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .stage {
+    width: min(1100px, 95vw);
+  }
+
+  .header-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 14px;
+    color: var(--muted);
+    font-size: 13px;
+    letter-spacing: 0.3px;
+  }
+  .header-strip .title {
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+  .header-strip .title b { color: var(--accent); }
+
+  .recorder {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 1px rgba(255,140,0,0.05),
+      0 30px 60px rgba(0,0,0,0.55),
+      0 8px 18px rgba(0,0,0,0.4);
+  }
+
+  .titlebar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: linear-gradient(180deg, #21262d, #161b22);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .dots { display: flex; gap: 6px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot.r { background: #ff5f57; }
+  .dot.y { background: #febc2e; }
+  .dot.g { background: #28c840; }
+
+  .titlebar .path {
+    font-family: "SF Mono", "Consolas", monospace;
+    font-size: 12px;
+    color: var(--text);
+    opacity: 0.85;
+  }
+
+  .rec-pill {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,80,80,0.12);
+    color: #ff8a8a;
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+  }
+  .rec-pill .blink {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #ff4040;
+    animation: blink 1s infinite;
+  }
+  @keyframes blink {
+    0%, 60% { opacity: 1; }
+    70%, 100% { opacity: 0.25; }
+  }
+
+  .stage-frame {
+    position: relative;
+    height: 560px;
+    background: var(--bg);
+  }
+
+  .clip {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 600ms ease;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .clip.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* ===== File Explorer (Clips 1 & 3) ===== */
+  .explorer {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    height: 100%;
+    font-family: "SF Mono", "Consolas", monospace;
+    font-size: 13px;
+  }
+  .sidebar {
+    background: var(--panel-2);
+    border-right: 1px solid var(--border);
+    padding: 14px 0;
+    overflow-y: auto;
+  }
+  .side-head {
+    color: var(--muted);
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    padding: 0 16px 10px;
+    font-family: -apple-system, sans-serif;
+  }
+  .tree { list-style: none; padding: 0; margin: 0; }
+  .tree li {
+    padding: 4px 16px 4px 28px;
+    color: var(--text);
+    cursor: default;
+    position: relative;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tree li.folder { color: var(--blue); padding-left: 16px; font-weight: 500; }
+  .tree li.folder::before { content: "▾ "; color: var(--muted); }
+  .tree li.file::before {
+    content: "";
+    position: absolute;
+    left: 16px; top: 50%;
+    width: 4px; height: 4px;
+    background: var(--muted);
+    border-radius: 50%;
+    transform: translateY(-50%);
+  }
+  .tree li.file.highlight {
+    background: rgba(255,140,0,0.15);
+    color: var(--accent);
+  }
+  .tree li.file.highlight::before { background: var(--accent); }
+
+  .listing {
+    padding: 18px 26px;
+    overflow-y: auto;
+    background: var(--bg);
+  }
+  .listing-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .listing-header h2 {
+    margin: 0;
+    font-family: -apple-system, sans-serif;
+    font-size: 15px;
+    color: var(--text);
+    font-weight: 600;
+  }
+  .listing-header .count {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: -apple-system, sans-serif;
+  }
+  .file-row {
+    display: grid;
+    grid-template-columns: 24px 1fr 90px 110px;
+    gap: 14px;
+    padding: 6px 4px;
+    align-items: center;
+    border-bottom: 1px dashed rgba(48,54,61,0.4);
+    font-size: 12.5px;
+    animation: fadeRow 500ms ease both;
+  }
+  @keyframes fadeRow {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .file-row .icon {
+    color: var(--accent);
+    font-size: 13px;
+  }
+  .file-row .name { color: var(--text); }
+  .file-row .name .ext { color: var(--muted); }
+  .file-row .size { color: var(--muted); text-align: right; }
+  .file-row .date { color: var(--muted); text-align: right; }
+  .file-row.dir .icon { color: var(--blue); }
+  .file-row.dir .name { color: var(--blue); }
+
+  /* ===== Markdown viewer (Clip 2) ===== */
+  .md-viewer {
+    height: 100%;
+    display: grid;
+    grid-template-columns: 60px 1fr;
+  }
+  .gutter {
+    background: var(--panel-2);
+    border-right: 1px solid var(--border);
+    padding: 14px 0;
+    text-align: center;
+    font-family: "SF Mono", "Consolas", monospace;
+    font-size: 11px;
+    color: #4a525d;
+    overflow: hidden;
+  }
+  .gutter div { line-height: 1.55; }
+  .md-scroller {
+    overflow: hidden;
+    position: relative;
+    background: var(--bg);
+  }
+  .md-content {
+    padding: 28px 44px;
+    font-family: -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.65;
+    font-size: 14.5px;
+    color: var(--text);
+    animation: panUp 22s linear infinite;
+  }
+  @keyframes panUp {
+    0%   { transform: translateY(0); }
+    8%   { transform: translateY(0); }
+    92%  { transform: translateY(-58%); }
+    100% { transform: translateY(-58%); }
+  }
+  .clip:not(.active) .md-content { animation-play-state: paused; }
+
+  .md-content h1 {
+    font-size: 26px;
+    color: var(--text);
+    margin: 0 0 6px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+  }
+  .md-content h2 {
+    font-size: 18px;
+    color: var(--accent);
+    margin: 28px 0 10px;
+    border-bottom: 1px solid rgba(255,140,0,0.18);
+    padding-bottom: 4px;
+  }
+  .md-content h3 {
+    font-size: 15px;
+    color: var(--steel);
+    margin: 20px 0 8px;
+  }
+  .md-content p { margin: 0 0 12px; color: #cdd5dd; }
+  .md-content code {
+    background: var(--code-bg);
+    color: var(--green);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: "SF Mono", "Consolas", monospace;
+    font-size: 12.5px;
+    border: 1px solid #1f2733;
+  }
+  .md-content strong { color: var(--text); }
+  .md-content ul { padding-left: 22px; margin: 0 0 14px; }
+  .md-content li { margin-bottom: 6px; color: #cdd5dd; }
+  .md-content table {
+    border-collapse: collapse;
+    margin: 12px 0 18px;
+    font-size: 13px;
+    width: 100%;
+  }
+  .md-content th, .md-content td {
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    text-align: left;
+  }
+  .md-content th { background: var(--panel-2); color: var(--accent); }
+  .md-content blockquote {
+    border-left: 3px solid var(--accent);
+    background: rgba(255,140,0,0.06);
+    padding: 8px 14px;
+    margin: 12px 0;
+    color: #cdd5dd;
+  }
+
+  /* ===== Bottom controls ===== */
+  .controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background: var(--panel-2);
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+    font-family: "SF Mono", "Consolas", monospace;
+  }
+  .nav-dots { display: flex; gap: 8px; }
+  .nav-dot {
+    width: 28px;
+    height: 4px;
+    background: #2a313a;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 250ms ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .nav-dot.active { background: rgba(255,140,0,0.25); }
+  .nav-dot.active::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    transform-origin: left;
+    animation: progress 6s linear forwards;
+  }
+  @keyframes progress {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+  .clip-label {
+    color: var(--text);
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .clip-label .accent { color: var(--accent); }
+
+  .hint {
+    text-align: center;
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.4px;
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div class="header-strip">
+    <div class="title">Spec-First Methodology — <b>Quick Clips</b></div>
+    <div>Visual_Learning_Sorting · b-roll · 3 clips · 18s loop</div>
+  </div>
+
+  <div class="recorder">
+
+    <!-- Title bar -->
+    <div class="titlebar">
+      <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+      <div class="path" id="pathLabel">Visual_Learning_Sorting / docs / design_docs</div>
+      <div class="rec-pill"><span class="blink"></span> REC</div>
+    </div>
+
+    <!-- Clip stage -->
+    <div class="stage-frame">
+
+      <!-- ========== CLIP 1: docs/design_docs/ ========== -->
+      <section class="clip active" data-clip="1">
+        <div class="explorer">
+          <aside class="sidebar">
+            <div class="side-head">Visual_Learning_Sorting</div>
+            <ul class="tree">
+              <li class="folder">src</li>
+              <li class="folder">tests</li>
+              <li class="folder">docs</li>
+              <li class="file" style="padding-left:36px;">contracts/</li>
+              <li class="file highlight" style="padding-left:36px;">design_docs/</li>
+              <li class="file" style="padding-left:36px;">AI_Conversations/</li>
+              <li class="folder">wiki</li>
+              <li class="folder">TODO</li>
+              <li class="file">CLAUDE.md</li>
+              <li class="file">pyproject.toml</li>
+              <li class="file">README.md</li>
+            </ul>
+          </aside>
+          <main class="listing" id="dd-listing">
+            <div class="listing-header">
+              <h2>docs/design_docs/</h2>
+              <div class="count">16 files · 294 KB · binding contracts</div>
+            </div>
+            <!-- file rows injected by JS -->
+          </main>
+        </div>
+      </section>
+
+      <!-- ========== CLIP 2: Spec-First-Methodology.md ========== -->
+      <section class="clip" data-clip="2">
+        <div class="md-viewer">
+          <div class="gutter" id="gutter"></div>
+          <div class="md-scroller">
+            <article class="md-content">
+              <h1>Spec-First Methodology</h1>
+              <p>This page explains how 15 design documents and 81 locked decisions governed AI code generation throughout the project, and why this approach was necessary.</p>
+
+              <h2>The Problem with "Vibe Coding"</h2>
+              <p>The default way people use AI for code generation is conversational: describe what you want, let the model write it, iterate on the output. This works for small, self-contained tasks. It breaks down on anything with cross-cutting constraints.</p>
+              <p>A sorting visualizer sounds simple, but the constraints interact in non-obvious ways. The Insertion Sort generator must emit individual compare-then-shift tick pairs (never batched), the key-selection tick must use <code>OpType.COMPARE</code> for timing purposes but must NOT increment the comparisons counter, and the terminating compare must fire only when the loop exits by condition (not by <code>j &lt; 0</code>).</p>
+              <blockquote>The specifications exist to make misalignment <strong>detectable</strong>.</blockquote>
+
+              <h2>What Was Written Before Any Code</h2>
+              <p><strong>15 design documents</strong> covering product requirements, architecture, data contracts, UI layout, algorithm visualization, behavior, acceptance tests, test plan, dev environment, animation specification, CI pipeline, and animation foundation.</p>
+              <p><strong>81 locked decisions</strong> in <code>DECISIONS.md</code> (D-001 through D-081), each resolving a specific ambiguity:</p>
+              <ul>
+                <li><strong>D-060</strong>: Each shift in Insertion Sort is an individual compare-then-shift tick pair. Never batched.</li>
+                <li><strong>D-058</strong>: Heap Sort RANGE ticks must include the sift-down parent index in <code>highlight_indices</code>.</li>
+                <li><strong>D-081</strong>: The View distinguishes Boundary T3 from Logical Tree T3 by message prefix, not contiguity.</li>
+              </ul>
+
+              <p><strong>Counter targets</strong> on the reference array <code>[4, 7, 2, 6, 1, 5, 3]</code>:</p>
+              <table>
+                <thead><tr><th>Algorithm</th><th>Comparisons</th><th>Writes</th><th>Steps</th></tr></thead>
+                <tbody>
+                  <tr><td>Bubble Sort</td><td>20</td><td>26</td><td>—</td></tr>
+                  <tr><td>Selection Sort</td><td>21</td><td>10</td><td>—</td></tr>
+                  <tr><td>Insertion Sort</td><td>17</td><td>19</td><td>—</td></tr>
+                  <tr><td>Heap Sort</td><td>20</td><td>30</td><td>35</td></tr>
+                </tbody>
+              </table>
+
+              <h2>The Two-Agent Workflow</h2>
+              <h3>Agent 1: Cowork (Opus) — The Architect</h3>
+              <p>Loads full specification context. Designs prompts with exact code paths and exit gates. Makes architectural trade-off calls. Produces a prompt document for each phase.</p>
+              <h3>Agent 2: Claude Code — The Builder</h3>
+              <p>Receives the prompt and executes mechanically. Writes code, runs <code>ruff check</code>, runs <code>pytest -x</code>, reports pass/fail against exit criteria. Doesn't interpret — follows.</p>
+
+              <h2>The Four-Step Prompt Pattern</h2>
+              <ul>
+                <li><strong>DEVLOG PRE-ACTION</strong> — record the plan before execution.</li>
+                <li><strong>IMPLEMENTATION</strong> — prescriptive prompt with code paths and gate commands.</li>
+                <li><strong>GATES</strong> — mechanical pass/fail: lint, format, tests, AST parse, counter targets.</li>
+                <li><strong>DEVLOG POST-ACTION</strong> — record what actually happened, surprises and corrections.</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== CLIP 3: docs/AI_Conversations/ ========== -->
+      <section class="clip" data-clip="3">
+        <div class="explorer">
+          <aside class="sidebar">
+            <div class="side-head">Visual_Learning_Sorting</div>
+            <ul class="tree">
+              <li class="folder">src</li>
+              <li class="folder">tests</li>
+              <li class="folder">docs</li>
+              <li class="file" style="padding-left:36px;">contracts/</li>
+              <li class="file" style="padding-left:36px;">design_docs/</li>
+              <li class="file highlight" style="padding-left:36px;">AI_Conversations/</li>
+              <li class="folder">wiki</li>
+              <li class="folder">TODO</li>
+              <li class="file">CLAUDE.md</li>
+              <li class="file">pyproject.toml</li>
+              <li class="file">README.md</li>
+            </ul>
+          </aside>
+          <main class="listing" id="ai-listing">
+            <div class="listing-header">
+              <h2>docs/AI_Conversations/</h2>
+              <div class="count">10 files · 122 KB · review sessions &amp; trap analysis</div>
+            </div>
+            <!-- file rows injected by JS -->
+          </main>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div class="clip-label">
+        <span id="clipNum" class="accent">CLIP 01</span> &nbsp;/&nbsp; <span id="clipDesc">design_docs folder listing</span>
+      </div>
+      <div class="nav-dots">
+        <div class="nav-dot active" data-target="1"></div>
+        <div class="nav-dot" data-target="2"></div>
+        <div class="nav-dot" data-target="3"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="hint">Auto-cycles every 6 s · hover to pause · click a dot to jump · clip 2 auto-pans</div>
+</div>
+
+<script>
+  // ---- Real file data (from filesystem inspection) ----
+  const designDocs = [
+    ["00_PSEUDOCODE.md",            "14 KB", "May 8"],
+    ["01_PRD.md",                    "3 KB", "May 1"],
+    ["02_ARCHITECTURE.md",          "11 KB", "May 1"],
+    ["03_DATA_CONTRACTS.md",        "16 KB", "May 8"],
+    ["04_UI_SPEC.md",               "29 KB", "May 1"],
+    ["05_ALGORITHMS_VIS_SPEC.md",   "46 KB", "May 8"],
+    ["06_BEHAVIOR_SPEC.md",          "7 KB", "May 1"],
+    ["07_ACCEPTANCE_TESTS.md",      "22 KB", "May 1"],
+    ["08_TEST_PLAN.md",             "28 KB", "May 8"],
+    ["09_DEV_ENV.md",                "5 KB", "May 1"],
+    ["10_ANIMATION_SPEC.md",        "30 KB", "May 1"],
+    ["11_CI.md",                     "3 KB", "May 1"],
+    ["12_ANIMATION_FOUNDATION.md",  "17 KB", "May 8"],
+    ["13_IMPLEMENTATION_ORDER.md",   "9 KB", "May 1"],
+    ["14_CONTEXT_PACKS.md",         "24 KB", "May 8"],
+    ["DECISIONS.md",                "29 KB", "May 8"],
+  ];
+
+  const aiConvos = [
+    ["2026-03-21-claude-supplementary-prompts.md",       "15 KB", "May 1"],
+    ["2026-03-21-gemini-recommendations.md",              "5 KB", "May 1"],
+    ["2026-03-21-session-summary-spec-gaps.md",           "9 KB", "May 1"],
+    ["2026-03-21_gap_conversation_1.md",                 "28 KB", "May 8"],
+    ["2026-03-21_review_claude_additional_traps.md",     "11 KB", "May 1"],
+    ["2026-03-21_review_gemini.md",                       "5 KB", "May 1"],
+    ["2026-03-22-animation-agent-strategy.md",           "14 KB", "May 1"],
+    ["2026-04-05-animation-contract-review-summary.md",  "12 KB", "May 1"],
+    ["2026-04-23_project_gap_review.md",                 "10 KB", "May 8"],
+    ["2026-05-09_video_content.md",                      "13 KB", "May 9"],
+  ];
+
+  function renderRows(container, rows, kind) {
+    rows.forEach((r, i) => {
+      const row = document.createElement("div");
+      row.className = "file-row";
+      row.style.animationDelay = (i * 50) + "ms";
+      const splitName = r[0].replace(/\.md$/, '');
+      row.innerHTML = `
+        <span class="icon">📄</span>
+        <span class="name">${splitName}<span class="ext">.md</span></span>
+        <span class="size">${r[1]}</span>
+        <span class="date">${r[2]}</span>
+      `;
+      container.appendChild(row);
+    });
+  }
+
+  renderRows(document.getElementById("dd-listing"), designDocs, "dd");
+  renderRows(document.getElementById("ai-listing"), aiConvos, "ai");
+
+  // Build gutter line numbers for the markdown clip
+  const gutter = document.getElementById("gutter");
+  for (let i = 1; i <= 90; i++) {
+    const div = document.createElement("div");
+    div.textContent = i;
+    gutter.appendChild(div);
+  }
+
+  // ---- Clip cycler ----
+  const clips = document.querySelectorAll(".clip");
+  const dots  = document.querySelectorAll(".nav-dot");
+  const pathLabel = document.getElementById("pathLabel");
+  const clipNum   = document.getElementById("clipNum");
+  const clipDesc  = document.getElementById("clipDesc");
+
+  const meta = {
+    1: { path: "Visual_Learning_Sorting / docs / design_docs",   label: "CLIP 01", desc: "design_docs folder listing" },
+    2: { path: "Visual_Learning_Sorting / wiki / Spec-First-Methodology.md", label: "CLIP 02", desc: "Spec-First Methodology · auto-pan" },
+    3: { path: "Visual_Learning_Sorting / docs / AI_Conversations", label: "CLIP 03", desc: "AI_Conversations directory" }
+  };
+
+  let current = 1;
+  let timer   = null;
+  const DURATION = 6000;
+
+  function showClip(n) {
+    current = n;
+    clips.forEach(c => c.classList.toggle("active", +c.dataset.clip === n));
+    dots.forEach(d  => d.classList.toggle("active", +d.dataset.target === n));
+    // restart progress animation by re-cloning the active dot's ::after
+    dots.forEach(d => {
+      if (+d.dataset.target === n) {
+        d.style.animation = "none";
+        d.offsetHeight; // reflow
+        d.style.animation = "";
+      }
+    });
+    pathLabel.textContent = meta[n].path;
+    clipNum.textContent   = meta[n].label;
+    clipDesc.textContent  = meta[n].desc;
+  }
+
+  function start() {
+    stop();
+    timer = setInterval(() => showClip(current === 3 ? 1 : current + 1), DURATION);
+  }
+  function stop() { if (timer) clearInterval(timer); timer = null; }
+
+  dots.forEach(d => d.addEventListener("click", () => {
+    showClip(+d.dataset.target);
+    start();
+  }));
+
+  const recorder = document.querySelector(".recorder");
+  recorder.addEventListener("mouseenter", stop);
+  recorder.addEventListener("mouseleave", start);
+
+  start();
+</script>
+</body>
+</html>
